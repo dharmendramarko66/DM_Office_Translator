@@ -43,7 +43,7 @@ if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
 fi
 
 echo
-echo "[1/6] Removing Current Files..."
+echo "[1/5] Removing Current Files..."
 
 rm -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py" || {
     echo "Current Files ..... FAILED"
@@ -57,7 +57,7 @@ rm -f "$INSTALL_DIR/current/run_hindi.sh" || {
 echo "Current Files ..... OK"
 
 echo
-echo "[2/6] Keyboard Shortcut..."
+echo "[2/5] Keyboard Shortcut..."
 echo
 if command -v gsettings >/dev/null 2>&1; then
 
@@ -83,7 +83,7 @@ else
 fi
 
 echo
-echo "[3/6] Removing Stable Files..."
+echo "[3/5] Removing Stable Files..."
 rm -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" || {
     echo "Stable Files ...... FAILED"
     exit 1
@@ -97,21 +97,7 @@ rm -f "$INSTALL_DIR/stable/run_hindi.sh" || {
 echo "Stable Files ...... OK"
 echo
 echo
-echo "[4/6] Removing Test Files..."
-
-rm -f "$INSTALL_DIR/test/english_to_hindi_hybrid_test.py" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-
-rm -f "$INSTALL_DIR/test/run_hindi_test.sh" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-
-echo "Test Files ........ OK"
-echo
-echo "[5/6] Removing Dictionary..."
+echo "[4/5] Removing Dictionary..."
 rm -f "$INSTALL_DIR/dictionary/dictionary.txt" || {
     echo "Dictionary ........ FAILED"
     exit 1
@@ -119,18 +105,15 @@ rm -f "$INSTALL_DIR/dictionary/dictionary.txt" || {
 
 echo "Dictionary ........ OK"
 echo
-echo "[6/6] Verifying Uninstallation..."
+echo "[5/5] Verifying Uninstallation..."
 
 if [ ! -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py" ] && \
    [ ! -f "$INSTALL_DIR/current/run_hindi.sh" ] && \
    [ ! -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
    [ ! -f "$INSTALL_DIR/stable/run_hindi.sh" ] && \
-   [ ! -f "$INSTALL_DIR/test/english_to_hindi_hybrid_test.py" ] && \
-   [ ! -f "$INSTALL_DIR/test/run_hindi_test.sh" ] && \
    [ ! -f "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
 
     rmdir "$INSTALL_DIR/stable" 2>/dev/null
-    rmdir "$INSTALL_DIR/test" 2>/dev/null
     rmdir "$INSTALL_DIR/current" 2>/dev/null
     rmdir "$INSTALL_DIR/dictionary" 2>/dev/null
     rmdir "$INSTALL_DIR/logs" 2>/dev/null

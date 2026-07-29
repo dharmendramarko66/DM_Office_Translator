@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 clear
 
 echo "=========================================="
@@ -31,16 +33,10 @@ cp -f "$HOME/.dm_office_tools/stable/english_to_hindi_hybrid.py" "$BACKUP_DIR/" 
     exit 1
 }
 cp -f "$HOME/.dm_office_tools/stable/run_hindi.sh" "$BACKUP_DIR/"
-
-cp -f "$HOME/.dm_office_tools/test/english_to_hindi_hybrid_test.py" "$BACKUP_DIR/"
-cp -f "$HOME/.dm_office_tools/test/run_hindi_test.sh" "$BACKUP_DIR/"
-
 cp -f "$HOME/.dm_office_tools/dictionary/dictionary.txt" "$BACKUP_DIR/"
 
 if [ -f "$BACKUP_DIR/english_to_hindi_hybrid.py" ] && \
    [ -f "$BACKUP_DIR/run_hindi.sh" ] && \
-   [ -f "$BACKUP_DIR/english_to_hindi_hybrid_test.py" ] && \
-   [ -f "$BACKUP_DIR/run_hindi_test.sh" ] && \
    [ -f "$BACKUP_DIR/dictionary.txt" ]; then
 
     echo "Backup ............. OK"
@@ -53,13 +49,13 @@ else
 fi
 echo "[2/6] Updating Stable Files..."
 
-cp -f "$HOME/DM_Office_Tools/stable/english_to_hindi_hybrid.py" \
+cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
 "$HOME/.dm_office_tools/stable/" || {
     echo "Stable Files ...... FAILED"
     exit 1
 }
 
-cp -f "$HOME/DM_Office_Tools/stable/run_hindi.sh" \
+cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
 "$HOME/.dm_office_tools/stable/" || {
     echo "Stable Files ...... FAILED"
     exit 1
@@ -70,7 +66,7 @@ echo
 
 echo "[3/6] Updating Dictionary..."
 
-cp -f "$HOME/DM_Office_Tools/dictionary/dictionary.txt" \
+cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
 "$HOME/.dm_office_tools/dictionary/" || {
     echo "Dictionary ........ FAILED"
     exit 1
@@ -79,27 +75,10 @@ cp -f "$HOME/DM_Office_Tools/dictionary/dictionary.txt" \
 echo "Dictionary ........ OK"
 echo
 
-echo "[4/6] Updating Test Files..."
-
-cp -f "$HOME/DM_Office_Tools/test/english_to_hindi_hybrid_test.py" \
-"$HOME/.dm_office_tools/test/" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-
-cp -f "$HOME/DM_Office_Tools/test/run_hindi_test.sh" \
-"$HOME/.dm_office_tools/test/" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-
-echo "Test Files ........ OK"
 echo
-echo "[5/6] Verifying Update..."
+echo "[4/6] Verifying Update..."
 if [ -f "$HOME/.dm_office_tools/stable/english_to_hindi_hybrid.py" ] && \
    [ -f "$HOME/.dm_office_tools/stable/run_hindi.sh" ] && \
-   [ -f "$HOME/.dm_office_tools/test/english_to_hindi_hybrid_test.py" ] && \
-   [ -f "$HOME/.dm_office_tools/test/run_hindi_test.sh" ] && \
    [ -f "$HOME/.dm_office_tools/dictionary/dictionary.txt" ]; then
 
     echo "Verification ..... OK"

@@ -185,8 +185,8 @@ After successful installation, DM Office Tools is ready to use.
 
 After installation, DM Office Tools automatically configures keyboard shortcuts for quick access.
 
-इंस्टॉलेशन के बाद DM Office Tools स्वतः Keyboard Shortcuts कॉन्फ़िगर करता है, जिससे Stable एवं Test संस्करण तुरंत चलाए जा सकते हैं.
-
+इंस्टॉलेशन के बाद DM Office Tools स्वतः Keyboard Shortcut कॉन्फ़िगर करता है, जिससे Smart Office Hybrid Translator (SOHT) तुरंत चलाया जा सकता है.
+	
 ### Default Shortcuts / डिफ़ॉल्ट शॉर्टकट
 
 | Version | Shortcut | Purpose |
@@ -225,7 +225,6 @@ The following commands are assigned to the keyboard shortcuts during installatio
 | Shortcut | Command |
 |----------|---------|
 | Alt + Space | /bin/bash "$HOME/.dm_office_tools/stable/run_hindi.sh"
-| Ctrl + Space | /bin/bash "$HOME/.dm_office_tools/test/run_hindi_test.sh" |
 
 ### Important Notes / महत्वपूर्ण बातें
 

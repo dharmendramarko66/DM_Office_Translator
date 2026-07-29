@@ -1,5 +1,7 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 clear
 
 echo "===================================================="
@@ -60,7 +62,7 @@ echo
 echo "[5/6] Backing up Version..."
 sleep 1
 
-if cp "$HOME/DM_Office_Tools/VERSION" "$BACKUP_DIR/"; then
+if  cp cp "$SCRIPT_DIR/VERSION" "$BACKUP_DIR/"; then
     echo "Version ............ OK"
 else
     echo "Version ............ FAILED"

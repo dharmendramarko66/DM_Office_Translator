@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
 clear
 
 echo "===================================================="
@@ -63,7 +65,7 @@ sleep 1
 
 INSTALL_DIR="$HOME/.dm_office_tools"
 
-mkdir -p "$INSTALL_DIR"/{stable,test,current,dictionary,backup,logs} || {
+mkdir -p "$INSTALL_DIR"/{stable,current,dictionary,backup,logs} || {
     echo "Installation Folder ..... FAILED"
     exit 1
 }
@@ -73,48 +75,36 @@ echo
 echo "[5/10] Installing Stable Files..."
 sleep 1
 
-cp -f stable/english_to_hindi_hybrid.py \
-"$INSTALL_DIR/stable/" || {
+cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
+"$INSTALL_DIR/stable/"
+
     echo "Stable Files ........ FAILED"
     exit 1
 }
 
-cp -f stable/run_hindi.sh \
-"$INSTALL_DIR/stable/" || {
+cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
+"$INSTALL_DIR/stable/"
+    
     echo "Stable Files ........ FAILED"
     exit 1
 }
 
 echo "Stable Files ........ OK"
 echo
-echo "[6/10] Installing Test Files..."
-sleep 1
-
-cp -f test/english_to_hindi_hybrid_test.py \
-"$INSTALL_DIR/test/" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-
-cp -f test/run_hindi_test.sh \
-"$INSTALL_DIR/test/" || {
-    echo "Test Files ........ FAILED"
-    exit 1
-}
-echo "Test Files ........ OK"
 
 echo
-echo "[7/10] Installing Dictionary..."
+echo "[6/10] Installing Dictionary..."
 sleep 1
 
-cp -f dictionary/dictionary.txt \
-"$INSTALL_DIR/dictionary/" || {
+cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
+"$INSTALL_DIR/dictionary/"
+    
     echo "Dictionary ......... FAILED"
     exit 1
 }
 echo "Dictionary ......... OK"
 echo
-echo "[8/10] Installing Current Files..."
+echo "[7/10] Installing Current Files..."
 sleep 1
 
 
@@ -135,10 +125,6 @@ chmod +x "$INSTALL_DIR/stable/run_hindi.sh" || {
     exit 1
 }
 
-chmod +x "$INSTALL_DIR/test/run_hindi_test.sh" || {
-    echo "Test Script ........ FAILED"
-    exit 1
-}
 
 chmod +x "$INSTALL_DIR/current/run_hindi.sh" || {
     echo "Current Script ..... FAILED"
@@ -149,7 +135,7 @@ echo "Scripts ............ OK"
 echo "Current Files ...... OK"
 
 echo
-echo "[9/10] Creating Keyboard Shortcut..."
+echo "[8/10] Creating Keyboard Shortcut..."
 sleep 1
 
 EXPECTED_CMD="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
@@ -314,14 +300,12 @@ else
 
 fi
 echo
-echo "[10/10] Verifying Installation..."
+echo "[9/10] Verifying Installation..."
 sleep 1
 if [ -x "$INSTALL_DIR/current/run_hindi.sh" ] && \
    [ -x "$INSTALL_DIR/stable/run_hindi.sh" ] && \
-   [ -x "$INSTALL_DIR/test/run_hindi_test.sh" ] && \
    [ -s "$INSTALL_DIR/current/english_to_hindi_hybrid.py" ] && \
    [ -s "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
-   [ -s "$INSTALL_DIR/test/english_to_hindi_hybrid_test.py" ] && \
    [ -s "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
     echo "Verification ...... OK"
 else
