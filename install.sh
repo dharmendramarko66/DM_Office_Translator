@@ -1,0 +1,367 @@
+#!/bin/bash
+set -e
+
+clear
+
+echo "===================================================="
+echo "             DM Office Tools Installer"
+echo
+echo "         Smart Office Hybrid Translator"
+echo "                    (SOHT)"
+echo
+echo "             Version : v1.0.1 Stable"
+echo
+echo "          Developed by Dharmendra Marko"
+echo "===================================================="
+
+
+echo
+echo "[1/10] Checking Ubuntu..."
+
+if grep -qi ubuntu /etc/os-release; then
+    echo "Ubuntu ............. OK"
+else
+    echo "Ubuntu ............. NOT SUPPORTED"
+    exit 1
+fi
+echo
+echo "[2/10] Checking Python..."
+sleep 1
+if command -v python3 >/dev/null 2>&1; then
+    echo "Python3 ........... OK"
+else
+    echo "Python3 ........... NOT FOUND"
+    echo
+    echo "Please install Python3 first."
+    exit 1
+fi
+
+echo
+echo "[3/10] Checking wl-clipboard..."
+sleep 1
+
+if command -v wl-copy >/dev/null 2>&1 && command -v wl-paste >/dev/null 2>&1; then
+    echo "wl-clipboard ..... OK"
+else
+    echo "wl-clipboard ..... NOT FOUND"
+    echo
+    echo "Installing wl-clipboard..."
+    sudo apt update
+    sudo apt install -y wl-clipboard
+
+    if command -v wl-copy >/dev/null 2>&1; then
+        echo "wl-clipboard ..... INSTALLED"
+    else
+        echo "wl-clipboard ..... FAILED"
+        exit 1
+    fi
+fi
+
+echo
+echo "[4/10] Creating Installation Folder..."
+sleep 1
+
+INSTALL_DIR="$HOME/.dm_office_tools"
+
+mkdir -p "$INSTALL_DIR"/{stable,test,current,dictionary,backup,logs} || {
+    echo "Installation Folder ..... FAILED"
+    exit 1
+}
+
+echo "Installation Folder ..... OK"
+echo
+echo "[5/10] Installing Stable Files..."
+sleep 1
+
+cp -f stable/english_to_hindi_hybrid.py \
+"$INSTALL_DIR/stable/" || {
+    echo "Stable Files ........ FAILED"
+    exit 1
+}
+
+cp -f stable/run_hindi.sh \
+"$INSTALL_DIR/stable/" || {
+    echo "Stable Files ........ FAILED"
+    exit 1
+}
+
+echo "Stable Files ........ OK"
+echo
+echo "[6/10] Installing Test Files..."
+sleep 1
+
+cp -f test/english_to_hindi_hybrid_test.py \
+"$INSTALL_DIR/test/" || {
+    echo "Test Files ........ FAILED"
+    exit 1
+}
+
+cp -f test/run_hindi_test.sh \
+"$INSTALL_DIR/test/" || {
+    echo "Test Files ........ FAILED"
+    exit 1
+}
+echo "Test Files ........ OK"
+
+echo
+echo "[7/10] Installing Dictionary..."
+sleep 1
+
+cp -f dictionary/dictionary.txt \
+"$INSTALL_DIR/dictionary/" || {
+    echo "Dictionary ......... FAILED"
+    exit 1
+}
+echo "Dictionary ......... OK"
+echo
+echo "[8/10] Installing Current Files..."
+sleep 1
+
+
+cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
+"$INSTALL_DIR/current/" || {
+    echo "Current Files ...... FAILED"
+    exit 1
+}
+
+cp -f "$INSTALL_DIR/stable/run_hindi.sh" \
+"$INSTALL_DIR/current/" || {
+    echo "Current Files ...... FAILED"
+    exit 1
+}
+
+chmod +x "$INSTALL_DIR/stable/run_hindi.sh" || {
+    echo "Stable Script ...... FAILED"
+    exit 1
+}
+
+chmod +x "$INSTALL_DIR/test/run_hindi_test.sh" || {
+    echo "Test Script ........ FAILED"
+    exit 1
+}
+
+chmod +x "$INSTALL_DIR/current/run_hindi.sh" || {
+    echo "Current Script ..... FAILED"
+    exit 1
+}
+
+echo "Scripts ............ OK"
+echo "Current Files ...... OK"
+
+echo
+echo "[9/10] Creating Keyboard Shortcut..."
+sleep 1
+
+EXPECTED_CMD="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
+
+echo "Checking shortcut availability..."
+#########################################
+# Find First Available Custom Shortcut Slot
+#########################################
+
+CUSTOM_KEYS=$(gsettings get \
+org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+
+INDEX=0
+
+while true
+do
+    KEY="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${INDEX}/"
+
+    if ! echo "$CUSTOM_KEYS" | grep -Fq "$KEY"
+    then
+        CUSTOM_KEY="$KEY"
+        break
+    fi
+
+    INDEX=$((INDEX + 1))
+done
+
+echo "Using shortcut slot .... custom${INDEX}"
+#########################################
+# Check Whether Alt+Space Is Already Used
+#########################################
+USED=""
+
+if [ "$CUSTOM_KEYS" != "@as []" ]; then
+
+    for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+    do
+        [ -z "$KEY" ] && continue
+
+        BINDING=$(gsettings get \
+        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$KEY \
+        binding 2>/dev/null)
+
+        if [ "$BINDING" = "'<Alt>space'" ]; then
+            USED=1
+            break
+        fi
+    done
+
+fi
+
+if [ -n "$USED" ]; then
+
+    echo
+    echo "Alt + Space ........ Already in use"
+    echo
+    echo "Please choose another shortcut."
+    echo
+    echo "1) Alt + H"
+    echo "2) Ctrl + Alt + H"
+    echo "3) Shift + Alt + H"
+    echo "4) Enter custom shortcut"
+    echo "5) Skip shortcut creation"
+    echo
+
+    read -rp "Select (1-5): " CHOICE
+
+    case "$CHOICE" in
+        1)
+            SHORTCUT="<Alt>h"
+            ;;
+        2)
+            SHORTCUT="<Primary><Alt>h"
+            ;;
+        3)
+            SHORTCUT="<Shift><Alt>h"
+            ;;
+        4)
+            read -rp "Enter shortcut (Example: <Primary><Alt>t): " SHORTCUT
+            ;;
+        5)
+            echo "Shortcut creation skipped."
+            SHORTCUT=""
+            ;;
+        *)
+            echo "Invalid choice."
+            exit 1
+            ;;
+    esac
+
+else
+
+    SHORTCUT="<Alt>space"
+
+fi
+#########################################
+# Create Keyboard Shortcut
+#########################################
+
+if [ -n "$SHORTCUT" ]; then
+
+    if [ "$CUSTOM_KEYS" = "@as []" ]; then
+        NEW_KEYS="['$CUSTOM_KEY']"
+    else
+        NEW_KEYS=$(echo "$CUSTOM_KEYS" | sed "s#]#, '$CUSTOM_KEY']#")
+    fi
+
+    gsettings set \
+    org.gnome.settings-daemon.plugins.media-keys \
+    custom-keybindings "$NEW_KEYS" || {
+        echo "Keyboard Shortcut .. FAILED"
+        exit 1
+    }
+
+    gsettings set \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
+    name "SOHT (Stable)" || {
+        echo "Keyboard Shortcut .. FAILED"
+        exit 1
+    }
+
+    gsettings set \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
+    command "$EXPECTED_CMD" || {
+        echo "Keyboard Shortcut .. FAILED"
+        exit 1
+    }
+
+    gsettings set \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
+    binding "$SHORTCUT" || {
+        echo "Keyboard Shortcut .. FAILED"
+        exit 1
+    }
+
+fi
+#########################################
+# Verify Shortcut
+#########################################
+
+if [ -z "$SHORTCUT" ]; then
+
+    echo "Keyboard Shortcut .. SKIPPED"
+
+else
+
+    if gsettings get \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY binding | \
+    grep -Fq "$SHORTCUT" && \
+    gsettings get \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY command | \
+    grep -Fq "$EXPECTED_CMD" && \
+    gsettings get \
+    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY name | \
+    grep -Fq "SOHT (Stable)"
+    then
+        echo "Keyboard Shortcut .. OK"
+    else
+        echo "Keyboard Shortcut .. FAILED"
+        exit 1
+    fi
+
+fi
+echo
+echo "[10/10] Verifying Installation..."
+sleep 1
+if [ -x "$INSTALL_DIR/current/run_hindi.sh" ] && \
+   [ -x "$INSTALL_DIR/stable/run_hindi.sh" ] && \
+   [ -x "$INSTALL_DIR/test/run_hindi_test.sh" ] && \
+   [ -s "$INSTALL_DIR/current/english_to_hindi_hybrid.py" ] && \
+   [ -s "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
+   [ -s "$INSTALL_DIR/test/english_to_hindi_hybrid_test.py" ] && \
+   [ -s "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
+    echo "Verification ...... OK"
+else
+    echo "Verification ...... FAILED"
+    exit 1
+fi
+
+echo
+echo "=========================================="
+echo "DM Office Tools v1.0.1 Installed Successfully"
+echo "=========================================="
+echo
+echo "Installation Path : $INSTALL_DIR"
+echo
+if [ -n "$SHORTCUT" ]; then
+    echo "Keyboard Shortcut : $SHORTCUT"
+else
+    echo "Keyboard Shortcut : Not Configured"
+fi
+echo
+echo "If automatic shortcut creation fails:"
+echo
+echo "Ubuntu Settings -> Keyboard -> View and Customize Shortcuts"
+echo
+echo "Name     : DM Office Tools (SOHT)"
+echo "Command  : $EXPECTED_CMD"
+if [ -n "$SHORTCUT" ]; then
+    echo "Shortcut : $SHORTCUT"
+else
+    echo "Shortcut : Not Configured"
+fi
+echo
+echo "Launch Command:"
+echo "$EXPECTED_CMD"
+echo
+echo "SOHT तैयार है।"
+if [ -n "$SHORTCUT" ]; then
+    echo "शुरू करने के लिए $SHORTCUT दबाएँ।"
+else
+    echo "Keyboard Shortcut Configure नहीं किया गया है।"
+fi
+echo "=========================================="
+
