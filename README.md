@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT)
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT)
 
-**Version / संस्करण:** 1.0.1 Stable
+**Version / संस्करण:** 1.0.2 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -292,7 +292,9 @@ Follow the on-screen instructions to complete the uninstallation.
 
 | Version | Status | Description |
 |---------|--------|-------------|
-| **1.0.1 Stable** | ✅ Current Release | Improved installer, updater, backup and uninstaller. |
+| **1.0.2 Stable** | ✅ Current Release | Improved installer, updater, backup and uninstaller. |
+
+| **1.0.1 Stable** | Previous Release | Initial stable release. |
 
 | **1.0.0 Stable** | Previous Release | Initial stable release. |
 
@@ -312,9 +314,9 @@ License information will be added in a future release.
 
 Latest stable release:
 
-[SOHT v1.0.1 - Stable Release](https://github.com/dharmendramarko66/DM_Office_Tools/releases/tag/v1.0.0)
+[SOHT v1.0.2 - Stable Release](https://github.com/dharmendramarko66/DM_Office_Tools/releases/tag/v1.0.2)
 
 Download:
-- README.pdf
-- Source Code (zip)
-- Source Code (tar.gz)
+- 📘 SOHT_README_v1.0.2.pdf
+- 📦 Source code (zip)
+- 📦 Source code (tar.gz)
