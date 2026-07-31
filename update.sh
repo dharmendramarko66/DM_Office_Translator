@@ -20,7 +20,7 @@ echo
 echo "Starting Update..."
 echo
 
-echo "[1/6] Creating Backup..."
+echo "[1/5] Creating Backup..."
 BACKUP_DIR="$HOME/.dm_office_tools/backup/$(date +%Y%m%d_%H%M%S)"
 
 mkdir -p "$BACKUP_DIR" || {
@@ -47,7 +47,7 @@ else
     exit 1
 
 fi
-echo "[2/6] Updating Stable Files..."
+echo "[2/5] Updating Stable Files..."
 
 cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
 "$HOME/.dm_office_tools/stable/" || {
@@ -64,7 +64,7 @@ cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
 echo "Stable Files ...... OK"
 echo
 
-echo "[3/6] Updating Dictionary..."
+echo "[3/5] Updating Dictionary..."
 
 cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
 "$HOME/.dm_office_tools/dictionary/" || {
@@ -76,7 +76,7 @@ echo "Dictionary ........ OK"
 echo
 
 echo
-echo "[4/6] Verifying Update..."
+echo "[4/5] Verifying Update..."
 if [ -f "$HOME/.dm_office_tools/stable/english_to_hindi_hybrid.py" ] && \
    [ -f "$HOME/.dm_office_tools/stable/run_hindi.sh" ] && \
    [ -f "$HOME/.dm_office_tools/dictionary/dictionary.txt" ]; then
@@ -90,7 +90,7 @@ else
 
 fi
 echo
-echo "[6/6] Update Completed"
+echo "[5/5] Update Completed"
 
 echo
 echo "=========================================="

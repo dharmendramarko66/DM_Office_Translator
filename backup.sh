@@ -62,7 +62,7 @@ echo
 echo "[5/6] Backing up Version..."
 sleep 1
 
-if  cp cp "$SCRIPT_DIR/VERSION" "$BACKUP_DIR/"; then
+if cp "$SCRIPT_DIR/VERSION" "$BACKUP_DIR/"; then
     echo "Version ............ OK"
 else
     echo "Version ............ FAILED"

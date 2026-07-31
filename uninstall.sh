@@ -134,10 +134,9 @@ echo "=========================================="
 echo "DM Office Tools Uninstalled Successfully"
 echo "=========================================="
 echo
-
-if [ -d "$HOME/.dm_office_tools_backup" ]; then
+if [ -d "$HOME/.dm_office_tools/backup" ]; then
     echo "Backup files have been preserved."
-    echo "Backup Folder : $HOME/.dm_office_tools_backup"
+    echo "Backup Folder : $HOME/.dm_office_tools/backup"
 else
     echo "Backup folder not found."
 fi
@@ -150,3 +149,4 @@ echo "DM Office Tools v1.0.1"
 echo "Developed by Dharmendra Marko"
 echo "=========================================="
 echo
+rm -rf "$INSTALL_DIR/test"

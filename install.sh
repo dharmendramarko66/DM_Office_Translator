@@ -76,15 +76,13 @@ echo "[5/10] Installing Stable Files..."
 sleep 1
 
 cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
-"$INSTALL_DIR/stable/"
-
+"$INSTALL_DIR/stable/" || {
     echo "Stable Files ........ FAILED"
     exit 1
 }
 
 cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
-"$INSTALL_DIR/stable/"
-    
+"$INSTALL_DIR/stable/" || {
     echo "Stable Files ........ FAILED"
     exit 1
 }
@@ -97,11 +95,11 @@ echo "[6/10] Installing Dictionary..."
 sleep 1
 
 cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
-"$INSTALL_DIR/dictionary/"
-    
+"$INSTALL_DIR/dictionary/" || {
     echo "Dictionary ......... FAILED"
     exit 1
 }
+
 echo "Dictionary ......... OK"
 echo
 echo "[7/10] Installing Current Files..."
