@@ -1,11 +1,10 @@
 # =========================================================
 # Smart Office Hybrid Translator (SOHT)
-# Version : 1.0 Stable
-# Release Date : 07-07-2026
+# Version : 1.0.2 Stable
+# Release Date : 31-07-2026
 # Platform : Ubuntu
 # Purpose : Court & Government Office Data Entry
 # =========================================================
-import tkinter as tk
 import requests
 import urllib.parse
 import re
@@ -82,8 +81,6 @@ dictionary = {
     "police station": "थाना",
     "commissioner": "आयुक्त",
 
-    "m.p.": "म.प्र.",
-    "m.p": "म.प्र.",
     "u.p.": "उ.प्र.",
     "c.g.": "छ.ग.",
     "india": "भारत"

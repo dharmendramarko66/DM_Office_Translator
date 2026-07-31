@@ -39,7 +39,25 @@ else
 fi
 
 echo
-echo "[3/10] Checking wl-clipboard..."
+echo "[3/10] Checking requests..."
+sleep 1
+
+if python3 -c "import requests" >/dev/null 2>&1; then
+    echo "requests .......... OK"
+else
+    echo "Installing requests..."
+    sudo apt update
+    sudo apt install -y python3-requests
+
+    if python3 -c "import requests" >/dev/null 2>&1; then
+        echo "requests .......... OK"
+    else
+        echo "requests .......... FAILED"
+        exit 1
+    fi
+fi
+echo
+echo "[4/10] Checking wl-clipboard..."
 sleep 1
 
 if command -v wl-copy >/dev/null 2>&1 && command -v wl-paste >/dev/null 2>&1; then
@@ -60,7 +78,7 @@ else
 fi
 
 echo
-echo "[4/10] Creating Installation Folder..."
+echo "[5/10] Creating Installation Folder..."
 sleep 1
 
 INSTALL_DIR="$HOME/.dm_office_tools"
@@ -72,7 +90,7 @@ mkdir -p "$INSTALL_DIR"/{stable,current,dictionary,backup,logs} || {
 
 echo "Installation Folder ..... OK"
 echo
-echo "[5/10] Installing Stable Files..."
+echo "[6/10] Installing Stable Files..."
 sleep 1
 
 cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
@@ -91,7 +109,7 @@ echo "Stable Files ........ OK"
 echo
 
 echo
-echo "[6/10] Installing Dictionary..."
+echo "[7/10] Installing Dictionary..."
 sleep 1
 
 cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
@@ -102,7 +120,7 @@ cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
 
 echo "Dictionary ......... OK"
 echo
-echo "[7/10] Installing Current Files..."
+echo "[8/10] Installing Current Files..."
 sleep 1
 
 
@@ -133,7 +151,7 @@ echo "Scripts ............ OK"
 echo "Current Files ...... OK"
 
 echo
-echo "[8/10] Creating Keyboard Shortcut..."
+echo "[9/10] Creating Keyboard Shortcut..."
 sleep 1
 
 EXPECTED_CMD="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
@@ -298,7 +316,7 @@ else
 
 fi
 echo
-echo "[9/10] Verifying Installation..."
+echo "[10/10] Verifying Installation..."
 sleep 1
 if [ -x "$INSTALL_DIR/current/run_hindi.sh" ] && \
    [ -x "$INSTALL_DIR/stable/run_hindi.sh" ] && \
