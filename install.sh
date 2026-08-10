@@ -2,366 +2,504 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="$HOME/.dm_office_tools"
+MENU_DIR="$HOME/.local/share/applications"
+ICON_DIR="$INSTALL_DIR/icons"
 
 clear
 
 echo "===================================================="
-echo "             DM Office Tools Installer"
+echo "              DM Office Tools Installer"
 echo
-echo "         Smart Office Hybrid Translator"
-echo "                    (SOHT)"
+echo "        Smart Office Hybrid Translator"
+echo "                   (SOHT)"
 echo
-echo "             Version : v1.0.1 Stable"
+echo "              Version : v2.0"
 echo
-echo "          Developed by Dharmendra Marko"
+echo "         Developed by Dharmendra Marko"
 echo "===================================================="
-
-
 echo
+
+# ----------------------------------------------------
+# [1/10] Checking Ubuntu
+# ----------------------------------------------------
+
 echo "[1/10] Checking Ubuntu..."
 
 if grep -qi ubuntu /etc/os-release; then
-    echo "Ubuntu ............. OK"
+    echo "Ubuntu ................. OK"
 else
-    echo "Ubuntu ............. NOT SUPPORTED"
+    echo "Ubuntu ................. NOT SUPPORTED"
     exit 1
 fi
+
 echo
+
+# ----------------------------------------------------
+# [2/10] Checking Python
+# ----------------------------------------------------
+
 echo "[2/10] Checking Python..."
-sleep 1
+
 if command -v python3 >/dev/null 2>&1; then
-    echo "Python3 ........... OK"
+    echo "Python3 ................ OK"
 else
-    echo "Python3 ........... NOT FOUND"
+    echo "Python3 ................ NOT FOUND"
     echo
     echo "Please install Python3 first."
     exit 1
 fi
 
 echo
+
+# ----------------------------------------------------
+# [3/10] Checking requests
+# ----------------------------------------------------
+
 echo "[3/10] Checking requests..."
-sleep 1
 
 if python3 -c "import requests" >/dev/null 2>&1; then
-    echo "requests .......... OK"
+    echo "requests ............... OK"
 else
     echo "Installing requests..."
     sudo apt update
     sudo apt install -y python3-requests
 
     if python3 -c "import requests" >/dev/null 2>&1; then
-        echo "requests .......... OK"
+        echo "requests ............... OK"
     else
-        echo "requests .......... FAILED"
+        echo "requests ............... FAILED"
         exit 1
     fi
 fi
-echo
-echo "[4/10] Checking wl-clipboard..."
-sleep 1
 
-if command -v wl-copy >/dev/null 2>&1 && command -v wl-paste >/dev/null 2>&1; then
-    echo "wl-clipboard ..... OK"
+echo
+
+# ----------------------------------------------------
+# [4/10] Checking wl-clipboard
+# ----------------------------------------------------
+
+echo "[4/10] Checking wl-clipboard..."
+
+if command -v wl-copy >/dev/null 2>&1 && \
+   command -v wl-paste >/dev/null 2>&1; then
+
+    echo "wl-clipboard .......... OK"
+
 else
-    echo "wl-clipboard ..... NOT FOUND"
-    echo
+
     echo "Installing wl-clipboard..."
     sudo apt update
     sudo apt install -y wl-clipboard
 
-    if command -v wl-copy >/dev/null 2>&1; then
-        echo "wl-clipboard ..... INSTALLED"
+    if command -v wl-copy >/dev/null 2>&1 && \
+       command -v wl-paste >/dev/null 2>&1; then
+
+        echo "wl-clipboard .......... OK"
+
     else
-        echo "wl-clipboard ..... FAILED"
+        echo "wl-clipboard .......... FAILED"
         exit 1
     fi
 fi
 
 echo
+
+# ----------------------------------------------------
+# [5/10] Creating Installation Folder
+# ----------------------------------------------------
+
 echo "[5/10] Creating Installation Folder..."
-sleep 1
 
-INSTALL_DIR="$HOME/.dm_office_tools"
+mkdir -p \
+"$INSTALL_DIR/stable" \
+"$INSTALL_DIR/current" \
+"$INSTALL_DIR/dictionary" \
+"$INSTALL_DIR/backup" \
+"$INSTALL_DIR/logs" \
+"$INSTALL_DIR/icons" \
+"$MENU_DIR"
 
-mkdir -p "$INSTALL_DIR"/{stable,current,dictionary,backup,logs} || {
-    echo "Installation Folder ..... FAILED"
-    exit 1
-}
-
-echo "Installation Folder ..... OK"
+echo "Installation Folder .... OK"
 echo
-echo "[6/10] Installing Stable Files..."
-sleep 1
 
+# ----------------------------------------------------
+# [6/10] Installing E2H + H2E Stable Files
+# ----------------------------------------------------
+
+echo "[6/10] Installing Stable Files..."
+
+# E2H
 cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
-"$INSTALL_DIR/stable/" || {
-    echo "Stable Files ........ FAILED"
-    exit 1
-}
+"$INSTALL_DIR/stable/"
 
 cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
-"$INSTALL_DIR/stable/" || {
-    echo "Stable Files ........ FAILED"
-    exit 1
-}
+"$INSTALL_DIR/stable/"
 
-echo "Stable Files ........ OK"
+# H2E
+cp -f "$SCRIPT_DIR/stable/hindi_to_english_hybrid.py" \
+"$INSTALL_DIR/stable/"
+
+cp -f "$SCRIPT_DIR/stable/run_hindi_to_english.sh" \
+"$INSTALL_DIR/stable/"
+
+chmod +x "$INSTALL_DIR/stable/run_hindi.sh"
+chmod +x "$INSTALL_DIR/stable/run_hindi_to_english.sh"
+
+echo "E2H Files ............. OK"
+echo "H2E Files ............. OK"
 echo
 
-echo
-echo "[7/10] Installing Dictionary..."
-sleep 1
+# ----------------------------------------------------
+# Current Files
+# ----------------------------------------------------
 
-cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
-"$INSTALL_DIR/dictionary/" || {
-    echo "Dictionary ......... FAILED"
-    exit 1
-}
-
-echo "Dictionary ......... OK"
-echo
-echo "[8/10] Installing Current Files..."
-sleep 1
-
+echo "Installing Current Files..."
 
 cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
-"$INSTALL_DIR/current/" || {
-    echo "Current Files ...... FAILED"
-    exit 1
-}
+"$INSTALL_DIR/current/"
 
 cp -f "$INSTALL_DIR/stable/run_hindi.sh" \
-"$INSTALL_DIR/current/" || {
-    echo "Current Files ...... FAILED"
-    exit 1
-}
+"$INSTALL_DIR/current/"
 
-chmod +x "$INSTALL_DIR/stable/run_hindi.sh" || {
-    echo "Stable Script ...... FAILED"
-    exit 1
-}
+cp -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
+"$INSTALL_DIR/current/"
 
+cp -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
+"$INSTALL_DIR/current/"
 
-chmod +x "$INSTALL_DIR/current/run_hindi.sh" || {
-    echo "Current Script ..... FAILED"
-    exit 1
-}
+chmod +x "$INSTALL_DIR/current/run_hindi.sh"
+chmod +x "$INSTALL_DIR/current/run_hindi_to_english.sh"
 
-echo "Scripts ............ OK"
-echo "Current Files ...... OK"
-
+echo "Current Files ......... OK"
 echo
-echo "[9/10] Creating Keyboard Shortcut..."
-sleep 1
 
-EXPECTED_CMD="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
+# ----------------------------------------------------
+# [7/10] Installing Dictionaries + Manager
+# ----------------------------------------------------
 
-echo "Checking shortcut availability..."
-#########################################
-# Find First Available Custom Shortcut Slot
-#########################################
+echo "[7/10] Installing Dictionary Files..."
+
+cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
+"$INSTALL_DIR/dictionary/"
+
+cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
+"$INSTALL_DIR/dictionary/"
+
+cp -f "$SCRIPT_DIR/dictionary/smart_dictionary_manager.py" \
+"$INSTALL_DIR/dictionary/"
+
+chmod +x "$INSTALL_DIR/dictionary/smart_dictionary_manager.py"
+
+echo "E2H Dictionary ........ OK"
+echo "H2E Dictionary ........ OK"
+echo "Dictionary Manager .... OK"
+echo
+
+# ----------------------------------------------------
+# Dictionary Manager Menu
+# ----------------------------------------------------
+
+echo "Creating Dictionary Manager Menu..."
+
+if [ -f "$SCRIPT_DIR/icons/soht_dictionary.png" ]; then
+    cp -f "$SCRIPT_DIR/icons/soht_dictionary.png" \
+    "$ICON_DIR/"
+
+    echo "Dictionary Icon ....... OK"
+else
+    echo "Dictionary Icon ....... NOT FOUND"
+    echo "Menu will be created without custom icon."
+fi
+
+cat > "$MENU_DIR/SOHT_Dictionary_Manager.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=SOHT Dictionary Manager
+Comment=Smart Office Hybrid Translator Dictionary Manager
+Exec=python3 $INSTALL_DIR/dictionary/smart_dictionary_manager.py
+Icon=$ICON_DIR/soht_dictionary.png
+Terminal=false
+Categories=Utility;Office;
+StartupNotify=true
+EOF
+
+chmod +x "$MENU_DIR/SOHT_Dictionary_Manager.desktop"
+
+echo "Dictionary Manager Menu OK"
+echo
+
+# ----------------------------------------------------
+# [8/10] Keyboard Shortcuts
+# ----------------------------------------------------
+
+echo "[8/10] Creating Keyboard Shortcuts..."
+echo
+
+# ----------------------------------------------------
+# Function: Find free shortcut slot
+# ----------------------------------------------------
+
+get_free_slot() {
+
+    local index=0
+    local key
+
+    while true
+    do
+        key="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${index}/"
+
+        if ! echo "$CUSTOM_KEYS" | grep -Fq "$key"; then
+            echo "$key"
+            return
+        fi
+
+        index=$((index + 1))
+    done
+}
+
+# ----------------------------------------------------
+# Read current shortcuts
+# ----------------------------------------------------
 
 CUSTOM_KEYS=$(gsettings get \
-org.gnome.settings-daemon.plugins.media-keys custom-keybindings)
+org.gnome.settings-daemon.plugins.media-keys \
+custom-keybindings)
 
-INDEX=0
+echo "Existing shortcut configuration:"
+echo "$CUSTOM_KEYS"
+echo
 
-while true
-do
-    KEY="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${INDEX}/"
+# ----------------------------------------------------
+# Shortcut helper
+# ----------------------------------------------------
 
-    if ! echo "$CUSTOM_KEYS" | grep -Fq "$KEY"
-    then
-        CUSTOM_KEY="$KEY"
-        break
-    fi
+add_shortcut() {
 
-    INDEX=$((INDEX + 1))
-done
-
-echo "Using shortcut slot .... custom${INDEX}"
-#########################################
-# Check Whether Alt+Space Is Already Used
-#########################################
-USED=""
-
-if [ "$CUSTOM_KEYS" != "@as []" ]; then
-
-    for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
-    do
-        [ -z "$KEY" ] && continue
-
-        BINDING=$(gsettings get \
-        org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$KEY \
-        binding 2>/dev/null)
-
-        if [ "$BINDING" = "'<Alt>space'" ]; then
-            USED=1
-            break
-        fi
-    done
-
-fi
-
-if [ -n "$USED" ]; then
-
-    echo
-    echo "Alt + Space ........ Already in use"
-    echo
-    echo "Please choose another shortcut."
-    echo
-    echo "1) Alt + H"
-    echo "2) Ctrl + Alt + H"
-    echo "3) Shift + Alt + H"
-    echo "4) Enter custom shortcut"
-    echo "5) Skip shortcut creation"
-    echo
-
-    read -rp "Select (1-5): " CHOICE
-
-    case "$CHOICE" in
-        1)
-            SHORTCUT="<Alt>h"
-            ;;
-        2)
-            SHORTCUT="<Primary><Alt>h"
-            ;;
-        3)
-            SHORTCUT="<Shift><Alt>h"
-            ;;
-        4)
-            read -rp "Enter shortcut (Example: <Primary><Alt>t): " SHORTCUT
-            ;;
-        5)
-            echo "Shortcut creation skipped."
-            SHORTCUT=""
-            ;;
-        *)
-            echo "Invalid choice."
-            exit 1
-            ;;
-    esac
-
-else
-
-    SHORTCUT="<Alt>space"
-
-fi
-#########################################
-# Create Keyboard Shortcut
-#########################################
-
-if [ -n "$SHORTCUT" ]; then
+    local SLOT="$1"
+    local NAME="$2"
+    local COMMAND="$3"
+    local BINDING="$4"
 
     if [ "$CUSTOM_KEYS" = "@as []" ]; then
-        NEW_KEYS="['$CUSTOM_KEY']"
+
+        NEW_KEYS="['$SLOT']"
+
     else
-        NEW_KEYS=$(echo "$CUSTOM_KEYS" | sed "s#]#, '$CUSTOM_KEY']#")
+
+        NEW_KEYS=$(echo "$CUSTOM_KEYS" | sed "s#]#, '$SLOT']#")
+
     fi
 
     gsettings set \
     org.gnome.settings-daemon.plugins.media-keys \
-    custom-keybindings "$NEW_KEYS" || {
-        echo "Keyboard Shortcut .. FAILED"
-        exit 1
-    }
+    custom-keybindings "$NEW_KEYS"
 
-    gsettings set \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
-    name "SOHT (Stable)" || {
-        echo "Keyboard Shortcut .. FAILED"
-        exit 1
-    }
+    dconf write \
+    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/name" \
+    "'$NAME'"
 
-    gsettings set \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
-    command "$EXPECTED_CMD" || {
-        echo "Keyboard Shortcut .. FAILED"
-        exit 1
-    }
+    dconf write \
+    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/command" \
+    "'$COMMAND'"
 
-    gsettings set \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY \
-    binding "$SHORTCUT" || {
-        echo "Keyboard Shortcut .. FAILED"
-        exit 1
-    }
+    dconf write \
+    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/binding" \
+    "'$BINDING'"
 
-fi
-#########################################
-# Verify Shortcut
-#########################################
+    CUSTOM_KEYS="$NEW_KEYS"
+}
 
-if [ -z "$SHORTCUT" ]; then
+# ----------------------------------------------------
+# E2H Shortcut
+# ----------------------------------------------------
 
-    echo "Keyboard Shortcut .. SKIPPED"
+E2H_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
+E2H_BINDING="<Alt>space"
+
+if echo "$CUSTOM_KEYS" | grep -Fq "$E2H_BINDING"; then
+
+    echo "E2H Alt+Space ........ Already in use"
+    echo "E2H shortcut .......... NOT CHANGED"
 
 else
 
-    if gsettings get \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY binding | \
-    grep -Fq "$SHORTCUT" && \
-    gsettings get \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY command | \
-    grep -Fq "$EXPECTED_CMD" && \
-    gsettings get \
-    org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$CUSTOM_KEY name | \
-    grep -Fq "SOHT (Stable)"
-    then
-        echo "Keyboard Shortcut .. OK"
-    else
-        echo "Keyboard Shortcut .. FAILED"
-        exit 1
+    E2H_SLOT=$(get_free_slot)
+
+    add_shortcut \
+    "$E2H_SLOT" \
+    "SOHT English to Hindi" \
+    "$E2H_COMMAND" \
+    "$E2H_BINDING"
+
+    echo "E2H Alt+Space ........ CREATED"
+fi
+
+# ----------------------------------------------------
+# H2E Shortcut
+# ----------------------------------------------------
+
+H2E_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi_to_english.sh"
+H2E_BINDING="<Alt>h"
+
+if echo "$CUSTOM_KEYS" | grep -Fq "$H2E_BINDING"; then
+
+    echo "H2E Alt+H ............ Already in use"
+    echo "H2E shortcut .......... NOT CHANGED"
+
+else
+
+    H2E_SLOT=$(get_free_slot)
+
+    add_shortcut \
+    "$H2E_SLOT" \
+    "SOHT Hindi to English" \
+    "$H2E_COMMAND" \
+    "$H2E_BINDING"
+
+    echo "H2E Alt+H ............ CREATED"
+fi
+
+echo
+
+# ----------------------------------------------------
+# [9/10] Verifying Shortcuts
+# ----------------------------------------------------
+
+echo "[9/10] Verifying Keyboard Shortcuts..."
+echo
+
+FINAL_KEYS=$(gsettings get \
+org.gnome.settings-daemon.plugins.media-keys \
+custom-keybindings)
+
+E2H_OK=0
+H2E_OK=0
+
+for KEY in $(echo "$FINAL_KEYS" | sed "s/@as //" | tr -d "[],'")
+do
+
+    [ -z "$KEY" ] && continue
+
+    NAME=$(dconf read "${KEY}name" 2>/dev/null || true)
+    COMMAND=$(dconf read "${KEY}command" 2>/dev/null || true)
+    BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
+
+    if [ "$BINDING" = "'<Alt>space'" ] && \
+       echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
+
+        E2H_OK=1
     fi
 
-fi
-echo
-echo "[10/10] Verifying Installation..."
-sleep 1
-if [ -x "$INSTALL_DIR/current/run_hindi.sh" ] && \
-   [ -x "$INSTALL_DIR/stable/run_hindi.sh" ] && \
-   [ -s "$INSTALL_DIR/current/english_to_hindi_hybrid.py" ] && \
-   [ -s "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
-   [ -s "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
-    echo "Verification ...... OK"
+    if [ "$BINDING" = "'<Alt>h'" ] && \
+       echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
+
+        H2E_OK=1
+    fi
+
+done
+
+if [ "$E2H_OK" -eq 1 ]; then
+    echo "E2H Alt+Space ........ OK"
 else
-    echo "Verification ...... FAILED"
+    echo "E2H Alt+Space ........ FAILED"
+    exit 1
+fi
+
+if [ "$H2E_OK" -eq 1 ]; then
+    echo "H2E Alt+H ............ OK"
+else
+    echo "H2E Alt+H ............ FAILED"
     exit 1
 fi
 
 echo
-echo "=========================================="
-echo "DM Office Tools v1.0.1 Installed Successfully"
-echo "=========================================="
-echo
-echo "Installation Path : $INSTALL_DIR"
-echo
-if [ -n "$SHORTCUT" ]; then
-    echo "Keyboard Shortcut : $SHORTCUT"
-else
-    echo "Keyboard Shortcut : Not Configured"
-fi
-echo
-echo "If automatic shortcut creation fails:"
-echo
-echo "Ubuntu Settings -> Keyboard -> View and Customize Shortcuts"
-echo
-echo "Name     : DM Office Tools (SOHT)"
-echo "Command  : $EXPECTED_CMD"
-if [ -n "$SHORTCUT" ]; then
-    echo "Shortcut : $SHORTCUT"
-else
-    echo "Shortcut : Not Configured"
-fi
-echo
-echo "Launch Command:"
-echo "$EXPECTED_CMD"
-echo
-echo "SOHT तैयार है।"
-if [ -n "$SHORTCUT" ]; then
-    echo "शुरू करने के लिए $SHORTCUT दबाएँ।"
-else
-    echo "Keyboard Shortcut Configure नहीं किया गया है।"
-fi
-echo "=========================================="
 
+# ----------------------------------------------------
+# [10/10] Final Installation Verification
+# ----------------------------------------------------
+
+echo "[10/10] Verifying Installation..."
+echo
+
+FAILED=0
+
+check_file() {
+
+    if [ -s "$1" ]; then
+        echo "OK ........ $2"
+    else
+        echo "FAILED ... $2"
+        FAILED=1
+    fi
+}
+
+check_file "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
+"E2H Translator"
+
+check_file "$INSTALL_DIR/stable/run_hindi.sh" \
+"E2H Launcher"
+
+check_file "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
+"H2E Translator"
+
+check_file "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
+"H2E Launcher"
+
+check_file "$INSTALL_DIR/current/english_to_hindi_hybrid.py" \
+"E2H Current"
+
+check_file "$INSTALL_DIR/current/hindi_to_english_hybrid.py" \
+"H2E Current"
+
+check_file "$INSTALL_DIR/dictionary/dictionary.txt" \
+"E2H Dictionary"
+
+check_file "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" \
+"H2E Dictionary"
+
+check_file "$INSTALL_DIR/dictionary/smart_dictionary_manager.py" \
+"Dictionary Manager"
+
+check_file "$MENU_DIR/SOHT_Dictionary_Manager.desktop" \
+"Dictionary Manager Menu"
+
+if [ "$FAILED" -ne 0 ]; then
+    echo
+    echo "Installation Verification ..... FAILED"
+    exit 1
+fi
+
+echo
+echo "Verification ................. OK"
+echo
+
+# ----------------------------------------------------
+# Installation Complete
+# ----------------------------------------------------
+
+echo "===================================================="
+echo "      DM Office Tools v2.0 Installed Successfully"
+echo "===================================================="
+echo
+echo "Installation Path:"
+echo "$INSTALL_DIR"
+echo
+echo "Installed Components:"
+echo
+echo "  ✔ English to Hindi"
+echo "  ✔ Hindi to English"
+echo "  ✔ E2H Dictionary"
+echo "  ✔ H2E Dictionary"
+echo "  ✔ Dictionary Manager"
+echo "  ✔ Dictionary Manager Menu"
+echo
+echo "Keyboard Shortcuts:"
+echo
+echo "  ✔ Alt + Space  → English to Hindi"
+echo "  ✔ Alt + H      → Hindi to English"
+echo
+echo "SOHT v2.0 तैयार है।"
+echo "===================================================="
+echo

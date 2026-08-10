@@ -1,9 +1,9 @@
 # =========================================================
-# Smart Office Hybrid Translator (SOHT)
+# Smart Office Hybrid Translator - Hindi to English (SOHT - H2E)
 # Version : 2.0 Optimized (Hybrid Offline/Online)
 # Release Date : 07-07-2026
 # Platform : Ubuntu
-# Purpose : Court & Government Office Data Entry
+# Purpose : Court & Government Office Data Entry (Hindi to English)
 # =========================================================
 import os
 import re
@@ -13,33 +13,34 @@ import requests
 
 APP_VERSION = "2.0"
 GOOGLE_API = (
-    "https://inputtools.google.com/request"
-    "?itc=hi-t-i0-und"
-    "&num=1"
-    "&text="
+    "https://translate.googleapis.com/translate_a/single"
+    "?client=gtx&sl=hi&tl=en&dt=t&q="
 )
 
 # Regex Patterns को पहले से प्री-कम्पाइल करना
-hindi_pattern = re.compile(r'[\u0900-\u097F]')
+english_pattern = re.compile(r'[a-zA-Z]')
 punctuation_pattern = re.compile(r'[,.:;()/-]+')
 
 # HTTP Session बनाना और डायनेमिक User-Agent सेट करना
 session = requests.Session()
-session.headers.update({"User-Agent": f"SOHT/{APP_VERSION}"})
+session.headers.update({"User-Agent": f"SOHT-H2E/{APP_VERSION}"})
 
 
-# 1. dictionary.txt लोड करने और Regex प्री-कम्पाइल करने का मॉड्यूलर फ़ंक्शन
+# 1. hindi_to_english_dictionary.txt लोड करने और Regex प्री-कम्पाइल करने का मॉड्यूलर फ़ंक्शन
 def load_dictionary():
     dictionary = {}
     compiled_list = []
 
     try:
         DICT_FILE = os.path.expanduser(
-            "~/.dm_office_tools/dictionary/dictionary.txt"
+            "~/.dm_office_tools/dictionary/hindi_to_english_dictionary.txt"
         )
 
         if not os.path.isfile(DICT_FILE):
-            DICT_FILE = os.path.expanduser("~/dictionary.txt")
+            DICT_FILE = "/home/districtcourt/DM_Office_Tools/dictionary/hindi_to_english_dictionary.txt"
+
+        if not os.path.isfile(DICT_FILE):
+            DICT_FILE = os.path.expanduser("~/hindi_to_english_dictionary.txt")
 
         if os.path.isfile(DICT_FILE):
             with open(DICT_FILE, encoding="utf-8") as f:
@@ -49,25 +50,17 @@ def load_dictionary():
                         continue
 
                     if "=" in line:
-                        eng, hin = line.split("=", 1)
-                        dictionary[eng.strip().lower()] = hin.strip()
+                        hin, eng = line.split("=", 1)
+                        dictionary[hin.strip()] = eng.strip()
         else:
             print("Dictionary file not found.")
 
         # डिक्शनरी लोड होने के बाद Regex पैटर्न्स को एक ही बार प्री-कम्पाइल करना
-        for eng, hin in sorted(
+        for hin, eng in sorted(
             dictionary.items(), key=lambda x: len(x[0]), reverse=True
         ):
-            if "." in eng:
-                pattern = re.compile(
-                    r'(?<!\w)' + re.escape(eng) + r'(?!\w)', re.IGNORECASE
-                )
-            else:
-                pattern = re.compile(
-                    r'\b' + re.escape(eng) + r'\b', re.IGNORECASE
-                )
-
-            compiled_list.append((pattern, hin))
+            pattern = re.compile(re.escape(hin), re.IGNORECASE)
+            compiled_list.append((pattern, eng))
 
     except (OSError, UnicodeDecodeError) as e:
         print("Dictionary File Error:", e)
@@ -103,8 +96,8 @@ try:
 
     if output:
         # 3. डिक्शनरी आधारित अनुवाद (Pre-compiled Regex द्वारा)
-        for pattern, hin in compiled_dictionary:
-            output = pattern.sub(hin, output)
+        for pattern, eng in compiled_dictionary:
+            output = pattern.sub(eng, output)
 
         # 4. इंटरनेट स्थिति की जाँच
         online = is_internet_available()
@@ -143,8 +136,8 @@ try:
                 final_tokens.append(punctuation_part)
                 continue
 
-            # पहले से हिन्दी शब्द न बदलें
-            if hindi_pattern.search(word_part):
+            # पहले से अंग्रेजी शब्द न बदलें
+            if english_pattern.search(word_part):
                 final_tokens.append(word_part + punctuation_part)
                 continue
 
@@ -153,7 +146,7 @@ try:
                 final_tokens.append(word_part + punctuation_part)
                 continue
 
-            # ऑनलाइन होने पर Google Input Tools का उपयोग (मूल शब्द API में और Lowercase Cache)
+            # ऑनलाइन होने पर Google Translate API का उपयोग (मूल शब्द API में और Lowercase Cache)
             if online:
                 cache_key = word_part.strip().lower()
 
@@ -171,15 +164,13 @@ try:
 
                     if (
                         isinstance(data, list)
-                        and len(data) > 1
-                        and data[0] == "SUCCESS"
+                        and len(data) > 0
+                        and isinstance(data[0], list)
+                        and len(data[0]) > 0
+                        and isinstance(data[0][0], list)
+                        and len(data[0][0]) > 0
                     ):
-                        converted = data[1][0][1][0]
-
-                        # हिन्दी अंकों को अंग्रेज़ी अंकों में बदलें
-                        converted = converted.translate(
-                            str.maketrans("०१२३४५६७८९", "0123456789")
-                        )
+                        converted = data[0][0][0].strip()
 
                         converted_with_punctuation = converted + punctuation_part
                         transliteration_cache[cache_key] = converted
@@ -199,8 +190,8 @@ try:
 
         result = "".join(final_tokens)
 
-        # 5. क्लीन-अप (डबल डॉट रिप्लेसमेंट और स्ट्रिप)
-        result = re.sub(r'(\b[\u0900-\u097F]+)\.\.', r'\1.', result)
+        # 5. क्लीन-अप (अतिरिक्त स्पेस को व्यवस्थित करना और स्ट्रिप)
+        result = re.sub(r' +', ' ', result)
         result = result.strip()
 
         # परिणाम को क्लिपबोर्ड में कॉपी करें (सुरक्षित तरीके से)
@@ -211,7 +202,7 @@ try:
                 text=True,
                 check=True
             )
-            print("Done! Hindi text copied to clipboard.")
+            print("Done! English text copied to clipboard.")
         except (FileNotFoundError, subprocess.CalledProcessError):
             print("wl-copy / wl-paste not installed.")
 

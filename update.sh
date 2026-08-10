@@ -1,107 +1,287 @@
 #!/bin/bash
+set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="$HOME/.dm_office_tools"
 
-clear
+# Clear screen only when running in a terminal
+if [ -t 1 ] && [ -n "${TERM:-}" ]; then
+    clear
+fi
 
-echo "=========================================="
-echo "         DM Office Tools"
+echo "===================================================="
+echo "              DM Office Tools"
 echo
-echo "            Updater"
+echo "        Smart Office Hybrid Translator"
+echo "                   (SOHT)"
 echo
-echo " Smart Office Hybrid Translator (SOHT)"
+echo "               Version : v2.0"
 echo
-echo " Version : 1.0.1 Stable"
-echo
-echo " Developed by"
-echo " Dharmendra Marko"
-echo "=========================================="
+echo "          Developed by Dharmendra Marko"
+echo "===================================================="
 echo
 echo "Starting Update..."
 echo
 
-echo "[1/5] Creating Backup..."
-BACKUP_DIR="$HOME/.dm_office_tools/backup/$(date +%Y%m%d_%H%M%S)"
+# ----------------------------------------------------
+# Check Installation
+# ----------------------------------------------------
 
-mkdir -p "$BACKUP_DIR" || {
-    echo "Backup Folder ..... FAILED"
+if [ ! -d "$INSTALL_DIR" ]; then
+    echo "SOHT installation not found."
+    echo
+    echo "Please run install.sh first."
     exit 1
-}
-
-cp -f "$HOME/.dm_office_tools/stable/english_to_hindi_hybrid.py" "$BACKUP_DIR/" || {
-    echo "Backup ............. FAILED"
-    exit 1
-}
-cp -f "$HOME/.dm_office_tools/stable/run_hindi.sh" "$BACKUP_DIR/"
-cp -f "$HOME/.dm_office_tools/dictionary/dictionary.txt" "$BACKUP_DIR/"
-
-if [ -f "$BACKUP_DIR/english_to_hindi_hybrid.py" ] && \
-   [ -f "$BACKUP_DIR/run_hindi.sh" ] && \
-   [ -f "$BACKUP_DIR/dictionary.txt" ]; then
-
-    echo "Backup ............. OK"
-
-else
-
-    echo "Backup ............. FAILED"
-    exit 1
-
 fi
-echo "[2/5] Updating Stable Files..."
+
+# ----------------------------------------------------
+# [1/6] Creating Backup
+# ----------------------------------------------------
+
+echo "[1/6] Creating Backup..."
+echo
+
+BACKUP_DIR="$INSTALL_DIR/backup/$(date +%Y%m%d_%H%M%S)"
+
+mkdir -p "$BACKUP_DIR"
+
+# E2H
+[ -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
+cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" "$BACKUP_DIR/"
+
+[ -f "$INSTALL_DIR/stable/run_hindi.sh" ] && \
+cp -f "$INSTALL_DIR/stable/run_hindi.sh" "$BACKUP_DIR/"
+
+# H2E
+[ -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" ] && \
+cp -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" "$BACKUP_DIR/"
+
+[ -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" ] && \
+cp -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" "$BACKUP_DIR/"
+
+# Dictionaries
+[ -f "$INSTALL_DIR/dictionary/dictionary.txt" ] && \
+cp -f "$INSTALL_DIR/dictionary/dictionary.txt" "$BACKUP_DIR/"
+
+[ -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" ] && \
+cp -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" "$BACKUP_DIR/"
+
+# Dictionary Manager
+[ -f "$INSTALL_DIR/dictionary/smart_dictionary_manager.py" ] && \
+cp -f "$INSTALL_DIR/dictionary/smart_dictionary_manager.py" "$BACKUP_DIR/"
+
+echo "Backup ................. OK"
+echo "Backup Location ........ $BACKUP_DIR"
+echo
+
+# ----------------------------------------------------
+# [2/6] Updating Stable Files
+# ----------------------------------------------------
+
+echo "[2/6] Updating Stable Files..."
+echo
+
+mkdir -p "$INSTALL_DIR/stable"
 
 cp -f "$SCRIPT_DIR/stable/english_to_hindi_hybrid.py" \
-"$HOME/.dm_office_tools/stable/" || {
-    echo "Stable Files ...... FAILED"
-    exit 1
-}
+"$INSTALL_DIR/stable/"
 
 cp -f "$SCRIPT_DIR/stable/run_hindi.sh" \
-"$HOME/.dm_office_tools/stable/" || {
-    echo "Stable Files ...... FAILED"
-    exit 1
-}
+"$INSTALL_DIR/stable/"
 
-echo "Stable Files ...... OK"
+cp -f "$SCRIPT_DIR/stable/hindi_to_english_hybrid.py" \
+"$INSTALL_DIR/stable/"
+
+cp -f "$SCRIPT_DIR/stable/run_hindi_to_english.sh" \
+"$INSTALL_DIR/stable/"
+
+chmod +x "$INSTALL_DIR/stable/run_hindi.sh"
+chmod +x "$INSTALL_DIR/stable/run_hindi_to_english.sh"
+
+echo "E2H Files ............. OK"
+echo "H2E Files ............. OK"
 echo
 
-echo "[3/5] Updating Dictionary..."
+# ----------------------------------------------------
+# [2.5/6] Updating Current Files
+# ----------------------------------------------------
 
+echo "[2.5/6] Updating Current Files..."
+echo
+
+mkdir -p "$INSTALL_DIR/current"
+
+cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
+"$INSTALL_DIR/current/"
+
+cp -f "$INSTALL_DIR/stable/run_hindi.sh" \
+"$INSTALL_DIR/current/"
+
+cp -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
+"$INSTALL_DIR/current/"
+
+cp -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
+"$INSTALL_DIR/current/"
+
+chmod +x "$INSTALL_DIR/current/run_hindi.sh"
+chmod +x "$INSTALL_DIR/current/run_hindi_to_english.sh"
+
+echo "E2H Current Files ...... OK"
+echo "H2E Current Files ...... OK"
+echo
+
+# ----------------------------------------------------
+# [3/6] Updating Dictionaries
+# ----------------------------------------------------
+
+echo "[3/6] Updating Dictionaries..."
+echo
+
+mkdir -p "$INSTALL_DIR/dictionary"
+
+# Main E2H dictionary
 cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
-"$HOME/.dm_office_tools/dictionary/" || {
-    echo "Dictionary ........ FAILED"
-    exit 1
+"$INSTALL_DIR/dictionary/"
+
+# H2E dictionary
+cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
+"$INSTALL_DIR/dictionary/"
+
+echo "E2H Dictionary ........ OK"
+echo "H2E Dictionary ........ OK"
+echo
+
+# ----------------------------------------------------
+# [4/6] Updating Dictionary Manager
+# ----------------------------------------------------
+
+echo "[4/6] Updating Dictionary Manager..."
+echo
+
+cp -f "$SCRIPT_DIR/dictionary/smart_dictionary_manager.py" \
+"$INSTALL_DIR/dictionary/"
+
+chmod +x "$INSTALL_DIR/dictionary/smart_dictionary_manager.py"
+
+echo "Dictionary Manager .... OK"
+echo
+
+# ----------------------------------------------------
+# [5/6] Updating Menu Icon
+# ----------------------------------------------------
+
+echo "[5/6] Updating Dictionary Manager Menu..."
+echo
+
+ICON_DIR="$INSTALL_DIR/icons"
+MENU_DIR="$HOME/.local/share/applications"
+
+mkdir -p "$ICON_DIR"
+mkdir -p "$MENU_DIR"
+
+if [ -f "$SCRIPT_DIR/icons/soht_dictionary.png" ]; then
+    cp -f "$SCRIPT_DIR/icons/soht_dictionary.png" \
+    "$ICON_DIR/"
+    echo "Dictionary Icon ....... OK"
+else
+    echo "Dictionary Icon ....... SKIPPED"
+fi
+
+cat > "$MENU_DIR/SOHT_Dictionary_Manager.desktop" <<EOF
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=SOHT Dictionary Manager
+Comment=Smart Office Hybrid Translator Dictionary Manager
+Exec=python3 $INSTALL_DIR/dictionary/smart_dictionary_manager.py
+Icon=$ICON_DIR/soht_dictionary.png
+Terminal=false
+Categories=Utility;Office;
+StartupNotify=true
+EOF
+
+chmod +x "$MENU_DIR/SOHT_Dictionary_Manager.desktop"
+
+echo "Menu Entry ............ OK"
+echo
+
+# ----------------------------------------------------
+# [6/6] Verification
+# ----------------------------------------------------
+
+echo "[6/6] Verifying Update..."
+echo
+
+FAILED=0
+
+check_file() {
+    if [ -s "$1" ]; then
+        echo "OK ........ $2"
+    else
+        echo "FAILED ... $2"
+        FAILED=1
+    fi
 }
 
-echo "Dictionary ........ OK"
-echo
+check_file "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
+"E2H Translator"
 
-echo
-echo "[4/5] Verifying Update..."
-if [ -f "$HOME/.dm_office_tools/stable/english_to_hindi_hybrid.py" ] && \
-   [ -f "$HOME/.dm_office_tools/stable/run_hindi.sh" ] && \
-   [ -f "$HOME/.dm_office_tools/dictionary/dictionary.txt" ]; then
+check_file "$INSTALL_DIR/stable/run_hindi.sh" \
+"E2H Launcher"
 
-    echo "Verification ..... OK"
+check_file "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
+"H2E Translator"
 
-else
+check_file "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
+"H2E Launcher"
 
-    echo "Verification ..... FAILED"
+check_file "$INSTALL_DIR/dictionary/dictionary.txt" \
+"E2H Dictionary"
+
+check_file "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" \
+"H2E Dictionary"
+
+check_file "$INSTALL_DIR/dictionary/smart_dictionary_manager.py" \
+"Dictionary Manager"
+
+check_file "$MENU_DIR/SOHT_Dictionary_Manager.desktop" \
+"Dictionary Manager Menu"
+
+if [ "$FAILED" -ne 0 ]; then
+    echo
+    echo "Update Verification ..... FAILED"
+    echo
+    echo "Your previous files are preserved in:"
+    echo "$BACKUP_DIR"
     exit 1
-
 fi
-echo
-echo "[5/5] Update Completed"
 
 echo
-echo "=========================================="
-echo "DM Office Tools Updated Successfully"
-echo "=========================================="
+echo "Verification ........... OK"
+echo
 
+# ----------------------------------------------------
+# Update Complete
+# ----------------------------------------------------
+
+echo "===================================================="
+echo "       DM Office Tools v2.0 Updated Successfully"
+echo "===================================================="
 echo
-echo "=========================================="
-echo "SOHT is ready."
-echo "Press Alt + Space to start."
+echo "Installed Components:"
 echo
-echo "SOHT तैयार है।"
-echo "शुरू करने के लिए Alt + Space दबाएँ।"
-echo "=========================================="
+echo "  ✔ E2H Translator"
+echo "  ✔ H2E Translator"
+echo "  ✔ E2H Dictionary"
+echo "  ✔ H2E Dictionary"
+echo "  ✔ Dictionary Manager"
+echo "  ✔ Dictionary Manager Menu"
+echo
+echo "Backup:"
+echo "$BACKUP_DIR"
+echo
+echo "Keyboard shortcuts were not modified."
+echo
+echo "SOHT v2.0 is ready."
+echo "===================================================="
+echo

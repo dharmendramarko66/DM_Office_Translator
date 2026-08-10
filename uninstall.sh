@@ -1,152 +1,304 @@
 #!/bin/bash
 
 INSTALL_DIR="$HOME/.dm_office_tools"
+MENU_DIR="$HOME/.local/share/applications"
 
 clear
+
+echo "===================================================="
+echo "             DM Office Tools Uninstaller"
+echo
+echo "         Smart Office Hybrid Translator"
+echo "                    (SOHT)"
+echo
+echo "              Version : v2.0"
+echo
+echo "          Developed by Dharmendra Marko"
+echo "===================================================="
+
+echo
+echo "Starting Uninstall..."
+echo
 
 if [ ! -d "$INSTALL_DIR" ]; then
     echo "DM Office Tools is not installed."
     exit 0
 fi
-echo "=========================================="
-echo "         DM Office Tools"
+
+echo "WARNING!"
 echo
-echo "          Uninstaller"
-echo
-echo " Smart Office Hybrid Translator (SOHT)"
-echo
-echo " Version : v1.0.1 Stable"
-echo
-echo " Developed by"
-echo " Dharmendra Marko"
-echo "=========================================="
-echo
-echo "Starting Uninstall..."
-echo
-echo "Warning!"
-echo
-echo "This action cannot be undone."
-echo
-echo "This will remove DM Office Tools"
+echo "This will remove DM Office Tools v2.0"
 echo "from your computer."
+echo
+echo "The following will be removed:"
+echo
+echo "  - English to Hindi Translator"
+echo "  - Hindi to English Translator"
+echo "  - E2H Dictionary"
+echo "  - H2E Dictionary"
+echo "  - Dictionary Manager"
+echo "  - Dictionary Manager Menu"
+echo "  - SOHT keyboard shortcuts"
 echo
 echo "Backup files will be preserved."
 echo
-echo "Keyboard shortcuts are not removed automatically."
-	
-read -p "Do you want to continue? (y/N): " confirm
 
-if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+read -rp "Do you want to continue? (y/N): " CONFIRM
+
+if [[ "$CONFIRM" != "y" && "$CONFIRM" != "Y" ]]; then
     echo
     echo "Uninstall cancelled."
     exit 0
 fi
 
 echo
-echo "[1/5] Removing Current Files..."
 
-rm -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py" || {
-    echo "Current Files ..... FAILED"
-    exit 1
-}
+# ====================================================
+# [1/7] Removing Keyboard Shortcuts
+# ====================================================
 
-rm -f "$INSTALL_DIR/current/run_hindi.sh" || {
-    echo "Current Files ..... FAILED"
-    exit 1
-}
-echo "Current Files ..... OK"
-
+echo "[1/7] Removing Keyboard Shortcuts..."
 echo
-echo "[2/5] Keyboard Shortcut..."
-echo
-if command -v gsettings >/dev/null 2>&1; then
 
-    if CUSTOM_KEYS=$(gsettings get \
-    org.gnome.settings-daemon.plugins.media-keys custom-keybindings 2>/dev/null); then
+if command -v gsettings >/dev/null 2>&1 && \
+   command -v dconf >/dev/null 2>&1; then
 
-        if echo "$CUSTOM_KEYS" | grep -Fq "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/"; then
-            echo "Keyboard Shortcut .... MANUAL REMOVAL REQUIRED"
-            echo "Installed shortcuts are not removed automatically."
-            echo
-            echo "Please remove it manually:"
-            echo "Settings -> Keyboard -> Custom Shortcuts"
-        else
-            echo "Keyboard Shortcut .... NOT FOUND"
+    CUSTOM_KEYS=$(gsettings get \
+        org.gnome.settings-daemon.plugins.media-keys \
+        custom-keybindings 2>/dev/null || echo "@as []")
+
+    NEW_KEYS="$CUSTOM_KEYS"
+
+    REMOVED=0
+
+    for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+    do
+        [ -z "$KEY" ] && continue
+
+        NAME=$(dconf read "${KEY}name" 2>/dev/null || true)
+        COMMAND=$(dconf read "${KEY}command" 2>/dev/null || true)
+        BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
+
+        # Remove only SOHT E2H shortcut
+        if [ "$NAME" = "'SOHT (Stable)'" ] && \
+           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh" && \
+           [ "$BINDING" = "'<Alt>space'" ]; then
+
+            NEW_KEYS=$(echo "$NEW_KEYS" | \
+                sed "s#'$KEY', ##; s#,'$KEY'##; s#'$KEY'##")
+
+            dconf reset -f "$KEY" 2>/dev/null || true
+            REMOVED=1
+            continue
         fi
 
+        # Remove only SOHT H2E shortcut
+        if [ "$NAME" = "'SOHT Hindi to English'" ] && \
+           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh" && \
+           [ "$BINDING" = "'<Alt>h'" ]; then
+
+            NEW_KEYS=$(echo "$NEW_KEYS" | \
+                sed "s#'$KEY', ##; s#,'$KEY'##; s#'$KEY'##")
+
+            dconf reset -f "$KEY" 2>/dev/null || true
+            REMOVED=1
+            continue
+        fi
+    done
+
+    if [ "$NEW_KEYS" = "@as []" ] || [ -z "$NEW_KEYS" ]; then
+        NEW_KEYS="@as []"
+    fi
+
+    gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys \
+        custom-keybindings "$NEW_KEYS" 2>/dev/null || true
+
+    if [ "$REMOVED" -eq 1 ]; then
+        echo "Keyboard Shortcuts .... OK"
     else
-        echo "Keyboard Shortcut .... SKIPPED"
+        echo "Keyboard Shortcuts .... NOT FOUND"
     fi
 
 else
-    echo "Keyboard Shortcut .... SKIPPED"
+    echo "Keyboard Shortcuts .... SKIPPED"
 fi
 
 echo
-echo "[3/5] Removing Stable Files..."
-rm -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" || {
-    echo "Stable Files ...... FAILED"
-    exit 1
-}
 
-rm -f "$INSTALL_DIR/stable/run_hindi.sh" || {
-    echo "Stable Files ...... FAILED"
-    exit 1
-}
+# ====================================================
+# [2/7] Removing Dictionary Manager Menu
+# ====================================================
 
-echo "Stable Files ...... OK"
+echo "[2/7] Removing Dictionary Manager Menu..."
 echo
-echo
-echo "[4/5] Removing Dictionary..."
-rm -f "$INSTALL_DIR/dictionary/dictionary.txt" || {
-    echo "Dictionary ........ FAILED"
-    exit 1
-}
 
-echo "Dictionary ........ OK"
-echo
-echo "[5/5] Verifying Uninstallation..."
+DESKTOP_FILE="$MENU_DIR/SOHT_Dictionary_Manager.desktop"
 
-if [ ! -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py" ] && \
-   [ ! -f "$INSTALL_DIR/current/run_hindi.sh" ] && \
-   [ ! -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" ] && \
-   [ ! -f "$INSTALL_DIR/stable/run_hindi.sh" ] && \
-   [ ! -f "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
+if [ -f "$DESKTOP_FILE" ]; then
+    rm -f "$DESKTOP_FILE" || {
+        echo "Dictionary Manager Menu .... FAILED"
+        exit 1
+    }
 
-    rmdir "$INSTALL_DIR/stable" 2>/dev/null
-    rmdir "$INSTALL_DIR/current" 2>/dev/null
-    rmdir "$INSTALL_DIR/dictionary" 2>/dev/null
-    rmdir "$INSTALL_DIR/logs" 2>/dev/null
-    rmdir "$INSTALL_DIR" 2>/dev/null
+    update-desktop-database "$MENU_DIR" 2>/dev/null || true
 
-
-if [ -d "$INSTALL_DIR" ]; then
-    echo "Note: Installation folder was not removed because it still contains other files."
-fi
-
-    echo "Verification ...... OK"
+    echo "Dictionary Manager Menu .... OK"
 else
-    echo "Verification ...... FAILED"
+    echo "Dictionary Manager Menu .... NOT FOUND"
+fi
+
+echo
+
+
+# ====================================================
+# [3/7] Removing Current Files
+# ====================================================
+
+echo "[3/7] Removing Current Files..."
+echo
+
+rm -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py"
+rm -f "$INSTALL_DIR/current/run_hindi.sh"
+rm -f "$INSTALL_DIR/current/hindi_to_english_hybrid.py"
+rm -f "$INSTALL_DIR/current/run_hindi_to_english.sh"
+
+echo "Current Files ............. OK"
+echo
+
+
+# ====================================================
+# [4/7] Removing Stable Files
+# ====================================================
+
+echo "[4/7] Removing Stable Files..."
+echo
+
+rm -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py"
+rm -f "$INSTALL_DIR/stable/run_hindi.sh"
+rm -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py"
+rm -f "$INSTALL_DIR/stable/run_hindi_to_english.sh"
+
+echo "Stable Files .............. OK"
+echo
+
+
+# ====================================================
+# [5/7] Removing Dictionaries
+# ====================================================
+
+echo "[5/7] Removing Dictionaries..."
+echo
+
+rm -f "$INSTALL_DIR/dictionary/dictionary.txt"
+rm -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt"
+rm -f "$INSTALL_DIR/dictionary/smart_dictionary_manager.py"
+
+echo "E2H Dictionary ............ OK"
+echo "H2E Dictionary ............ OK"
+echo "Dictionary Manager ........ OK"
+echo
+
+
+# ====================================================
+# [6/7] Removing Empty Installation Folders
+# ====================================================
+
+echo "[6/7] Cleaning Installation Folders..."
+echo
+
+rmdir "$INSTALL_DIR/current" 2>/dev/null || true
+rmdir "$INSTALL_DIR/stable" 2>/dev/null || true
+rmdir "$INSTALL_DIR/dictionary" 2>/dev/null || true
+rmdir "$INSTALL_DIR/logs" 2>/dev/null || true
+
+# IMPORTANT:
+# Backup folder is intentionally preserved.
+
+if [ -d "$INSTALL_DIR/backup" ]; then
+    echo "Backup Folder ............. PRESERVED"
+fi
+
+rmdir "$INSTALL_DIR" 2>/dev/null || true
+
+echo "Installation Cleanup ...... OK"
+echo
+
+
+# ====================================================
+# [7/7] Verifying Uninstallation
+# ====================================================
+
+echo "[7/7] Verifying Uninstallation..."
+echo
+
+FAILED=0
+
+check_removed()
+{
+    if [ -e "$1" ]; then
+        echo "FAILED ........ $2"
+        FAILED=1
+    else
+        echo "OK ............ $2"
+    fi
+}
+
+check_removed "$INSTALL_DIR/current/english_to_hindi_hybrid.py" \
+    "E2H Current"
+
+check_removed "$INSTALL_DIR/current/hindi_to_english_hybrid.py" \
+    "H2E Current"
+
+check_removed "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
+    "E2H Stable"
+
+check_removed "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
+    "H2E Stable"
+
+check_removed "$INSTALL_DIR/dictionary/dictionary.txt" \
+    "E2H Dictionary"
+
+check_removed "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" \
+    "H2E Dictionary"
+
+check_removed "$INSTALL_DIR/dictionary/smart_dictionary_manager.py" \
+    "Dictionary Manager"
+
+check_removed "$DESKTOP_FILE" \
+    "Dictionary Manager Menu"
+
+echo
+
+if [ "$FAILED" -ne 0 ]; then
+    echo "Verification ............. FAILED"
     exit 1
 fi
+
+echo "Verification ............. OK"
 echo
-echo "=========================================="
-echo "DM Office Tools Uninstalled Successfully"
-echo "=========================================="
+
+echo "===================================================="
+echo "       DM Office Tools v2.0"
+echo "       Uninstalled Successfully"
+echo "===================================================="
+
 echo
-if [ -d "$HOME/.dm_office_tools/backup" ]; then
+
+if [ -d "$INSTALL_DIR/backup" ]; then
     echo "Backup files have been preserved."
-    echo "Backup Folder : $HOME/.dm_office_tools/backup"
+    echo
+    echo "Backup Folder:"
+    echo "$INSTALL_DIR/backup"
 else
-    echo "Backup folder not found."
+    echo "No backup folder found."
 fi
+
 echo
-echo "आपकी Backup Files सुरक्षित रखी गई हैं।"
-echo "आप install.sh चलाकर कभी भी पुनः Install कर सकते हैं।"
+echo "SOHT v2.0 has been removed."
+echo
+echo "आप install.sh चलाकर SOHT को कभी भी पुनः Install कर सकते हैं।"
 echo
 echo "Thank you for using DM Office Tools."
-echo "DM Office Tools v1.0.1"
 echo "Developed by Dharmendra Marko"
-echo "=========================================="
-echo
-rm -rf "$INSTALL_DIR/test"
+echo "===================================================="
