@@ -5690,3 +5690,4 @@ Singaud=सिंगौद
 Testword123=परीक्षण शब्द
 Laxmi=लक्ष्मी
 Jhalon=झलौन
+Jhurai=झुराइ
