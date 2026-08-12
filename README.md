@@ -148,7 +148,9 @@ Run the installation script from terminal:
 टर्मिनल से इंस्टॉलेशन स्क्रिप्ट चलाएँ:
 
 ```bash
-cd ~/DM_Office_Tools
+cd ~/Downloads
+unzip -o DM_Office_Tools-main.zip
+cd DM_Office_Tools-main
 chmod +x install.sh
 ./install.sh
 ```

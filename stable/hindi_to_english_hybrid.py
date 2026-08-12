@@ -35,10 +35,6 @@ def load_dictionary():
         DICT_FILE = os.path.expanduser(
             "~/.dm_office_tools/dictionary/hindi_to_english_dictionary.txt"
         )
-
-        if not os.path.isfile(DICT_FILE):
-            DICT_FILE = "/home/districtcourt/DM_Office_Tools/dictionary/hindi_to_english_dictionary.txt"
-
         if not os.path.isfile(DICT_FILE):
             DICT_FILE = os.path.expanduser("~/hindi_to_english_dictionary.txt")
 

@@ -16,11 +16,17 @@ class DictionaryApp(Gtk.Window):
     self.set_resizable(False)
     self.set_position(Gtk.WindowPosition.CENTER)
 
-    self.dict_dir = "/home/districtcourt/DM_Office_Tools/dictionary"
+    # ----------------------------------------------------
+    # Portable SOHT Installation Paths
+    # ----------------------------------------------------
+    self.script_dir = os.path.dirname(os.path.abspath(__file__))
+    self.install_dir = os.path.dirname(self.script_dir)
+    self.dict_dir = os.path.join(self.install_dir, "dictionary")
     self.dict_file = os.path.join(self.dict_dir, "dictionary.txt")
     self.h2e_dict_file = os.path.join(
         self.dict_dir, "hindi_to_english_dictionary.txt"
     )
+
     self.current_mode = "E2H"
     self.original_key = None
 
@@ -499,10 +505,8 @@ class DictionaryApp(Gtk.Window):
 
   def on_soht_update(self, widget):
     sh_paths = [
+        os.path.join(self.install_dir, "update.sh"),
         os.path.join(self.dict_dir, "update.sh"),
-        "/home/districtcourt/DM_Office_Tools/dictionary/update.sh",
-        "/home/districtcourt/DM_Office_Tools/update.sh",
-        "update.sh",
     ]
 
     target_sh = None

@@ -1,8 +1,25 @@
 #!/bin/bash
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 INSTALL_DIR="$HOME/.dm_office_tools"
+
+# ----------------------------------------------------
+# Find SOHT Source Directory
+# ----------------------------------------------------
+
+if [ -f "$PWD/install.sh" ] && [ -d "$PWD/stable" ]; then
+    SCRIPT_DIR="$PWD"
+elif [ -f "$HOME/Downloads/DM_Office_Tools-main/install.sh" ]; then
+    SCRIPT_DIR="$HOME/Downloads/DM_Office_Tools-main"
+elif [ -f "$HOME/DM_Office_Tools/install.sh" ]; then
+    SCRIPT_DIR="$HOME/DM_Office_Tools"
+else
+    echo "SOHT source files not found."
+    echo
+    echo "Please keep the extracted DM_Office_Tools-main folder"
+    echo "inside ~/Downloads or ~/DM_Office_Tools."
+    exit 1
+fi
 
 # Clear screen only when running in a terminal
 if [ -t 1 ] && [ -n "${TERM:-}" ]; then
@@ -15,7 +32,7 @@ echo
 echo "        Smart Office Hybrid Translator"
 echo "                   (SOHT)"
 echo
-echo "               Version : v2.0"
+echo "               Version : v2.0.1"
 echo
 echo "          Developed by Dharmendra Marko"
 echo "===================================================="
@@ -265,7 +282,7 @@ echo
 # ----------------------------------------------------
 
 echo "===================================================="
-echo "       DM Office Tools v2.0 Updated Successfully"
+echo "       DM Office Tools v2.0.1 Updated Successfully"
 echo "===================================================="
 echo
 echo "Installed Components:"
@@ -282,6 +299,6 @@ echo "$BACKUP_DIR"
 echo
 echo "Keyboard shortcuts were not modified."
 echo
-echo "SOHT v2.0 is ready."
+echo "SOHT v2.0.1 is ready."
 echo "===================================================="
 echo

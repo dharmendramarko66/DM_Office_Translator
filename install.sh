@@ -14,7 +14,7 @@ echo
 echo "        Smart Office Hybrid Translator"
 echo "                   (SOHT)"
 echo
-echo "              Version : v2.0"
+echo "              Version : v2.0.1"
 echo
 echo "         Developed by Dharmendra Marko"
 echo "===================================================="
@@ -146,8 +146,12 @@ cp -f "$SCRIPT_DIR/stable/run_hindi_to_english.sh" \
 chmod +x "$INSTALL_DIR/stable/run_hindi.sh"
 chmod +x "$INSTALL_DIR/stable/run_hindi_to_english.sh"
 
+cp -f "$SCRIPT_DIR/update.sh" "$INSTALL_DIR/update.sh"
+chmod +x "$INSTALL_DIR/update.sh"
+
 echo "E2H Files ............. OK"
 echo "H2E Files ............. OK"
+echo "Update Script ........ OK"
 echo
 
 # ----------------------------------------------------
@@ -231,14 +235,69 @@ echo "Dictionary Manager Menu OK"
 echo
 
 # ----------------------------------------------------
-# [8/10] Keyboard Shortcuts
+# [8/10] Creating Keyboard Shortcuts
 # ----------------------------------------------------
 
 echo "[8/10] Creating Keyboard Shortcuts..."
 echo
 
+CUSTOM_KEYS=$(gsettings get \
+    org.gnome.settings-daemon.plugins.media-keys \
+    custom-keybindings 2>/dev/null || echo "@as []")
+
+echo "Existing shortcut configuration:"
+echo "$CUSTOM_KEYS"
+echo
+
+SOHT_E2H_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
+SOHT_H2E_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi_to_english.sh"
+
+SOHT_E2H_BINDING="<Alt>space"
+SOHT_H2E_BINDING="<Alt>h"
+
+
 # ----------------------------------------------------
-# Function: Find free shortcut slot
+# Remove a shortcut slot from custom-keybindings
+# ----------------------------------------------------
+
+remove_slot_from_list() {
+
+    local SLOT="$1"
+
+    CUSTOM_KEYS=$(echo "$CUSTOM_KEYS" | \
+        sed "s#'$SLOT', ##; s#,'$SLOT'##; s#'$SLOT'##")
+
+    dconf reset -f "$SLOT" 2>/dev/null || true
+}
+
+
+# ----------------------------------------------------
+# Add shortcut to custom-keybindings
+# ----------------------------------------------------
+
+add_slot_to_list() {
+
+    local SLOT="$1"
+
+    if [ "$CUSTOM_KEYS" = "@as []" ] || [ -z "$CUSTOM_KEYS" ]; then
+
+        CUSTOM_KEYS="['$SLOT']"
+
+    else
+
+        CUSTOM_KEYS=$(echo "$CUSTOM_KEYS" | \
+            sed "s#]#, '$SLOT']#")
+
+    fi
+
+    gsettings set \
+        org.gnome.settings-daemon.plugins.media-keys \
+        custom-keybindings "$CUSTOM_KEYS"
+}
+
+
+# ----------------------------------------------------
+# Find free custom-keybinding slot
 # ----------------------------------------------------
 
 get_free_slot() {
@@ -248,6 +307,7 @@ get_free_slot() {
 
     while true
     do
+
         key="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${index}/"
 
         if ! echo "$CUSTOM_KEYS" | grep -Fq "$key"; then
@@ -256,123 +316,256 @@ get_free_slot() {
         fi
 
         index=$((index + 1))
+
     done
 }
 
-# ----------------------------------------------------
-# Read current shortcuts
-# ----------------------------------------------------
 
-CUSTOM_KEYS=$(gsettings get \
-org.gnome.settings-daemon.plugins.media-keys \
-custom-keybindings)
+# ====================================================
+# E2H Alt+Space
+# ====================================================
 
-echo "Existing shortcut configuration:"
-echo "$CUSTOM_KEYS"
-echo
+E2H_SLOT=""
+E2H_FOUND=0
 
-# ----------------------------------------------------
-# Shortcut helper
-# ----------------------------------------------------
+for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+do
 
-add_shortcut() {
+    [ -z "$KEY" ] && continue
 
-    local SLOT="$1"
-    local NAME="$2"
-    local COMMAND="$3"
-    local BINDING="$4"
+    NAME=$(dconf read "${KEY}name" 2>/dev/null || true)
+    COMMAND=$(dconf read "${KEY}command" 2>/dev/null || true)
+    BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
 
-    if [ "$CUSTOM_KEYS" = "@as []" ]; then
+    # Existing SOHT E2H shortcut
+    if echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
 
-        NEW_KEYS="['$SLOT']"
+        if [ "$E2H_FOUND" -eq 0 ]; then
 
-    else
+            E2H_SLOT="$KEY"
+            E2H_FOUND=1
 
-        NEW_KEYS=$(echo "$CUSTOM_KEYS" | sed "s#]#, '$SLOT']#")
+        else
+
+            # Remove duplicate SOHT E2H shortcut
+            remove_slot_from_list "$KEY"
+
+        fi
 
     fi
 
-    gsettings set \
-    org.gnome.settings-daemon.plugins.media-keys \
-    custom-keybindings "$NEW_KEYS"
+done
 
-    dconf write \
-    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/name" \
-    "'$NAME'"
-
-    dconf write \
-    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/command" \
-    "'$COMMAND'"
-
-    dconf write \
-    "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/$(basename "$SLOT")/binding" \
-    "'$BINDING'"
-
-    CUSTOM_KEYS="$NEW_KEYS"
-}
 
 # ----------------------------------------------------
-# E2H Shortcut
+# If SOHT E2H already exists, repair it
 # ----------------------------------------------------
 
-E2H_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
-E2H_BINDING="<Alt>space"
+if [ "$E2H_FOUND" -eq 1 ]; then
 
-if echo "$CUSTOM_KEYS" | grep -Fq "$E2H_BINDING"; then
+    dconf write "${E2H_SLOT}name" \
+        "'SOHT English to Hindi'"
 
-    echo "E2H Alt+Space ........ Already in use"
-    echo "E2H shortcut .......... NOT CHANGED"
+    dconf write "${E2H_SLOT}command" \
+        "'$SOHT_E2H_COMMAND'"
+
+    dconf write "${E2H_SLOT}binding" \
+        "'$SOHT_E2H_BINDING'"
+
+    echo "E2H Alt+Space ........ UPDATED"
 
 else
 
-    E2H_SLOT=$(get_free_slot)
+    # ------------------------------------------------
+    # Find existing Alt+Space shortcut
+    # ------------------------------------------------
 
-    add_shortcut \
-    "$E2H_SLOT" \
-    "SOHT English to Hindi" \
-    "$E2H_COMMAND" \
-    "$E2H_BINDING"
+    OLD_SLOT=""
 
-    echo "E2H Alt+Space ........ CREATED"
+    for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+    do
+
+        [ -z "$KEY" ] && continue
+
+        BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
+
+        if [ "$BINDING" = "'$SOHT_E2H_BINDING'" ]; then
+            OLD_SLOT="$KEY"
+            break
+        fi
+
+    done
+
+
+    # ------------------------------------------------
+    # Reuse existing Alt+Space slot
+    # ------------------------------------------------
+
+    if [ -n "$OLD_SLOT" ]; then
+
+        E2H_SLOT="$OLD_SLOT"
+
+        dconf write "${E2H_SLOT}name" \
+            "'SOHT English to Hindi'"
+
+        dconf write "${E2H_SLOT}command" \
+            "'$SOHT_E2H_COMMAND'"
+
+        dconf write "${E2H_SLOT}binding" \
+            "'$SOHT_E2H_BINDING'"
+
+        echo "E2H Alt+Space ........ CONFIGURED"
+
+    else
+
+        E2H_SLOT=$(get_free_slot)
+
+        add_slot_to_list "$E2H_SLOT"
+
+        dconf write "${E2H_SLOT}name" \
+            "'SOHT English to Hindi'"
+
+        dconf write "${E2H_SLOT}command" \
+            "'$SOHT_E2H_COMMAND'"
+
+        dconf write "${E2H_SLOT}binding" \
+            "'$SOHT_E2H_BINDING'"
+
+        echo "E2H Alt+Space ........ CREATED"
+
+    fi
+
 fi
 
+
+# ====================================================
+# H2E Alt+H
+# ====================================================
+
+H2E_SLOT=""
+H2E_FOUND=0
+
+for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+do
+
+    [ -z "$KEY" ] && continue
+
+    COMMAND=$(dconf read "${KEY}command" 2>/dev/null || true)
+
+    # Existing SOHT H2E shortcut
+    if echo "$COMMAND" | \
+        grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
+
+        if [ "$H2E_FOUND" -eq 0 ]; then
+
+            H2E_SLOT="$KEY"
+            H2E_FOUND=1
+
+        else
+
+            # Remove duplicate SOHT H2E shortcut
+            remove_slot_from_list "$KEY"
+
+        fi
+
+    fi
+
+done
+
+
 # ----------------------------------------------------
-# H2E Shortcut
+# If SOHT H2E already exists, repair it
 # ----------------------------------------------------
 
-H2E_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi_to_english.sh"
-H2E_BINDING="<Alt>h"
+if [ "$H2E_FOUND" -eq 1 ]; then
 
-if echo "$CUSTOM_KEYS" | grep -Fq "$H2E_BINDING"; then
+    dconf write "${H2E_SLOT}name" \
+        "'SOHT Hindi to English'"
 
-    echo "H2E Alt+H ............ Already in use"
-    echo "H2E shortcut .......... NOT CHANGED"
+    dconf write "${H2E_SLOT}command" \
+        "'$SOHT_H2E_COMMAND'"
+
+    dconf write "${H2E_SLOT}binding" \
+        "'$SOHT_H2E_BINDING'"
+
+    echo "H2E Alt+H ............ UPDATED"
 
 else
 
-    H2E_SLOT=$(get_free_slot)
+    # ------------------------------------------------
+    # Find existing Alt+H shortcut
+    # ------------------------------------------------
 
-    add_shortcut \
-    "$H2E_SLOT" \
-    "SOHT Hindi to English" \
-    "$H2E_COMMAND" \
-    "$H2E_BINDING"
+    OLD_SLOT=""
 
-    echo "H2E Alt+H ............ CREATED"
+    for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+    do
+
+        [ -z "$KEY" ] && continue
+
+        BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
+
+        if [ "$BINDING" = "'$SOHT_H2E_BINDING'" ]; then
+            OLD_SLOT="$KEY"
+            break
+        fi
+
+    done
+
+
+    # ------------------------------------------------
+    # Reuse existing Alt+H slot
+    # ------------------------------------------------
+
+    if [ -n "$OLD_SLOT" ]; then
+
+        H2E_SLOT="$OLD_SLOT"
+
+        dconf write "${H2E_SLOT}name" \
+            "'SOHT Hindi to English'"
+
+        dconf write "${H2E_SLOT}command" \
+            "'$SOHT_H2E_COMMAND'"
+
+        dconf write "${H2E_SLOT}binding" \
+            "'$SOHT_H2E_BINDING'"
+
+        echo "H2E Alt+H ............ CONFIGURED"
+
+    else
+
+        H2E_SLOT=$(get_free_slot)
+
+        add_slot_to_list "$H2E_SLOT"
+
+        dconf write "${H2E_SLOT}name" \
+            "'SOHT Hindi to English'"
+
+        dconf write "${H2E_SLOT}command" \
+            "'$SOHT_H2E_COMMAND'"
+
+        dconf write "${H2E_SLOT}binding" \
+            "'$SOHT_H2E_BINDING'"
+
+        echo "H2E Alt+H ............ CREATED"
+
+    fi
+
 fi
+
 
 echo
 
 # ----------------------------------------------------
-# [9/10] Verifying Shortcuts
+# [9/10] Verifying Keyboard Shortcuts
 # ----------------------------------------------------
 
 echo "[9/10] Verifying Keyboard Shortcuts..."
 echo
 
 FINAL_KEYS=$(gsettings get \
-org.gnome.settings-daemon.plugins.media-keys \
-custom-keybindings)
+    org.gnome.settings-daemon.plugins.media-keys \
+    custom-keybindings)
 
 E2H_OK=0
 H2E_OK=0
@@ -386,32 +579,50 @@ do
     COMMAND=$(dconf read "${KEY}command" 2>/dev/null || true)
     BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
 
-    if [ "$BINDING" = "'<Alt>space'" ] && \
-       echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
+
+    if [ "$NAME" = "'SOHT English to Hindi'" ] && \
+       [ "$BINDING" = "'<Alt>space'" ] && \
+       echo "$COMMAND" | \
+       grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
 
         E2H_OK=1
+
     fi
 
-    if [ "$BINDING" = "'<Alt>h'" ] && \
-       echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
+
+    if [ "$NAME" = "'SOHT Hindi to English'" ] && \
+       [ "$BINDING" = "'<Alt>h'" ] && \
+       echo "$COMMAND" | \
+       grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
 
         H2E_OK=1
+
     fi
 
 done
 
+
 if [ "$E2H_OK" -eq 1 ]; then
+
     echo "E2H Alt+Space ........ OK"
+
 else
+
     echo "E2H Alt+Space ........ FAILED"
     exit 1
+
 fi
 
+
 if [ "$H2E_OK" -eq 1 ]; then
+
     echo "H2E Alt+H ............ OK"
+
 else
+
     echo "H2E Alt+H ............ FAILED"
     exit 1
+
 fi
 
 echo
@@ -446,6 +657,9 @@ check_file "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
 
 check_file "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
 "H2E Launcher"
+
+check_file "$INSTALL_DIR/update.sh" \
+"Update Script"
 
 check_file "$INSTALL_DIR/current/english_to_hindi_hybrid.py" \
 "E2H Current"
@@ -500,6 +714,6 @@ echo
 echo "  ✔ Alt + Space  → English to Hindi"
 echo "  ✔ Alt + H      → Hindi to English"
 echo
-echo "SOHT v2.0 तैयार है।"
+echo "SOHT v2.0.1 तैयार है।"
 echo "===================================================="
 echo
