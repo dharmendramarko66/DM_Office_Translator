@@ -14,7 +14,7 @@ echo
 echo "        Smart Office Hybrid Translator"
 echo "                   (SOHT)"
 echo
-echo "              Version : v2.0.1"
+echo "              Version : v2.0.2"
 echo
 echo "         Developed by Dharmendra Marko"
 echo "===================================================="
@@ -694,7 +694,7 @@ echo
 # ----------------------------------------------------
 
 echo "===================================================="
-echo "      DM Office Tools v2.0 Installed Successfully"
+echo "      DM Office Tools v2.0.2 Installed Successfully"
 echo "===================================================="
 echo
 echo "Installation Path:"
@@ -714,6 +714,6 @@ echo
 echo "  ✔ Alt + Space  → English to Hindi"
 echo "  ✔ Alt + H      → Hindi to English"
 echo
-echo "SOHT v2.0.1 तैयार है।"
+echo "SOHT v2.0.2 तैयार है।"
 echo "===================================================="
 echo

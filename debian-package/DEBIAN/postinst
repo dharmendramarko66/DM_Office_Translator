@@ -1,0 +1,40 @@
+#!/bin/bash
+set -e
+
+INSTALL_DIR="/opt/dm-office-tools"
+MENU_DIR="/usr/share/applications"
+ICON_DIR="/usr/share/icons/hicolor/256x256/apps"
+
+echo "Configuring DM Office Tools..."
+
+# Make application scripts executable
+chmod +x "$INSTALL_DIR/stable/run_hindi.sh"
+chmod +x "$INSTALL_DIR/stable/run_hindi_to_english.sh"
+chmod +x "$INSTALL_DIR/stable/english_to_hindi_hybrid.py"
+chmod +x "$INSTALL_DIR/stable/hindi_to_english_hybrid.py"
+chmod +x "$INSTALL_DIR/dictionary/smart_dictionary_manager.py"
+
+# Create user data directory
+USER_HOME="${SUDO_USER:+$(getent passwd "$SUDO_USER" | cut -d: -f6)}"
+USER_HOME="${USER_HOME:-$HOME}"
+
+if [ -n "$USER_HOME" ] && [ -d "$USER_HOME" ]; then
+    mkdir -p "$USER_HOME/.dm_office_tools/dictionary"
+    cp -f "$INSTALL_DIR/dictionary/dictionary.txt" \
+        "$USER_HOME/.dm_office_tools/dictionary/dictionary.txt"
+    cp -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" \
+        "$USER_HOME/.dm_office_tools/dictionary/hindi_to_english_dictionary.txt"
+
+    chown -R "${SUDO_USER:-$USER}":"${SUDO_USER:-$USER}" \
+        "$USER_HOME/.dm_office_tools" 2>/dev/null || true
+fi
+
+# Refresh desktop database
+update-desktop-database "$MENU_DIR" 2>/dev/null || true
+
+# Refresh icon cache
+gtk-update-icon-cache -f -t /usr/share/icons/hicolor 2>/dev/null || true
+
+echo "DM Office Tools configured successfully."
+
+exit 0

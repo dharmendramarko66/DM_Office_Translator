@@ -1,0 +1,11 @@
+Package: dm-office-tools
+Version: 2.0.2
+Section: office
+Priority: optional
+Architecture: amd64
+Maintainer: Dharmendra Marko
+Depends: python3, python3-gi, python3-requests, wl-clipboard
+Homepage: https://github.com/dharmendramarko66/DM_Office_Tools
+Description: Smart Office Hybrid Translator (SOHT)
+ Offline English ↔ Hindi translator for Court and Government
+ Office data entry with Dictionary Manager and keyboard shortcuts.
