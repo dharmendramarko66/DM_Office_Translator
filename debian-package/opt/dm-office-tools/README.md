@@ -134,34 +134,56 @@ DM Office Tools त्वरित उपयोग के लिए ऑटोम
 
 | Shortcut / शॉर्टकट | Purpose / कार्य | Command / निर्धारित कमांड |
 |---|---|---|
-| **Alt + Space** | English → Hindi Translation | `/bin/bash "$HOME/.dm_office_tools/current/run_hindi.sh"` |
-| **Alt + H** | Hindi → English Translation | `/bin/bash "$HOME/.dm_office_tools/current/run_hindi_to_english.sh"` |
+| **Alt + Space** | English → Hindi Translation | `/bin/bash /opt/dm-office-tools/stable/run_hindi.sh` |
+| **Alt + H** | Hindi → English Translation | `/bin/bash /opt/dm-office-tools/stable/run_hindi_to_english.sh` |
 
-*Note: All shortcuts execute from the active `$HOME/.dm_office_tools/current/` installation directory in v2.0.*
+*Note: The shortcuts execute the system-installed translators from `/opt/dm-office-tools/stable/`.*
 
 ---
 
 ## Installation / इंस्टॉलेशन
 
-Run the installation script from terminal:
+### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-टर्मिनल से इंस्टॉलेशन स्क्रिप्ट चलाएँ:
+1. Download `DM_Office_Tools_2.0.2_amd64.deb` from the GitHub Release.
+2. Open your **Downloads** folder.
+3. Double-click the `.deb` file.
+4. Ubuntu Software / App Center should open.
+5. Click **Install** and enter your system password when requested.
+6. After installation, DM Office Tools will be available from the Applications menu.
+
+### If Double-click Installation Does Not Open / यदि डबल-क्लिक से इंस्टॉलेशन न खुले
+
+कुछ Ubuntu/Linux सिस्टम में `.deb` पर Double-click करने से graphical installer नहीं खुलता। ऐसी स्थिति में Terminal से सीधे install करें:
 
 ```bash
 cd ~/Downloads
-unzip -o DM_Office_Tools-main.zip
-cd DM_Office_Tools-main
-chmod +x install.sh
-./install.sh
+sudo apt install ./DM_Office_Tools_2.0.2_amd64.deb
 ```
 
-### Components Configured Upon Installation / इंस्टॉलेशन के बाद उपलब्ध घटक:
+Installation के बाद verify करें:
+
+```bash
+dpkg -s dm-office-tools | grep -E "Package:|Version:|Status:"
+```
+
+Expected:
+
+```text
+Package: dm-office-tools
+Status: install ok installed
+Version: 2.0.2
+```
+
+### Components Configured Upon Installation / इंस्टॉलेशन के बाद उपलब्ध घटक
+
 - ✔ English → Hindi Translator (SOHT)
 - ✔ Hindi → English Translator (SOHT)
 - ✔ E2H Dictionary (`dictionary.txt`)
 - ✔ H2E Dictionary (`hindi_to_english_dictionary.txt`)
 - ✔ Smart Dictionary Manager (GUI App)
-- ✔ Application Menu Launcher (`SOHT Dictionary Manager`)
+- ✔ Application Menu Launcher (`DM Office Tools`)
+- ✔ Application Menu Launcher (`Smart Dictionary Manager`)
 - ✔ Keyboard Shortcut: `Alt + Space` (English → Hindi)
 - ✔ Keyboard Shortcut: `Alt + H` (Hindi → English)
 
