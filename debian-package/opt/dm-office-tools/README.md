@@ -80,7 +80,7 @@ DM_Office_Tools/
 ├── README.md
 ├── LICENSE
 ├── icons/
-│   └── soht_dictionary.png
+│   └── dm-office-tools-installer.png
 ├── dictionary/
 │   ├── dictionary.txt
 │   ├── hindi_to_english_dictionary.txt
@@ -98,7 +98,7 @@ DM_Office_Tools/
 - **update.sh:** Updates project files, dictionaries, and application scripts safely.
 - **uninstall.sh:** Removes translators, dictionaries, Dictionary Manager, Menu entry and SOHT keyboard shortcuts while preserving backups.
 - **backup.sh:** Developer backup utility for creating timestamped manual backups.
-- **icons/soht_dictionary.png:** Icon for the Smart Dictionary Manager application.
+- **icons/dm-office-tools-installer.png:** Icon for the Smart Dictionary Manager application.
 - **dictionary/dictionary.txt:** English to Hindi dictionary records (`English=Hindi`).
 - **dictionary/hindi_to_english_dictionary.txt:** Hindi to English dictionary records (`Hindi=English`).
 - **dictionary/smart_dictionary_manager.py:** Smart Dictionary Manager GUI Application.
@@ -145,7 +145,7 @@ DM Office Tools त्वरित उपयोग के लिए ऑटोम
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `DM_Office_Tools_2.0.2_amd64.deb` from the GitHub Release.
+1. Download `DM_Office_Tools_2.0.3_amd64.deb` from the GitHub Release.
 2. Open your **Downloads** folder.
 3. Double-click the `.deb` file.
 4. Ubuntu Software / App Center should open.
@@ -158,7 +158,7 @@ DM Office Tools त्वरित उपयोग के लिए ऑटोम
 
 ```bash
 cd ~/Downloads
-sudo apt install ./DM_Office_Tools_2.0.2_amd64.deb
+sudo apt install ./DM_Office_Tools_2.0.3_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -172,7 +172,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 2.0.2
+Version: 2.0.3
 ```
 
 ### Components Configured Upon Installation / इंस्टॉलेशन के बाद उपलब्ध घटक

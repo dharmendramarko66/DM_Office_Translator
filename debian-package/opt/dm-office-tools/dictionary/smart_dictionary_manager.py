@@ -17,12 +17,16 @@ class DictionaryApp(Gtk.Window):
     self.set_position(Gtk.WindowPosition.CENTER)
 
     # ----------------------------------------------------
-    # Portable SOHT Installation Paths
+    # User Data & Dictionary Paths
     # ----------------------------------------------------
     self.script_dir = os.path.dirname(os.path.abspath(__file__))
-    self.install_dir = os.path.dirname(self.script_dir)
-    self.dict_dir = os.path.join(self.install_dir, "dictionary")
+    self.user_data_dir = os.path.expanduser("~/.dm_office_tools")
+    self.install_dir = "/opt/dm-office-tools"
+
+    self.dict_dir = os.path.join(self.user_data_dir, "dictionary")
+
     self.dict_file = os.path.join(self.dict_dir, "dictionary.txt")
+
     self.h2e_dict_file = os.path.join(
         self.dict_dir, "hindi_to_english_dictionary.txt"
     )
@@ -130,22 +134,67 @@ class DictionaryApp(Gtk.Window):
       )
 
   def save_dictionary(self):
+    """Safely save the current user dictionary and report success/failure."""
+    import tempfile
+
     try:
-      os.makedirs(
-          os.path.dirname(os.path.abspath(self.dict_file)), exist_ok=True
+      dictionary_dir = os.path.dirname(os.path.abspath(self.dict_file))
+      os.makedirs(dictionary_dir, exist_ok=True)
+
+      fd, temp_path = tempfile.mkstemp(
+          prefix=".soht_dictionary_",
+          suffix=".tmp",
+          dir=dictionary_dir,
+          text=True,
       )
-      with open(self.dict_file, "w", encoding="utf-8") as f:
-        for eng, hin in self.dictionary.items():
-          f.write(f"{eng}={hin}\n")
+
+      try:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as f:
+          for eng, hin in self.dictionary.items():
+            f.write(f"{eng}={hin}\n")
+
+          f.flush()
+          os.fsync(f.fileno())
+
+        os.replace(temp_path, self.dict_file)
+
+      except Exception:
+        try:
+          os.unlink(temp_path)
+        except OSError:
+          pass
+        raise
+
+      # Verify that the saved dictionary can be read back correctly.
+      verify_count = 0
+
+      with open(self.dict_file, "r", encoding="utf-8") as f:
+        for line in f:
+          line = line.strip()
+          if line and "=" in line:
+            verify_count += 1
+
+      if verify_count != len(self.dictionary):
+        raise IOError(
+            f"Dictionary verification failed: "
+            f"expected {len(self.dictionary)}, got {verify_count}"
+        )
+
       if hasattr(self, "total_label"):
         self.total_label.set_markup(
             f"<span weight='bold' foreground='#2980b9'>Total Entries :"
             f" {len(self.dictionary)}</span>"
         )
+
+      return True
+
     except Exception as e:
       self.show_message(
-          Gtk.MessageType.ERROR, "Error", f"Failed to save dictionary: {e}"
+          Gtk.MessageType.ERROR,
+          "Error",
+          f"Failed to save dictionary: {e}",
       )
+      return False
 
   def create_ui(self):
     main_vbox = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
@@ -471,92 +520,99 @@ class DictionaryApp(Gtk.Window):
             f"शब्द '{first}' पहले से मौजूद है!",
         )
         return
-      self.dictionary[first] = second
-      self.save_dictionary()
-      self.show_message(
-          Gtk.MessageType.INFO,
-          "Success",
-          f"नया शब्द '{first}' सफलतापूर्वक जोड़ा गया!",
-      )
-      self.clear_fields()
-      self.status_label.set_markup(
-          "<span weight='bold' foreground='#27ae60'>✔ Ready to Add New"
-          " Entry</span>"
-      )
-    else:
-      if self.original_key and self.original_key != first:
-        if self.original_key in self.dictionary:
-          del self.dictionary[self.original_key]
 
       self.dictionary[first] = second
-      self.save_dictionary()
-      self.show_message(
-          Gtk.MessageType.INFO,
-          "Success",
-          f"शब्द '{first}' सफलतापूर्वक अपडेट किया गया!",
-      )
-      self.clear_fields()
-      self.status_label.set_markup(
-          "<span weight='bold' foreground='#27ae60'>"
-          "✔ Record Updated Successfully"
-          "</span>"
-      )
-      self.update_suggestions()
 
-  def on_soht_update(self, widget):
-    sh_paths = [
-        os.path.join(self.install_dir, "update.sh"),
-        os.path.join(self.dict_dir, "update.sh"),
-    ]
-
-    target_sh = None
-    for p in sh_paths:
-      if os.path.exists(p):
-        target_sh = p
-        break
-
-    if target_sh:
-      try:
-        os.chmod(target_sh, 0O755)
-        res = subprocess.run(
-            ["bash", target_sh],
-            capture_output=True,
-            text=True,
-            cwd=os.path.dirname(target_sh),
+      if self.save_dictionary():
+        self.show_message(
+            Gtk.MessageType.INFO,
+            "Success",
+            f"नया शब्द '{first}' स्थायी रूप से सेव हो गया!",
         )
-        if res.returncode == 0:
-          self.load_dictionary()
-
-          if hasattr(self, "rb_update") and self.rb_update.get_active():
-            self.update_suggestions()
-
-          self.show_message(
-              Gtk.MessageType.INFO,
-              "SOHT Update",
-              "✅ SOHT Update Successful!\n\nSOHT को सफलतापूर्वक अपडेट कर दिया"
-              " गया है।\nसभी files और dictionaries update हो गई हैं।",
-          )
-        else:
-          err = res.stderr.strip() if res.stderr else "Unknown script error"
-          self.show_message(
-              Gtk.MessageType.ERROR,
-              "SOHT Update Error",
-              f"⚠️ Error executing update.sh:\n{err}",
-          )
-      except Exception as e:
+        self.clear_fields()
+        self.status_label.set_markup(
+            "<span weight='bold' foreground='#27ae60'>"
+            "✔ Ready to Add New Entry"
+            "</span>"
+        )
+        self.update_suggestions()
+      else:
+        self.dictionary.pop(first, None)
+        self.status_label.set_markup(
+            "<span weight='bold' foreground='#c0392b'>"
+            "✖ Dictionary save failed"
+            "</span>"
+        )
         self.show_message(
             Gtk.MessageType.ERROR,
-            "Execution Error",
-            f"Failed to run update.sh:\n{e}",
+            "Save Error",
+            f"शब्द '{first}' सेव नहीं हो सका।\n\n"
+            "मूल dictionary सुरक्षित रखी गई है।",
         )
+
     else:
+      old_key = self.original_key
+      old_value = self.dictionary.get(old_key) if old_key else None
+
+      if old_key and old_key != first:
+        if old_key in self.dictionary:
+          del self.dictionary[old_key]
+
+      self.dictionary[first] = second
+
+      if self.save_dictionary():
+        self.show_message(
+            Gtk.MessageType.INFO,
+            "Success",
+            f"शब्द '{first}' सफलतापूर्वक अपडेट और स्थायी रूप से सेव हो गया!",
+        )
+        self.clear_fields()
+        self.original_key = None
+        self.status_label.set_markup(
+            "<span weight='bold' foreground='#27ae60'>"
+            "✔ Record Updated Successfully"
+            "</span>"
+        )
+        self.update_suggestions()
+      else:
+        self.dictionary.pop(first, None)
+
+        if old_key and old_value is not None:
+          self.dictionary[old_key] = old_value
+
+        self.status_label.set_markup(
+            "<span weight='bold' foreground='#c0392b'>"
+            "✖ Dictionary update failed"
+            "</span>"
+        )
+        self.show_message(
+            Gtk.MessageType.ERROR,
+            "Update Error",
+            "Dictionary update सेव नहीं हो सका।\n\n"
+            "पुराना record restore कर दिया गया है।",
+        )
+
+  def on_soht_update(self, widget):
+    try:
+      # DEB installation में software update update.sh से नहीं होता।
+      # यह button केवल current user dictionary को reload करता है।
+      self.load_dictionary()
+
+      if hasattr(self, "rb_update") and self.rb_update.get_active():
+        self.update_suggestions()
+
       self.show_message(
-          Gtk.MessageType.WARNING,
-          "File Not Found",
-          (
-              "⚠️ 'update.sh' फ़ाइल नहीं मिली।\n\nकृपया सुनिश्चित करें कि"
-              f" 'update.sh' फ़ाइल {self.dict_dir} में मौजूद है।"
-          ),
+          Gtk.MessageType.INFO,
+          "Dictionary Reloaded",
+          "✅ Dictionary सफलतापूर्वक reload हो गई।\n\n"
+          "नई entries और वर्तमान dictionary data अब उपलब्ध हैं।",
+      )
+
+    except Exception as e:
+      self.show_message(
+          Gtk.MessageType.ERROR,
+          "Dictionary Reload Error",
+          f"⚠️ Dictionary reload failed:\n{e}",
       )
 
   def show_message(self, message_type, title, text):

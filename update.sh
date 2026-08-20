@@ -32,7 +32,7 @@ echo
 echo "        Smart Office Hybrid Translator"
 echo "                   (SOHT)"
 echo
-echo "               Version : v2.0.1"
+echo "               Version : v2.0.3"
 echo
 echo "          Developed by Dharmendra Marko"
 echo "===================================================="
@@ -119,35 +119,6 @@ echo "E2H Files ............. OK"
 echo "H2E Files ............. OK"
 echo
 
-# ----------------------------------------------------
-# [2.5/6] Updating Current Files
-# ----------------------------------------------------
-
-echo "[2.5/6] Updating Current Files..."
-echo
-
-mkdir -p "$INSTALL_DIR/current"
-
-cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/run_hindi.sh" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
-"$INSTALL_DIR/current/"
-
-chmod +x "$INSTALL_DIR/current/run_hindi.sh"
-chmod +x "$INSTALL_DIR/current/run_hindi_to_english.sh"
-
-echo "E2H Current Files ...... OK"
-echo "H2E Current Files ...... OK"
-echo
-
-# ----------------------------------------------------
 # [3/6] Updating Dictionaries
 # ----------------------------------------------------
 
@@ -157,12 +128,24 @@ echo
 mkdir -p "$INSTALL_DIR/dictionary"
 
 # Main E2H dictionary
-cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
-"$INSTALL_DIR/dictionary/"
+# Preserve the existing user dictionary during update.
+if [ ! -f "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
+    cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
+    "$INSTALL_DIR/dictionary/"
+    echo "E2H Dictionary ........ INSTALLED"
+else
+    echo "E2H Dictionary ........ PRESERVED"
+fi
 
 # H2E dictionary
-cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
-"$INSTALL_DIR/dictionary/"
+# Preserve the existing user dictionary during update.
+if [ ! -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" ]; then
+    cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
+    "$INSTALL_DIR/dictionary/"
+    echo "H2E Dictionary ........ INSTALLED"
+else
+    echo "H2E Dictionary ........ PRESERVED"
+fi
 
 echo "E2H Dictionary ........ OK"
 echo "H2E Dictionary ........ OK"
@@ -282,7 +265,7 @@ echo
 # ----------------------------------------------------
 
 echo "===================================================="
-echo "       DM Office Tools v2.0.1 Updated Successfully"
+echo "       DM Office Tools v2.0.3 Updated Successfully"
 echo "===================================================="
 echo
 echo "Installed Components:"
@@ -299,6 +282,6 @@ echo "$BACKUP_DIR"
 echo
 echo "Keyboard shortcuts were not modified."
 echo
-echo "SOHT v2.0.1 is ready."
+echo "SOHT v2.0.3 is ready."
 echo "===================================================="
 echo

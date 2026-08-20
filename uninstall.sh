@@ -81,7 +81,7 @@ if command -v gsettings >/dev/null 2>&1 && \
 
         # Remove only SOHT E2H shortcut
         if [ "$NAME" = "'SOHT (Stable)'" ] && \
-           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh" && \
+           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/stable/run_hindi.sh" && \
            [ "$BINDING" = "'<Alt>space'" ]; then
 
             NEW_KEYS=$(echo "$NEW_KEYS" | \
@@ -94,7 +94,7 @@ if command -v gsettings >/dev/null 2>&1 && \
 
         # Remove only SOHT H2E shortcut
         if [ "$NAME" = "'SOHT Hindi to English'" ] && \
-           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh" && \
+           echo "$COMMAND" | grep -Fq "$INSTALL_DIR/stable/run_hindi_to_english.sh" && \
            [ "$BINDING" = "'<Alt>h'" ]; then
 
             NEW_KEYS=$(echo "$NEW_KEYS" | \
@@ -152,22 +152,22 @@ echo
 
 
 # ====================================================
-# [3/7] Removing Current Files
+# [3.5/7] Removing Legacy Current Directory
 # ====================================================
 
-echo "[3/7] Removing Current Files..."
+echo "[3.5/7] Removing Legacy Current Directory..."
 echo
 
-rm -f "$INSTALL_DIR/current/english_to_hindi_hybrid.py"
-rm -f "$INSTALL_DIR/current/run_hindi.sh"
-rm -f "$INSTALL_DIR/current/hindi_to_english_hybrid.py"
-rm -f "$INSTALL_DIR/current/run_hindi_to_english.sh"
+if [ -d "$INSTALL_DIR/current" ]; then
+    rm -rf "$INSTALL_DIR/current"
+    echo "Legacy Current Directory .... REMOVED"
+else
+    echo "Legacy Current Directory .... NOT FOUND"
+fi
 
-echo "Current Files ............. OK"
 echo
 
 
-# ====================================================
 # [4/7] Removing Stable Files
 # ====================================================
 
@@ -207,7 +207,6 @@ echo
 echo "[6/7] Cleaning Installation Folders..."
 echo
 
-rmdir "$INSTALL_DIR/current" 2>/dev/null || true
 rmdir "$INSTALL_DIR/stable" 2>/dev/null || true
 rmdir "$INSTALL_DIR/dictionary" 2>/dev/null || true
 rmdir "$INSTALL_DIR/logs" 2>/dev/null || true
@@ -244,11 +243,7 @@ check_removed()
     fi
 }
 
-check_removed "$INSTALL_DIR/current/english_to_hindi_hybrid.py" \
-    "E2H Current"
 
-check_removed "$INSTALL_DIR/current/hindi_to_english_hybrid.py" \
-    "H2E Current"
 
 check_removed "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
     "E2H Stable"

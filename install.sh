@@ -14,7 +14,7 @@ echo
 echo "        Smart Office Hybrid Translator"
 echo "                   (SOHT)"
 echo
-echo "              Version : v2.0.2"
+echo "              Version : v2.0.3"
 echo
 echo "         Developed by Dharmendra Marko"
 echo "===================================================="
@@ -113,7 +113,6 @@ echo "[5/10] Creating Installation Folder..."
 
 mkdir -p \
 "$INSTALL_DIR/stable" \
-"$INSTALL_DIR/current" \
 "$INSTALL_DIR/dictionary" \
 "$INSTALL_DIR/backup" \
 "$INSTALL_DIR/logs" \
@@ -155,40 +154,28 @@ echo "Update Script ........ OK"
 echo
 
 # ----------------------------------------------------
-# Current Files
-# ----------------------------------------------------
-
-echo "Installing Current Files..."
-
-cp -f "$INSTALL_DIR/stable/english_to_hindi_hybrid.py" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/run_hindi.sh" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/hindi_to_english_hybrid.py" \
-"$INSTALL_DIR/current/"
-
-cp -f "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
-"$INSTALL_DIR/current/"
-
-chmod +x "$INSTALL_DIR/current/run_hindi.sh"
-chmod +x "$INSTALL_DIR/current/run_hindi_to_english.sh"
-
-echo "Current Files ......... OK"
-echo
-
-# ----------------------------------------------------
 # [7/10] Installing Dictionaries + Manager
 # ----------------------------------------------------
 
 echo "[7/10] Installing Dictionary Files..."
 
-cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
-"$INSTALL_DIR/dictionary/"
+# Install default dictionaries only if they do not already exist.
+# Never overwrite the user's existing dictionary.
+if [ ! -f "$INSTALL_DIR/dictionary/dictionary.txt" ]; then
+    cp -f "$SCRIPT_DIR/dictionary/dictionary.txt" \
+    "$INSTALL_DIR/dictionary/"
+    echo "E2H Dictionary ........ INSTALLED"
+else
+    echo "E2H Dictionary ........ PRESERVED"
+fi
 
-cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
-"$INSTALL_DIR/dictionary/"
+if [ ! -f "$INSTALL_DIR/dictionary/hindi_to_english_dictionary.txt" ]; then
+    cp -f "$SCRIPT_DIR/dictionary/hindi_to_english_dictionary.txt" \
+    "$INSTALL_DIR/dictionary/"
+    echo "H2E Dictionary ........ INSTALLED"
+else
+    echo "H2E Dictionary ........ PRESERVED"
+fi
 
 cp -f "$SCRIPT_DIR/dictionary/smart_dictionary_manager.py" \
 "$INSTALL_DIR/dictionary/"
@@ -206,9 +193,10 @@ echo
 
 echo "Creating Dictionary Manager Menu..."
 
-if [ -f "$SCRIPT_DIR/icons/soht_dictionary.png" ]; then
-    cp -f "$SCRIPT_DIR/icons/soht_dictionary.png" \
-    "$ICON_DIR/"
+DICTIONARY_ICON="$SCRIPT_DIR/icons/dm-office-tools-installer.png"
+
+if [ -f "$DICTIONARY_ICON" ]; then
+    cp -f "$DICTIONARY_ICON"         "$ICON_DIR/dm-office-tools-installer.png"
 
     echo "Dictionary Icon ....... OK"
 else
@@ -223,9 +211,9 @@ Type=Application
 Name=SOHT Dictionary Manager
 Comment=Smart Office Hybrid Translator Dictionary Manager
 Exec=python3 $INSTALL_DIR/dictionary/smart_dictionary_manager.py
-Icon=$ICON_DIR/soht_dictionary.png
+Icon=$ICON_DIR/dm-office-tools-installer.png
 Terminal=false
-Categories=Utility;Office;
+Categories=Utility;
 StartupNotify=true
 EOF
 
@@ -234,7 +222,6 @@ chmod +x "$MENU_DIR/SOHT_Dictionary_Manager.desktop"
 echo "Dictionary Manager Menu OK"
 echo
 
-# ----------------------------------------------------
 # [8/10] Creating Keyboard Shortcuts
 # ----------------------------------------------------
 
@@ -249,8 +236,8 @@ echo "Existing shortcut configuration:"
 echo "$CUSTOM_KEYS"
 echo
 
-SOHT_E2H_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi.sh"
-SOHT_H2E_COMMAND="/bin/bash $INSTALL_DIR/current/run_hindi_to_english.sh"
+SOHT_E2H_COMMAND="/bin/bash $INSTALL_DIR/stable/run_hindi.sh"
+SOHT_H2E_COMMAND="/bin/bash $INSTALL_DIR/stable/run_hindi_to_english.sh"
 
 SOHT_E2H_BINDING="<Alt>space"
 SOHT_H2E_BINDING="<Alt>h"
@@ -338,7 +325,7 @@ do
     BINDING=$(dconf read "${KEY}binding" 2>/dev/null || true)
 
     # Existing SOHT E2H shortcut
-    if echo "$COMMAND" | grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
+    if echo "$COMMAND" | grep -Fq "$INSTALL_DIR/stable/run_hindi.sh"; then
 
         if [ "$E2H_FOUND" -eq 0 ]; then
 
@@ -454,7 +441,7 @@ do
 
     # Existing SOHT H2E shortcut
     if echo "$COMMAND" | \
-        grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
+        grep -Fq "$INSTALL_DIR/stable/run_hindi_to_english.sh"; then
 
         if [ "$H2E_FOUND" -eq 0 ]; then
 
@@ -583,7 +570,7 @@ do
     if [ "$NAME" = "'SOHT English to Hindi'" ] && \
        [ "$BINDING" = "'<Alt>space'" ] && \
        echo "$COMMAND" | \
-       grep -Fq "$INSTALL_DIR/current/run_hindi.sh"; then
+       grep -Fq "$INSTALL_DIR/stable/run_hindi.sh"; then
 
         E2H_OK=1
 
@@ -593,7 +580,7 @@ do
     if [ "$NAME" = "'SOHT Hindi to English'" ] && \
        [ "$BINDING" = "'<Alt>h'" ] && \
        echo "$COMMAND" | \
-       grep -Fq "$INSTALL_DIR/current/run_hindi_to_english.sh"; then
+       grep -Fq "$INSTALL_DIR/stable/run_hindi_to_english.sh"; then
 
         H2E_OK=1
 
@@ -661,11 +648,7 @@ check_file "$INSTALL_DIR/stable/run_hindi_to_english.sh" \
 check_file "$INSTALL_DIR/update.sh" \
 "Update Script"
 
-check_file "$INSTALL_DIR/current/english_to_hindi_hybrid.py" \
-"E2H Current"
 
-check_file "$INSTALL_DIR/current/hindi_to_english_hybrid.py" \
-"H2E Current"
 
 check_file "$INSTALL_DIR/dictionary/dictionary.txt" \
 "E2H Dictionary"
@@ -694,7 +677,7 @@ echo
 # ----------------------------------------------------
 
 echo "===================================================="
-echo "      DM Office Tools v2.0.2 Installed Successfully"
+echo "      DM Office Tools v2.0.3 Installed Successfully"
 echo "===================================================="
 echo
 echo "Installation Path:"
@@ -714,6 +697,6 @@ echo
 echo "  ✔ Alt + Space  → English to Hindi"
 echo "  ✔ Alt + H      → Hindi to English"
 echo
-echo "SOHT v2.0.2 तैयार है।"
+echo "SOHT v2.0.3 तैयार है।"
 echo "===================================================="
 echo
