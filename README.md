@@ -3,13 +3,28 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 2.0 Stable
+**Version / संस्करण:** 2.0.3 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
 **Platform / प्लेटफ़ॉर्म:** Ubuntu Linux (Ubuntu 24.04 LTS & later)
 
 **Developer / विकसितकर्ता:** Dharmendra Marko
+
+---
+
+## What's New in v2.0.3 / v2.0.3 में नया क्या है
+
+- Fixed Smart Dictionary Manager save/update persistence.
+- Added persistent user dictionary storage.
+- User dictionaries survive reinstall and uninstall.
+- Fixed automatic GNOME keyboard shortcut configuration during `.deb` installation.
+- Standardized translator runtime under `/opt/dm-office-tools/stable/`.
+- Removed the legacy `current/` runtime architecture.
+- Added cleanup of legacy `~/.dm_office_tools/current/` during uninstall.
+- Improved GNOME shortcut cleanup during uninstall.
+- Updated application menu integration.
+- Updated installation and release documentation.
 
 ---
 
@@ -44,8 +59,8 @@ DM Office Tools लिनक्स के लिए एक प्रोफेश
   - दोनों (E2H एवं H2E) डिक्शनरी को प्रबंधित (जोड़ने, संपादित करने, हटाने एवं खोजने) के लिए सुव्यवस्थित ग्राफिकल ऐप (GUI)।
 
 - **Dictionary Manager Menu Integration / डिक्शनरी मैनेजर मेनु एकीकरण**
-  - Automatic application menu entry (`SOHT Dictionary Manager`) for 1-click access.
-  - `SOHT Dictionary Manager` नाम से ऑटोमैटिक एप्लिकेशन मेनु एंट्री की सुविधा।
+  - Automatic application menu entries (`DM Office Tools` and `Smart Dictionary Manager`) for 1-click access.
+  - `DM Office Tools` एवं `Smart Dictionary Manager` नाम से ऑटोमैटिक एप्लिकेशन मेनु एंट्री की सुविधा।
 
 - **Automatic Keyboard Shortcuts / ऑटोमैटिक कीबोर्ड शॉर्टकट**
   - Automatically configures dual keyboard shortcuts during installation (`Alt + Space` for E2H and `Alt + H` for H2E).
@@ -60,11 +75,14 @@ DM Office Tools लिनक्स के लिए एक प्रोफेश
 ## System Requirements / सिस्टम आवश्यकताएँ
 
 - **Operating System:** Ubuntu 24.04 LTS or later
+- **Architecture:** amd64 (64-bit)
 - **Python Version:** Python 3.12 or later (`python3-requests`, `python3-gi`, `gir1.2-gtk-3.0`)
 - **Desktop Environment:** GNOME Desktop Environment
 - **Clipboard Utility:** `wl-clipboard`
 - **Disk Space:** Less than 20 MB (excluding backup files)
 - **Internet Connection:** Optional
+  - Local dictionary processing works offline.
+  - Online transliteration may be used when internet access is available.
 
 ---
 
@@ -72,24 +90,49 @@ DM Office Tools लिनक्स के लिए एक प्रोफेश
 
 ```text
 DM_Office_Tools/
+├── VERSION
+├── README.md
+├── LICENSE
 ├── install.sh
 ├── update.sh
 ├── uninstall.sh
 ├── backup.sh
-├── VERSION
-├── README.md
-├── LICENSE
+│
 ├── icons/
 │   └── dm-office-tools-installer.png
+│
 ├── dictionary/
 │   ├── dictionary.txt
 │   ├── hindi_to_english_dictionary.txt
 │   └── smart_dictionary_manager.py
-└── stable/
-    ├── english_to_hindi_hybrid.py
-    ├── hindi_to_english_hybrid.py
-    ├── run_hindi.sh
-    └── run_hindi_to_english.sh
+│
+├── stable/
+│   ├── english_to_hindi_hybrid.py
+│   ├── hindi_to_english_hybrid.py
+│   ├── run_hindi.sh
+│   └── run_hindi_to_english.sh
+│
+└── debian-package/
+    ├── DEBIAN/
+    │   ├── control
+    │   ├── postinst
+    │   └── postrm
+    │
+    ├── opt/
+    │   └── dm-office-tools/
+    │       ├── VERSION
+    │       ├── README.md
+    │       ├── LICENSE
+    │       ├── launch.sh
+    │       ├── icons/
+    │       ├── dictionary/
+    │       └── stable/
+    │
+    └── usr/
+        └── share/
+            └── applications/
+                ├── dm-office-tools.desktop
+                └── smart-dictionary-manager.desktop
 ```
 
 ### Folder & Script Description / फ़ोल्डर एवं स्क्रिप्ट विवरण
@@ -98,7 +141,7 @@ DM_Office_Tools/
 - **update.sh:** Updates project files, dictionaries, and application scripts safely.
 - **uninstall.sh:** Removes translators, dictionaries, Dictionary Manager, Menu entry and SOHT keyboard shortcuts while preserving backups.
 - **backup.sh:** Developer backup utility for creating timestamped manual backups.
-- **icons/dm-office-tools-installer.png:** Icon for the Smart Dictionary Manager application.
+- **icons/dm-office-tools-installer.png:** Application icon used by DM Office Tools.
 - **dictionary/dictionary.txt:** English to Hindi dictionary records (`English=Hindi`).
 - **dictionary/hindi_to_english_dictionary.txt:** Hindi to English dictionary records (`Hindi=English`).
 - **dictionary/smart_dictionary_manager.py:** Smart Dictionary Manager GUI Application.
@@ -111,9 +154,9 @@ DM_Office_Tools/
 
 ## Smart Dictionary Manager / स्मार्ट डिक्शनरी मैनेजर
 
-The **Smart Dictionary Manager** is a GUI-based management tool included in v2.0 to customize and manage offline dictionaries.
+The **Smart Dictionary Manager** is a GUI-based management tool included in v2.0.3 to customize and manage offline dictionaries.
 
-**Smart Dictionary Manager** v2.0 में शामिल एक ग्राफिकल डिक्शनरी प्रबंधन टूल है, जो ऑफलाइन डिक्शनरी को कस्टमाइज़ एवं मैनेज करने की सुविधा देता है।
+**Smart Dictionary Manager** v2.0.3 में शामिल एक ग्राफिकल डिक्शनरी प्रबंधन टूल है, जो ऑफलाइन डिक्शनरी को कस्टमाइज़ एवं मैनेज करने की सुविधा देता है।
 
 ### Key Capabilities / प्रमुख विशेषताएँ:
 - **E2H Dictionary Management (`dictionary/dictionary.txt`):** Manage English to Hindi translation terms.
@@ -122,7 +165,19 @@ The **Smart Dictionary Manager** is a GUI-based management tool included in v2.0
 - **Edit / Update Entries (संपादित करना):** Update meanings or spellings of existing records.
 - **Delete Entries (हटाना):** Remove obsolete word entries safely.
 - **Live Search & Suggestions:** Real-time search and auto-completion while typing.
-- **Menu Launcher:** Launch directly from the Ubuntu Applications Menu as **`SOHT Dictionary Manager`**.
+- **Menu Launcher:** Launch directly from the Ubuntu Applications Menu as **`Smart Dictionary Manager`**.
+
+---
+
+## Runtime Architecture / रनटाइम संरचना
+
+v2.0.3 uses the stable system installation path:
+
+`/opt/dm-office-tools/stable/`
+
+The legacy user-level `~/.dm_office_tools/current/` runtime architecture is no longer used.
+
+During uninstallation, the obsolete legacy `current/` directory is removed if it exists, while user dictionaries and backups are preserved.
 
 ---
 
@@ -218,11 +273,14 @@ DM Office Tools को सुरक्षित रूप से हटाने
 ./uninstall.sh
 ```
 
-`uninstall.sh` removes the following components:
-- ✔ E2H & H2E Translators
-- ✔ E2H & H2E Dictionaries
+`uninstall.sh` removes the installed application components:
+- ✔ E2H & H2E Translator files
+- ✔ Installed E2H & H2E dictionary files
 - ✔ Smart Dictionary Manager App & Menu Launchers
 - ✔ SOHT Keyboard Shortcuts (`Alt + Space` & `Alt + H`)
+- ✔ Legacy `~/.dm_office_tools/current/` runtime directory, if present
+
+**Important:** User dictionaries stored in `~/.dm_office_tools/dictionary/` are **PRESERVED**.
 
 **Important:** Your backups stored in `~/.dm_office_tools/backup/` are **PRESERVED** and will NOT be deleted during uninstallation.
 
@@ -244,7 +302,8 @@ DM Office Tools को सुरक्षित रूप से हटाने
 
 | Version | Status | Description |
 |---|---|---|
-| **2.0 Stable** | ✅ Current Release | Major release with H2E Translator, H2E Dictionary, Smart Dictionary Manager and dual keyboard shortcuts. |
+| **2.0.3 Stable** | ✅ Current Release | Improved installer, persistent user dictionaries, automatic keyboard shortcuts, stable `/opt/dm-office-tools/stable/` runtime and legacy `current/` cleanup. |
+| **2.0 Stable** | Previous Release | Major release with H2E Translator, H2E Dictionary, Smart Dictionary Manager and dual keyboard shortcuts. |
 | **1.0.2 Stable** | Previous Release | Improved installer, updater, backup and uninstaller. |
 | **1.0.1 Stable** | Previous Release | Initial stable release. |
 | **1.0.0 Stable** | Previous Release | Initial stable release. |
@@ -269,9 +328,11 @@ DM Office Tools `LICENSE` फ़ाइल में उल्लेखित श
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version:** 2.0 Stable
+- **Latest Version:** 2.0.3 Stable
+- **Release:** v2.0.3
+- **Package:** `DM_Office_Tools_2.0.3_amd64.deb`
+- **Architecture:** amd64
 - **Repository:** DM_Office_Tools
-- *Note: Official release download links will be updated upon GitHub tagging.*
 
 ---
 
