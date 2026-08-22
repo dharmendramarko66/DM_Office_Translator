@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+
+  <id>io.github.dharmendramarko66.DMOfficeTools</id>
+
+  <name>DM Office Tools (SOHT)</name>
+
+  <summary>
+    Smart Office Hybrid Translator for English-Hindi and Hindi-English data entry
+  </summary>
+
+  <description>
+    <p>
+      DM Office Tools is a professional hybrid productivity toolkit for
+      Ubuntu Linux, featuring the Smart Office Hybrid Translator (SOHT)
+      and Smart Dictionary Manager.
+    </p>
+    <p>
+      It is designed for bidirectional English to Hindi and Hindi to English
+      data entry work in court and government offices.
+    </p>
+    <p>
+      The application provides English to Hindi and Hindi to English
+      translation together with customizable offline dictionaries.
+    </p>
+  </description>
+
+  <launchable type="desktop-id">
+    dm-office-tools.desktop
+  </launchable>
+
+  <icon type="stock">dm-office-tools</icon>
+
+  <categories>
+    <category>Office</category>
+ategory>/d
+  </categories>
+
+  <project_license>LicenseRef-DM-Office-Tools</project_license>
+  <metadata_license>CC0-1.0</metadata_license>
+
+  <url type="homepage">
+    https://github.com/dharmendramarko66/DM_Office_Tools
+  </url>
+
+  <url type="bugtracker">
+    https://github.com/dharmendramarko66/DM_Office_Tools/issues
+  </url>
+
+<developer id="io.github.dharmendramarko66">
+    <name>Dharmendra Marko</name>
+</developer>
+
+<releases>
+    <release version="2.0.4" date="2026-08-12"/>
+</releases>
+
+<content_rating type="oars-1.1"/>
+
+</component>

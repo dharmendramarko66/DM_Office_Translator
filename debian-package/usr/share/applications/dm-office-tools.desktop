@@ -1,10 +1,10 @@
 [Desktop Entry]
 Version=1.0
 Type=Application
-Name=DM Office Tools
+Name=DM Office Tools (SOHT)
 Comment=Smart Office Hybrid Translator (SOHT)
 Exec=/opt/dm-office-tools/launch.sh
-Icon=/opt/dm-office-tools/icons/dm-office-tools-installer.png
+Icon=dm-office-tools
 Terminal=false
-Categories=Office;Utility;
+Categories=Office;
 StartupNotify=true
