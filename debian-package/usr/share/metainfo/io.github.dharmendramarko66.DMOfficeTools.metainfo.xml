@@ -50,8 +50,10 @@
     <name>Dharmendra Marko</name>
 </developer>
 
+<pkgname>dm-office-tools</pkgname>
+
 <releases>
-    <release version="2.0.4" date="2026-08-12"/>
+    <release version="2.0.5" date="2026-08-22"/>
 </releases>
 
 <content_rating type="oars-1.1"/>
