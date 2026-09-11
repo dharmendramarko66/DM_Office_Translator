@@ -1,0 +1,8 @@
+#!/bin/bash
+set -e
+
+# DM Office Translator
+# Pre-removal hook intentionally kept minimal.
+# Configuration cleanup is handled by postrm.
+
+exit 0

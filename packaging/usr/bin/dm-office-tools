@@ -1,0 +1,2 @@
+#!/bin/bash
+exec python3 /usr/share/dm-office-tools/stable/soht_app.py "$@"

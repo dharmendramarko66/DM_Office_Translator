@@ -1,0 +1,133 @@
+#!/bin/bash
+set -e
+
+echo "[INFO] Removing DM Office Translator configuration..."
+
+# ------------------------------------------------------------
+# Detect desktop user
+# ------------------------------------------------------------
+
+TARGET_USER="${SUDO_USER:-}"
+
+if [[ -z "$TARGET_USER" || "$TARGET_USER" == "root" ]]; then
+    TARGET_USER="$(logname 2>/dev/null || true)"
+fi
+
+if [[ -z "$TARGET_USER" || "$TARGET_USER" == "root" ]]; then
+    TARGET_USER="$(who 2>/dev/null | awk 'NR==1 {print $1}')"
+fi
+
+if [[ -z "$TARGET_USER" || "$TARGET_USER" == "root" ]]; then
+    echo "[WARN] No desktop user detected."
+    exit 0
+fi
+
+USER_HOME="$(getent passwd "$TARGET_USER" | cut -d: -f6)"
+
+if [[ -z "$USER_HOME" || ! -d "$USER_HOME" ]]; then
+    echo "[WARN] Could not determine home directory."
+    exit 0
+fi
+
+# ------------------------------------------------------------
+# Remove only SOHT keyboard shortcuts
+# ------------------------------------------------------------
+
+remove_soht_shortcuts() {
+
+    local USER_NAME="$1"
+    local USER_HOME="$2"
+
+    local XDG_RUNTIME_DIR
+    local DBUS_SESSION_BUS_ADDRESS
+
+    XDG_RUNTIME_DIR="/run/user/$(id -u "$USER_NAME")"
+    DBUS_SESSION_BUS_ADDRESS="unix:path=$XDG_RUNTIME_DIR/bus"
+
+    if [[ ! -S "$XDG_RUNTIME_DIR/bus" ]]; then
+        echo "[WARN] GNOME session bus not available."
+        return 0
+    fi
+
+    runuser -u "$USER_NAME" -- \
+        env \
+        HOME="$USER_HOME" \
+        USER="$USER_NAME" \
+        LOGNAME="$USER_NAME" \
+        XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
+        DBUS_SESSION_BUS_ADDRESS="$DBUS_SESSION_BUS_ADDRESS" \
+        bash -s <<'SHORTCUT_SCRIPT'
+
+CUSTOM_SCHEMA="org.gnome.settings-daemon.plugins.media-keys"
+
+CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || echo "@as []")"
+
+if [[ "$CUSTOM_KEYS" == "@as []" || -z "$CUSTOM_KEYS" ]]; then
+    exit 0
+fi
+
+NEW_KEYS="$CUSTOM_KEYS"
+REMOVED=0
+
+for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+do
+    [[ -z "$KEY" ]] && continue
+
+    NAME="$(dconf read "${KEY}name" 2>/dev/null || true)"
+    COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
+
+    if [[ "$NAME" == "'SOHT English to Hindi'" ]] || \
+       [[ "$NAME" == "'SOHT Hindi to English'" ]] || \
+       echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h" || \
+       echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e" || \
+       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_english_to_hindi.sh" || \
+       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_hindi_to_english.sh"; then
+
+        NEW_KEYS="$(echo "$NEW_KEYS" | \
+            sed "s#'$KEY', ##; s#,'$KEY'##; s#'$KEY'##")"
+
+        dconf reset -f "$KEY" 2>/dev/null || true
+        REMOVED=1
+    fi
+done
+
+if [[ "$REMOVED" -eq 1 ]]; then
+    gsettings set "$CUSTOM_SCHEMA" custom-keybindings "$NEW_KEYS"
+    echo "[OK] SOHT keyboard shortcuts removed."
+else
+    echo "[OK] No SOHT keyboard shortcuts found."
+fi
+
+SHORTCUT_SCRIPT
+}
+
+if command -v gsettings >/dev/null 2>&1 && \
+   command -v dconf >/dev/null 2>&1 && \
+   command -v runuser >/dev/null 2>&1; then
+
+    remove_soht_shortcuts "$TARGET_USER" "$USER_HOME"
+else
+    echo "[WARN] GNOME shortcut tools unavailable."
+fi
+
+# ------------------------------------------------------------
+# Remove obsolete desktop launchers
+# ------------------------------------------------------------
+
+rm -f \
+    "$USER_HOME/Desktop/Smart_Dictionary_Manager.desktop" \
+    "$USER_HOME/Desktop/SOHT_Dictionary_Manager.desktop" \
+    "$USER_HOME/.local/share/applications/Smart_Dictionary_Manager.desktop" \
+    "$USER_HOME/.local/share/applications/SOHT_Dictionary_Manager.desktop"
+
+# ------------------------------------------------------------
+# Refresh desktop database
+# ------------------------------------------------------------
+
+if command -v update-desktop-database >/dev/null 2>&1; then
+    update-desktop-database /usr/share/applications >/dev/null 2>&1 || true
+fi
+
+echo "[OK] DM Office Translator configuration removed."
+
+exit 0

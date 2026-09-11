@@ -1,0 +1,2 @@
+#!/bin/bash
+exec /usr/share/dm-office-tools/stable/run_hindi_to_english.sh "$@"

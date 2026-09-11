@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=DM Office Translator
+Comment=Smart Office Hybrid Translator (SOHT)
+Exec=/usr/bin/dm-office-tools
+Icon=/usr/share/dm-office-tools/dm-office-translator.png
+Terminal=false
+Categories=Office;
+StartupNotify=true
