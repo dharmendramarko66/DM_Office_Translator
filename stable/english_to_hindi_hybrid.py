@@ -1,6 +1,6 @@
 # =========================================================
 # Smart Office Hybrid Translator (SOHT)
-# Version : 2.0 Optimized (Hybrid Offline/Online)
+# Version : 2.0.6 (Hybrid Offline/Online)
 # Release Date : 07-07-2026
 # Platform : Ubuntu
 # Purpose : Court & Government Office Data Entry
@@ -11,7 +11,7 @@ import subprocess
 import urllib.parse
 import json
 
-APP_VERSION = "2.0"
+APP_VERSION = "2.0.6"
 GOOGLE_API = (
     "https://inputtools.google.com/request?itc=hi-t-i0-und&num=1&text="
 )
@@ -211,7 +211,7 @@ def e2h_offline_transliterate_word(word):
           # Special Roman-Hindi clusters which are normally one onset.
           second = get_consonant(i)
 
-          if second and len(second) >= 2:
+          if second:
               candidate = first + second
 
               cluster_map = {
@@ -226,6 +226,10 @@ def e2h_offline_transliterate_word(word):
                   "bh": "भ",
                   "tr": "त्र",
                   "dr": "द्र",
+                  "ndr": "न्द्र",
+                  "ntr": "न्त्र",
+                  "mp": "म्प",
+                  "mb": "म्ब",
                   "kr": "क्र",
                   "gr": "ग्र",
                   "pr": "प्र",
@@ -338,6 +342,8 @@ def e2h_offline_transliterate_word(word):
       ("धर्मेन्द्र", "धर्मेंद्र"),
       ("मधय", "मध्य"),
       ("अदलत", "अदालत"),
+      ("प्रतिक्षलय", "प्रतीक्षालय"),
+      ("सरजन", "सृजन"),
   ]
 
   for source, target in replacements:
@@ -358,17 +364,21 @@ def e2h_offline_transliterate_word(word):
 # डिक्शनरी लोड करें
 compiled_dictionary = load_dictionary()
 
-try:
-  # क्लिपबोर्ड से टेक्स्ट प्राप्त करना (सुरक्षित तरीके से)
+def main():
   try:
-    text = subprocess.check_output(["wl-paste"], text=True).strip()
-  except (FileNotFoundError, subprocess.CalledProcessError):
-    print("wl-paste / wl-copy not installed or clipboard empty.")
-    text = ""
+    # क्लिपबोर्ड से टेक्स्ट प्राप्त करना (सुरक्षित तरीके से)
+    try:
+      text = subprocess.check_output(["wl-paste"], text=True).strip()
+    except (FileNotFoundError, subprocess.CalledProcessError):
+      print("wl-paste / wl-copy not installed or clipboard empty.")
+      text = ""
 
-  output = text
+    output = text
 
-  if output:
+    if not output or not output.strip():
+      print("Clipboard is empty or contains only whitespace.")
+      return
+
     # 3. डिक्शनरी आधारित अनुवाद (Pre-compiled Regex द्वारा)
     #
     # Dictionary-generated text को temporary private-use markers में
@@ -376,7 +386,10 @@ try:
     protected_dictionary = {}
 
     for index, (pattern, hin) in enumerate(compiled_dictionary):
-      marker = chr(0xE000 + index)
+      if index <= 0xF8FF - 0xE000:
+        marker = chr(0xE000 + index)
+      else:
+        marker = chr(0xF0000 + (index - (0xF8FF - 0xE000 + 1)))
       if pattern.search(output):
         protected_dictionary[marker] = hin
         output = pattern.sub(marker, output)
@@ -507,9 +520,9 @@ try:
             final_tokens.append(original_with_punctuation)
 
         except (IndexError, KeyError, TypeError, ValueError, RuntimeError, json.JSONDecodeError):
-          original_with_punctuation = word_part + punctuation_part
-          transliteration_cache[cache_key] = word_part
-          final_tokens.append(original_with_punctuation)
+          offline_converted = e2h_offline_transliterate_word(word_part)
+          transliteration_cache[cache_key] = offline_converted
+          final_tokens.append(offline_converted + punctuation_part)
       else:
         # Google unavailable/failed: offline Roman → Devanagari fallback
         final_tokens.append(
@@ -537,7 +550,8 @@ try:
     print("\nResult:\n")
     print(result)
 
-except Exception as e:
-  print("Error:", e)
-finally:
-  pass
+  except Exception as e:
+    print("Error:", e)
+
+if __name__ == "__main__":
+  main()

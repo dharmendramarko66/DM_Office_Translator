@@ -120,6 +120,7 @@ DM_Office_Tools/
 ├── dictionary/
 │   ├── english_to_hindi_dictionary.txt
 │   └── hindi_to_english_dictionary.txt
+├── sync-dictionaries.sh
 └── packaging/
     ├── DEBIAN/
     │   ├── control
@@ -146,6 +147,48 @@ DM_Office_Tools/
 - `dictionary/` — English → Hindi और Hindi → English user dictionary source files.
 - `packaging/` — Debian package metadata, maintainer scripts, launchers और package build script.
 - `packaging/usr/share/dm-office-tools/` — Installed stable runtime और dictionaries का package location.
+
+## Dictionary Synchronization / डिक्शनरी सिंक्रोनाइज़ेशन
+
+The `sync-dictionaries.sh` utility safely synchronizes project dictionaries with user dictionaries.
+
+`sync-dictionaries.sh` utility project dictionaries और user dictionaries को सुरक्षित रूप से synchronize करने के लिए उपयोग की जाती है।
+
+### Purpose / उद्देश्य
+
+- Adds only new dictionary entries from the project dictionary to the user dictionary.
+  - Project dictionary से केवल नई entries को user dictionary में जोड़ा जाता है।
+
+- Does not overwrite existing user dictionary entries.
+  - मौजूदा user dictionary entries को overwrite नहीं किया जाता।
+
+- Detects and reports conflicts when the same word has different translations.
+  - यदि किसी शब्द की अलग-अलग translations मिलती हैं तो conflict की जानकारी दी जाती है।
+
+- Keeps existing user customizations protected.
+  - User द्वारा किए गए custom dictionary changes सुरक्षित रहते हैं।
+
+### Usage / उपयोग
+
+From the project root directory:
+
+Project root directory से चलाएँ:
+
+```bash
+./sync-dictionaries.sh
+```
+
+If the script is not executable:
+
+यदि script executable नहीं है:
+
+```bash
+bash sync-dictionaries.sh
+```
+
+The synchronization process reports the number of new entries and conflicts for both English → Hindi and Hindi → English dictionaries.
+
+Synchronization के दौरान English → Hindi और Hindi → English दोनों dictionaries में नई entries और conflicts की संख्या दिखाई जाती है।
 
 ## Smart Dictionary Manager / स्मार्ट डिक्शनरी मैनेजर
 
