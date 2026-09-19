@@ -32,9 +32,9 @@ sync_dictionary() {
         return
     fi
 
-    TMP_NEW="$(mktemp)"
+    TMP_RESULT="$(mktemp)"
 
-    python3 - "$USER_FILE" "$PROJECT_FILE" "$TMP_NEW" <<'PY'
+    python3 - "$USER_FILE" "$PROJECT_FILE" "$TMP_RESULT" <<'PY'
 import sys
 
 user_file, project_file, output_file = sys.argv[1:4]
@@ -56,29 +56,50 @@ user = load(user_file)
 project = load(project_file)
 
 new_entries = []
-conflicts = []
+updated_entries = []
 
 for key, value in user.items():
     if key not in project:
         new_entries.append((key, value))
     elif project[key] != value:
-        conflicts.append((key, project[key], value))
+        updated_entries.append((key, project[key], value))
 
-with open(output_file, "w", encoding="utf-8") as f:
+# Preserve project dictionary order and unrelated records.
+# Only changed existing entries are replaced; new entries are appended.
+seen_keys = set()
+
+with open(project_file, encoding="utf-8") as src, open(output_file, "w", encoding="utf-8") as dst:
+    for line in src:
+        raw = line.rstrip("\n")
+
+        if "=" in raw:
+            key_part, _ = raw.split("=", 1)
+            key = key_part.strip()
+
+            if key in user and key in project and key not in seen_keys:
+                if project[key] != user[key]:
+                    dst.write(f"{key}={user[key]}\n")
+                    seen_keys.add(key)
+                    continue
+
+                seen_keys.add(key)
+
+        dst.write(raw + "\n")
+
     for key, value in new_entries:
-        f.write(f"{key}={value}\n")
+        dst.write(f"{key}={value}\n")
 
 print(f"Project entries : {len(project)}")
 print(f"User entries    : {len(user)}")
 print(f"New entries     : {len(new_entries)}")
-print(f"Conflicts       : {len(conflicts)}")
+print(f"Updated entries : {len(updated_entries)}")
 
-if conflicts:
-    print("\n⚠️ Conflicts — इन्हें बदला नहीं जाएगा:")
-    for key, old, new in conflicts:
+if updated_entries:
+    print("\n✏️ Updated entries — Project dictionary में संशोधन:")
+    for key, old, new in updated_entries:
         print(f"  {key}:")
-        print(f"    Project: {old}")
-        print(f"    User:    {new}")
+        print(f"    Old: {old}")
+        print(f"    New: {new}")
 
 if new_entries:
     print("\n🆕 New entries:")
@@ -86,15 +107,15 @@ if new_entries:
         print(f"  {key}={value}")
 PY
 
-    if [ -s "$TMP_NEW" ]; then
-        cat "$TMP_NEW" >> "$PROJECT_FILE"
+    if [ -s "$TMP_RESULT" ]; then
+        cat "$TMP_RESULT" > "$PROJECT_FILE"
         echo
-        echo "✅ केवल नए entries project dictionary में जोड़ी गईं।"
+        echo "✅ Project dictionary sync applied: new entries added and changed entries updated."
     else
-        echo "ℹ️ कोई नया entry नहीं मिला।"
+        echo "ℹ️ कोई dictionary बदलाव नहीं मिला।"
     fi
 
-    rm -f "$TMP_NEW"
+    rm -f "$TMP_RESULT"
 }
 
 sync_dictionary "english_to_hindi_dictionary.txt"
