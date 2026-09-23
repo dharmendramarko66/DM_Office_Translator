@@ -1,10 +1,11 @@
 Package: dm-office-tools
-Version: 2.0.6
+Version: 2.0.7
 Section: office
 Priority: optional
 Architecture: amd64
 Maintainer: Dharmendra Marko
 Depends: python3, python3-gi, python3-requests, wl-clipboard
+Suggests: xclip | xsel
 Homepage: https://github.com/dharmendramarko66/DM_Office_Translator
 Description: DM Office Translator
  Smart Office Hybrid Translator (SOHT) for English-Hindi and Hindi-English

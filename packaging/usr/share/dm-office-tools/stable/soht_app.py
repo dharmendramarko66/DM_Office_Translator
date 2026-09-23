@@ -2,11 +2,17 @@
 
 import os
 import subprocess
+import sys
 
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GdkPixbuf
 
+
+try:
+    from soht_version import APP_VERSION
+except ImportError:
+    APP_VERSION = "2.0.7"
 
 INSTALL_DIR = "/usr/share/dm-office-tools"
 ICON_PATH = "/usr/share/dm-office-tools/dm-office-translator.png"
@@ -231,6 +237,12 @@ class SOHTApp(Gtk.Window):
 
 
 def main():
+    # Installed version जाँचने के लिए:
+    #   dm-office-tools --version
+    if "--version" in sys.argv:
+        print(f"DM Office Translator {APP_VERSION}")
+        return
+
     app = SOHTApp()
     app.show_all()
     Gtk.main()

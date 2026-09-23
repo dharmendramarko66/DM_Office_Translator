@@ -1,19 +1,51 @@
+#!/usr/bin/env python3
 # =========================================================
 # Smart Office Hybrid Translator - Hindi to English (SOHT - H2E)
-# Version : 2.0 Optimized (Hybrid Offline/Online)
-# Release Date : 07-07-2026
-# Platform : Ubuntu
+# Version : from soht_version.py (single source of truth)
+# Platform : Ubuntu (Wayland + X11)
 # Purpose : Court & Government Office Data Entry (Hindi to English)
+#
+# Changelog vs 2.0:
+#   - Version अब soht_version.py से (single source of truth)।
+#   - SOHT_OFFLINE=1 या ~/.dm_office_tools/offline_mode फ़ाइल से
+#     पूरी तरह offline (no-network) मोड।
+#   - Dictionary के हज़ारों patterns अब एक ही combined regex में।
+#   - X11 के लिए xclip/xsel clipboard fallback।
+#   - व्यक्तिगत नाम इंजन से हटाकर dictionary फ़ाइलों में।
+#   - सिस्टम dictionary अब base के रूप में मिलती है।
+#   - मुख्य logic अब translate() function में — testable।
 # =========================================================
 import os
 import re
 import subprocess
+import sys
+import time
 import urllib.parse
+
 import requests
 
-APP_VERSION = "2.0"
+try:
+    from soht_version import APP_VERSION
+except ImportError:  # direct execution from anywhere
+    APP_VERSION = "2.0.7"
+
+# ---------------------------------------------------------
+# Paths / configuration
+# ---------------------------------------------------------
+
+USER_DATA_DIR = os.path.expanduser("~/.dm_office_tools")
+USER_DICT_DIR = os.path.join(USER_DATA_DIR, "dictionary")
+SYSTEM_DICT_DIR = os.path.join(
+    os.environ.get("SOHT_SYSTEM_DIR", "/usr/share/dm-office-tools"),
+    "dictionary",
+)
+
+H2E_DICT_FILENAME = "hindi_to_english_dictionary.txt"
+E2H_DICT_FILENAME = "english_to_hindi_dictionary.txt"
+
 GOOGLE_API = (
-    "https://translate.googleapis.com/translate_a/single?client=gtx&sl=hi&tl=en&dt=t&q="
+    "https://translate.googleapis.com/translate_a/single"
+    "?client=gtx&sl=hi&tl=en&dt=t&q="
 )
 
 # Regex Patterns को पहले से प्री-कम्पाइल करना
@@ -28,55 +60,126 @@ session.headers.update({"User-Agent": f"SOHT-H2E/{APP_VERSION}"})
 # दोबारा धीमी network request न करें।
 google_temporarily_disabled = False
 
-GOOGLE_FAILURE_FILE = os.path.expanduser(
-    "~/.dm_office_tools/google_failure_until"
-)
+GOOGLE_FAILURE_FILE = os.path.join(USER_DATA_DIR, "google_failure_until")
 GOOGLE_FAILURE_COOLDOWN = 60 * 60  # 60 minutes
 
+ONLINE_TIMEOUT = (0.5, 1.5)
 
-def google_cooldown_active():
-  try:
-    with open(GOOGLE_FAILURE_FILE, encoding="utf-8") as f:
-      failure_until = float(f.read().strip())
+# प्रति translation में अधिकतम Google requests (हर unresolved
+# Hindi segment के लिए एक — आमतौर पर 1-2 ही होते हैं)।
+MAX_ONLINE_REQUESTS = 3
 
-    return failure_until > __import__("time").time()
-  except (OSError, ValueError):
+
+def offline_only_mode():
+    """संवेदनशील दस्तावेज़ों के लिए पूर्ण offline मोड।
+
+    सक्रिय करने के दो तरीके:
+      1. Environment variable:  SOHT_OFFLINE=1
+      2. Marker फ़ाइल बनाएँ:     ~/.dm_office_tools/offline_mode
+    """
+    value = os.environ.get("SOHT_OFFLINE", "").strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    return os.path.isfile(os.path.join(USER_DATA_DIR, "offline_mode"))
+
+
+# ---------------------------------------------------------
+# Clipboard helpers (Wayland पहले, फिर X11 fallback)
+# ---------------------------------------------------------
+
+def read_clipboard():
+    """wl-paste → xclip → xsel क्रम में कोशिश करें।"""
+    commands = [
+        ["wl-paste"],
+        ["xclip", "-selection", "clipboard", "-o"],
+        ["xsel", "-b", "-o"],
+    ]
+
+    for command in commands:
+        try:
+            result = subprocess.run(
+                command, capture_output=True, text=True, timeout=5
+            )
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            continue
+
+        if result.returncode == 0 and result.stdout:
+            return result.stdout
+
+    print("Clipboard could not be read (wl-paste/xclip/xsel नहीं मिला या खाली)।")
+    return ""
+
+
+def write_clipboard(text):
+    """wl-copy → xclip → xsel क्रम में कोशिश करें।"""
+    commands = [
+        ["wl-copy"],
+        ["xclip", "-selection", "clipboard"],
+        ["xsel", "-b", "-i"],
+    ]
+
+    for command in commands:
+        try:
+            subprocess.run(
+                command, input=text, text=True, check=True, timeout=5
+            )
+            return True
+        except (
+            FileNotFoundError,
+            subprocess.CalledProcessError,
+            subprocess.TimeoutExpired,
+        ):
+            continue
+
+    print("Clipboard could not be written (wl-copy/xclip/xsel नहीं मिला)।")
     return False
 
 
+# ---------------------------------------------------------
+# Google failure cooldown
+# ---------------------------------------------------------
+
+def google_cooldown_active():
+    try:
+        with open(GOOGLE_FAILURE_FILE, encoding="utf-8") as f:
+            failure_until = float(f.read().strip())
+
+        return failure_until > time.time()
+    except (OSError, ValueError):
+        return False
+
+
 def set_google_failure_cooldown():
-  try:
-    os.makedirs(
-        os.path.dirname(GOOGLE_FAILURE_FILE),
-        exist_ok=True
-    )
+    try:
+        os.makedirs(
+            os.path.dirname(GOOGLE_FAILURE_FILE),
+            exist_ok=True
+        )
 
-    failure_until = (
-        __import__("time").time() + GOOGLE_FAILURE_COOLDOWN
-    )
+        failure_until = (
+            time.time() + GOOGLE_FAILURE_COOLDOWN
+        )
 
-    temp_file = GOOGLE_FAILURE_FILE + ".tmp"
+        temp_file = GOOGLE_FAILURE_FILE + ".tmp"
 
-    with open(temp_file, "w", encoding="utf-8") as f:
-      f.write(str(failure_until))
-      f.flush()
-      os.fsync(f.fileno())
+        with open(temp_file, "w", encoding="utf-8") as f:
+            f.write(str(failure_until))
+            f.flush()
+            os.fsync(f.fileno())
 
-    os.replace(temp_file, GOOGLE_FAILURE_FILE)
+        os.replace(temp_file, GOOGLE_FAILURE_FILE)
 
-  except OSError:
-    pass
+    except OSError:
+        pass
 
 
 def clear_google_failure_cooldown():
-  try:
-    os.remove(GOOGLE_FAILURE_FILE)
-  except FileNotFoundError:
-    pass
-  except OSError:
-    pass
-
-
+    try:
+        os.remove(GOOGLE_FAILURE_FILE)
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
 
 
 # ---------------------------------------------------------
@@ -121,26 +224,11 @@ H2E_HALANT = "्"
 
 
 def h2e_offline_transliterate_word(word):
-    """Offline Hindi -> Roman fallback for unresolved words."""
+    """Offline Hindi -> Roman fallback for unresolved words।
 
-    # Common exact Roman spellings where phonetic transliteration
-    # should match normal office/data-entry usage.
-    exact = {
-        "पवन": "pawan",
-        "मुक्तिधाम": "muktidham",
-        "आगे": "aage",
-        "पीछे": "pichhe",
-        "जबलपुर": "jabalpur",
-        "गुप्तेश्वर": "gupteshwar",
-        "रामकुमार": "raamkumaar",
-        "जिला": "jila",
-        "कॉम्प्लेक्स": "complex",
-        "के": "ke",
-        "पास": "pas",
-    }
-
-    if word in exact:
-        return exact[word]
+    NOTE: व्यक्तिगत शब्द/नाम (पवन, जबलपुर, ...) अब इंजन में
+    hardcoded नहीं हैं — वे dictionary फ़ाइलों में entries के
+    रूप में रखे गए हैं।"""
 
     result = []
     i = 0
@@ -206,169 +294,159 @@ def h2e_offline_transliterate_word(word):
 
     return value
 
+
 def h2e_offline_transliterate(text):
-  if not text:
-    return text
+    if not text:
+        return text
 
-  pieces = re.split(r"(\s+)", text)
-  result = []
+    pieces = re.split(r"(\s+)", text)
+    result = []
 
-  for piece in pieces:
-    if not piece or piece.isspace():
-      result.append(piece)
-      continue
-
-    match = re.match(
-        r"^([^\u0900-\u097F]*)([\u0900-\u097F]+)([^\u0900-\u097F]*)$",
-        piece
-    )
-
-    if not match:
-      result.append(piece)
-      continue
-
-    prefix, hindi, suffix = match.groups()
-    converted = h2e_offline_transliterate_word(hindi)
-    result.append(prefix + converted + suffix)
-
-  return "".join(result)
-
-
-# 1. hindi_to_english_dictionary.txt लोड करने और Regex प्री-कम्पाइल करने का मॉड्यूलर फ़ंक्शन
-def load_dictionary():
-  dictionary = {}
-  compiled_list = []
-
-  try:
-    # 1. Dedicated Hindi -> English dictionary
-    H2E_FILE = os.path.expanduser(
-        "~/.dm_office_tools/dictionary/hindi_to_english_dictionary.txt"
-    )
-
-    if os.path.isfile(H2E_FILE):
-      with open(H2E_FILE, encoding="utf-8") as f:
-        for line in f:
-          line = line.strip()
-          if not line or line.startswith("#") or "=" not in line:
+    for piece in pieces:
+        if not piece or piece.isspace():
+            result.append(piece)
             continue
 
-          hin, eng = line.split("=", 1)
-          hin = hin.strip()
-          eng = eng.strip()
+        match = re.match(
+            r"^([^\u0900-\u097F]*)([\u0900-\u097F]+)([^\u0900-\u097F]*)$",
+            piece,
+        )
 
-          if hin and eng:
-            dictionary[hin] = eng
-
-    # 2. Main user dictionary is also authoritative for reverse lookup.
-    #    Example: Ashish=आशीष  ->  आशीष=Ashish
-    MAIN_FILE = os.path.expanduser(
-        "~/.dm_office_tools/dictionary/english_to_hindi_dictionary.txt"
-    )
-
-    if os.path.isfile(MAIN_FILE):
-      with open(MAIN_FILE, encoding="utf-8") as f:
-        for line in f:
-          line = line.strip()
-          if not line or line.startswith("#") or "=" not in line:
+        if not match:
+            result.append(piece)
             continue
 
-          eng, hin = line.split("=", 1)
-          eng = eng.strip()
-          hin = hin.strip()
+        prefix, hindi, suffix = match.groups()
+        converted = h2e_offline_transliterate_word(hindi)
+        result.append(prefix + converted + suffix)
 
-          if eng and hin and hin not in dictionary:
-            dictionary[hin] = eng
+    return "".join(result)
+
+
+# ---------------------------------------------------------
+# Dictionary loading
+#
+# पहले हज़ारों अलग regex patterns बनते थे; अब एक ही combined
+# regex (longest-match-first alternation, Devanagari boundaries)
+# से सारे matches एक ही sweep में मिलते हैं।
+# ---------------------------------------------------------
+
+def _read_dictionary_file(path):
+    entries = {}
+
+    try:
+        with open(path, encoding="utf-8") as fh:
+            for line in fh:
+                line = line.strip()
+
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+
+                key, value = line.split("=", 1)
+                key = key.strip()
+                value = value.strip()
+
+                if key and value:
+                    entries[key] = value
+    except (OSError, UnicodeDecodeError) as exc:
+        print("Dictionary File Error:", exc)
+
+    return entries
+
+
+def load_dictionary(dict_dirs=None):
+    """Hindi→English dictionary + (reverse of) English→Hindi dictionary
+    load करके (combined_regex, key→english map) लौटाता है।"""
+    if dict_dirs is None:
+        dict_dirs = [USER_DICT_DIR]
+        if os.path.isdir(SYSTEM_DICT_DIR):
+            dict_dirs.append(SYSTEM_DICT_DIR)
+
+    dictionary = {}
+
+    for dict_dir in dict_dirs:
+        # 1. Dedicated Hindi -> English dictionary
+        h2e_path = os.path.join(dict_dir, H2E_DICT_FILENAME)
+        if os.path.isfile(h2e_path):
+            for hin, eng in _read_dictionary_file(h2e_path).items():
+                dictionary.setdefault(hin, eng)
+
+        # 2. Main user dictionary भी reverse lookup के लिए
+        #    authoritative है। Example: Ashish=आशीष -> आशीष=Ashish
+        e2h_path = os.path.join(dict_dir, E2H_DICT_FILENAME)
+        if os.path.isfile(e2h_path):
+            for eng, hin in _read_dictionary_file(e2h_path).items():
+                if hin not in dictionary:
+                    dictionary[hin] = eng
+
+    if not dictionary:
+        return None, {}
 
     # Longest Hindi phrases first.
-    for hin, eng in sorted(
-        dictionary.items(), key=lambda x: len(x[0]), reverse=True
-    ):
-      pattern = re.compile(
-          rf"(?<![\u0900-\u097F]){re.escape(hin)}(?![\u0900-\u097F])",
-          re.IGNORECASE
-      )
-      compiled_list.append((pattern, eng))
+    keys = sorted(dictionary, key=len, reverse=True)
 
-  except (OSError, UnicodeDecodeError) as e:
-    print("Dictionary File Error:", e)
-  except Exception as e:
-    print("Dictionary Load Error:", e)
-
-  return compiled_list
-
-
-# 2. इंटरनेट कनेक्टिविटी की त्वरित जाँच (Lightweight Endpoint)
-def is_internet_available():
-  try:
-    response = session.get(
-        "https://clients3.google.com/generate_204", timeout=(1.0, 1.5)
-    )
-    return response.status_code == 204
-  except requests.RequestException:
-    return False
-
-
-# डिक्शनरी लोड करें
-compiled_dictionary = load_dictionary()
-
-try:
-  # क्लिपबोर्ड से टेक्स्ट प्राप्त करना
-  try:
-    text = subprocess.check_output(["wl-paste"], text=True).strip()
-  except (FileNotFoundError, subprocess.CalledProcessError):
-    print("wl-paste / wl-copy not installed or clipboard empty.")
-    text = ""
-
-  output = text
-
-  if output:
-    # 3. Dictionary पहले लागू करें।
-    # Dictionary result को final output में सुरक्षित रखें।
-    dictionary_matches = []
-
-    for pattern, eng in compiled_dictionary:
-      for match in pattern.finditer(output):
-        dictionary_matches.append(
-            (match.start(), match.end(), eng)
-        )
-
-    # पहले position, फिर longest match।
-    dictionary_matches.sort(
-        key=lambda item: (item[0], -(item[1] - item[0]))
+    combined = re.compile(
+        r"(?<![\u0900-\u097F])(?:"
+        + "|".join(re.escape(k) for k in keys)
+        + r")(?![\u0900-\u097F])"
     )
 
-    accepted_matches = []
-    last_end = -1
+    return combined, dictionary
 
-    for start_pos, end_pos, eng in dictionary_matches:
-      if start_pos >= last_end:
-        accepted_matches.append(
-            (start_pos, end_pos, eng)
-        )
-        last_end = end_pos
 
-    # Dictionary और unresolved segments अलग करें।
+# ---------------------------------------------------------
+# Main translation flow
+# ---------------------------------------------------------
+
+def translate(text):
+    """मुख्य अनुवाद pipeline — clipboard I/O से मुक्त, ताकि
+    tests इसे बिना clipboard के चला सकें।"""
+    # NOTE: यह function module-level flag को update करता है —
+    # `global` घोषणा ज़रूरी है, वरना Python इसे local समझ लेता
+    # है और पहली पढ़ाई पर UnboundLocalError आता है।
+    global google_temporarily_disabled
+
+    if not text or not text.strip():
+        print("Clipboard is empty or contains only whitespace.")
+        return None
+
+    output = text
+
+    # 1. Dictionary pass — एक ही combined regex sweep।
+    combined, dictionary = load_dictionary()
+
     segments = []
-    position = 0
 
-    for start_pos, end_pos, eng in accepted_matches:
-      if position < start_pos:
-        segments.append(
-            ("unresolved", output[position:start_pos])
-        )
+    if combined is not None:
+        accepted_matches = []
+        last_end = -1
 
-      segments.append(("dictionary", eng))
-      position = end_pos
+        for match in combined.finditer(output):
+            start_pos, end_pos = match.start(), match.end()
 
-    if position < len(output):
-      segments.append(
-          ("unresolved", output[position:])
-      )
+            if start_pos >= last_end:
+                eng = dictionary.get(match.group(0))
+                if eng:
+                    accepted_matches.append((start_pos, end_pos, eng))
+                    last_end = end_pos
+
+        # Dictionary और unresolved segments अलग करें।
+        position = 0
+
+        for start_pos, end_pos, eng in accepted_matches:
+            if position < start_pos:
+                segments.append(("unresolved", output[position:start_pos]))
+
+            segments.append(("dictionary", eng))
+            position = end_pos
+
+        if position < len(output):
+            segments.append(("unresolved", output[position:]))
 
     if not segments:
-      segments = [("unresolved", output)]
+        segments = [("unresolved", output)]
 
-    # 4. केवल unresolved Hindi text देखें।
+    # 2. केवल unresolved Hindi text देखें।
     unresolved_text = "".join(
         value
         for kind, value in segments
@@ -379,124 +457,165 @@ try:
         re.search(r"[\u0900-\u097F]", unresolved_text)
     )
 
-    # 5. अगर कोई unresolved Hindi नहीं है,
-    # तो Google को बिल्कुल call न करें।
-    converted_online = None
+    # 3. अगर कोई unresolved Hindi नहीं है, तो Google को
+    #    बिल्कुल call न करें। Offline-only मोड में भी कभी नहीं।
+    offline = offline_only_mode()
+
+    if offline:
+        print("[सूचना] Offline-only मोड सक्रिय है — network उपयोग नहीं होगा।")
+
+    # प्रत्येक unresolved Hindi segment का अनुवाद Google से।
+    #
+    # v2.0.7 fix: पहले सारे segments का text मिलाकर एक ही
+    # request जाती थी लेकिन केवल पहला segment ही replace होता
+    # था (बाकी text drop) — और एक variable-scoping bug
+    # (UnboundLocalError) की वजह से जिन पतों में कोई शब्द
+    # dictionary से बाहर था, translation पूरी तरह fail हो
+    # जाता था। अब प्रत्येक segment अपनी जगह पर replace होता
+    # है और किसी भी failure पर offline fallback चलता है।
+    online_results = {}
 
     if (
         has_unresolved_hindi
+        and not offline
         and not google_temporarily_disabled
         and not google_cooldown_active()
     ):
-      try:
-        response = session.get(
-            GOOGLE_API + urllib.parse.quote(unresolved_text),
-            timeout=(0.2, 0.8)
-        )
+        requests_made = 0
+        google_failed = False
 
-        # 429 को Google failure मानें और इसी process में
-        # आगे की network delay रोक दें।
-        if response.status_code == 429:
-          google_temporarily_disabled = True
-          set_google_failure_cooldown()
-          converted_online = None
-        else:
-          response.raise_for_status()
-          data = response.json()
+        for index, (kind, value) in enumerate(segments):
+            if kind != "unresolved":
+                continue
+            if not re.search(r"[\u0900-\u097F]", value):
+                continue
+            if (
+                google_temporarily_disabled
+                or requests_made >= MAX_ONLINE_REQUESTS
+            ):
+                break
 
-          if (
-              isinstance(data, list)
-              and len(data) > 0
-              and isinstance(data[0], list)
-          ):
-            parts = []
+            requests_made += 1
 
-            for item in data[0]:
-              if (
-                  isinstance(item, list)
-                  and len(item) > 0
-                  and isinstance(item[0], str)
-              ):
-                parts.append(item[0])
+            # Segment के बीच का Hindi core ही Google को भेजें —
+            # आस-पास के spaces output में सुरक्षित रहेंगे।
+            core = value.strip()
 
-            if parts:
-              converted_online = "".join(parts).strip()
-              clear_google_failure_cooldown()
+            try:
+                response = session.get(
+                    GOOGLE_API + urllib.parse.quote(core),
+                    timeout=ONLINE_TIMEOUT,
+                )
 
-      except (
-          requests.RequestException,
-          ValueError,
-          IndexError,
-          KeyError,
-          TypeError
-      ):
-        # Network failure के बाद persistent cooldown लगाएँ।
-        google_temporarily_disabled = True
-        set_google_failure_cooldown()
-        converted_online = None
+                # 429 को Google failure मानें और इसी process में
+                # आगे की network delay रोक दें।
+                if response.status_code == 429:
+                    google_temporarily_disabled = True
+                    set_google_failure_cooldown()
+                    google_failed = True
+                    break
 
-    # 6. Final result।
-    if not has_unresolved_hindi:
-      # केवल dictionary/English/numbers हैं।
-      result = "".join(
-          value for kind, value in segments
-      )
+                response.raise_for_status()
+                data = response.json()
 
-    elif converted_online is not None:
-      # Google सफल हुआ।
-      final_parts = []
-      online_used = False
+                parts = []
 
-      for kind, value in segments:
+                if (
+                    isinstance(data, list)
+                    and len(data) > 0
+                    and isinstance(data[0], list)
+                ):
+                    for item in data[0]:
+                        if (
+                            isinstance(item, list)
+                            and len(item) > 0
+                            and isinstance(item[0], str)
+                        ):
+                            parts.append(item[0])
+
+                if parts:
+                    online_results[index] = "".join(parts).strip()
+
+            except (
+                requests.RequestException,
+                ValueError,
+                IndexError,
+                KeyError,
+                TypeError
+            ):
+                # Network failure के बाद persistent cooldown लगाएँ।
+                google_temporarily_disabled = True
+                set_google_failure_cooldown()
+                google_failed = True
+                break
+
+        if online_results and not google_failed:
+            clear_google_failure_cooldown()
+
+    # 4. Final result — प्रत्येक segment अपनी जगह पर।
+    #
+    # dictionary segment → English value; successful online
+    # segment → Google का अनुवाद; बाकी Hindi → offline phonetic
+    # fallback; केवल spaces/punctuation → जस की तस।
+    final_parts = []
+
+    for index, (kind, value) in enumerate(segments):
         if kind == "dictionary":
-          final_parts.append(value)
+            final_parts.append(value)
+        elif index in online_results:
+            # Online अनुवाद के साथ segment के original spaces
+            # (leading/trailing) वापस जोड़ें।
+            leading = value[: len(value) - len(value.lstrip())]
+            trailing = value[len(value.rstrip()):]
+            final_parts.append(
+                leading + online_results[index] + trailing
+            )
+        elif re.search(r"[\u0900-\u097F]", value):
+            final_parts.append(h2e_offline_transliterate(value))
         else:
-          if not online_used:
-            final_parts.append(converted_online)
-            online_used = True
+            final_parts.append(value)
 
-      result = "".join(final_parts)
+    result = "".join(final_parts)
 
-    else:
-      # Google failure / 429 / timeout:
-      # केवल unresolved segments पर offline fallback।
-      final_parts = []
-
-      for kind, value in segments:
-        if kind == "dictionary":
-          final_parts.append(value)
-        else:
-          final_parts.append(
-              h2e_offline_transliterate(value)
-          )
-
-      result = "".join(final_parts)
-
-
-    # 5. क्लीन-अप (अतिरिक्त स्पेस को व्यवस्थित करना और स्ट्रिप)
+    # 5. Clean-up (अतिरिक्त स्पेस और strip)
     result = re.sub(r" +", " ", result)
     result = result.strip()
 
     # English output में प्रत्येक शब्द का पहला अक्षर Capital करें।
-    # उदाहरण: "Runier hand pump gram garda"
-    #       → "Runier Hand Pump Gram Garda"
     result = re.sub(
         r"(?<![A-Za-z])([a-z])",
         lambda m: m.group(1).upper(),
-        result
+        result,
     )
 
-    # परिणाम को क्लिपबोर्ड में कॉपी करें (सुरक्षित तरीके से)
+    return result
+
+
+def main():
+    # Installed version जाँचने के लिए:
+    #   dm-office-tools-h2e --version
+    if "--version" in sys.argv:
+        print(f"DM Office Translator (Hindi → English) {APP_VERSION}")
+        return
+
     try:
-      subprocess.run(["wl-copy"], input=result, text=True, check=True)
-      print("Done! English text copied to clipboard.")
-    except (FileNotFoundError, subprocess.CalledProcessError):
-      print("wl-copy / wl-paste not installed.")
+        text = read_clipboard()
+        result = translate(text)
 
-    print("\nResult:\n")
-    print(result)
+        if result is None:
+            return
 
-except Exception as e:
-  print("Error:", e)
-finally:
-  session.close()
+        if write_clipboard(result):
+            print("Done! English text copied to clipboard.")
+
+        print("\nResult:\n")
+        print(result)
+
+    except Exception as e:  # noqa: BLE001 — top-level safety net
+        print("Error:", e)
+    finally:
+        session.close()
+
+
+if __name__ == "__main__":
+    main()

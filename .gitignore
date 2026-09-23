@@ -6,3 +6,5 @@
 # Python cache
 __pycache__/
 *.pyc
+!apt-repo/pool/**/*.deb
+!apt-repo/pool/**/*.deb

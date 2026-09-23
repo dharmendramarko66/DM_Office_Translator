@@ -63,15 +63,39 @@ done
 
 echo "[1/4] Required files ........ OK"
 
+echo "[1/4] Verifying version consistency..."
+
+VERSION_FROM_PY="$(python3 -c "
+import sys
+sys.path.insert(0, '$PROJECT_DIR/stable')
+import soht_version
+print(soht_version.APP_VERSION)
+")"
+
+if [[ "$VERSION" != "$VERSION_FROM_PY" ]]; then
+    echo "[ERROR] Version mismatch:"
+    echo "        DEBIAN/control says $VERSION"
+    echo "        stable/soht_version.py says $VERSION_FROM_PY"
+    echo "        (version केवल stable/soht_version.py में बदलें)"
+    exit 1
+fi
+echo "[1/4] Version .................. OK ($VERSION)"
+
 echo "[1/4] Syncing stable sources into packaging..."
 
-cp -f \
-    "$PROJECT_DIR/stable/english_to_hindi_hybrid.py" \
-    "$SCRIPT_DIR/usr/share/dm-office-tools/stable/english_to_hindi_hybrid.py"
+mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/stable"
+find "$PROJECT_DIR/stable" -maxdepth 1 -type f \
+    -exec cp -f {} "$SCRIPT_DIR/usr/share/dm-office-tools/stable/" \;
 
+echo "[1/4] Syncing dictionaries into packaging..."
+
+mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/dictionary"
 cp -f \
-    "$PROJECT_DIR/stable/hindi_to_english_hybrid.py" \
-    "$SCRIPT_DIR/usr/share/dm-office-tools/stable/hindi_to_english_hybrid.py"
+    "$PROJECT_DIR/dictionary/english_to_hindi_dictionary.txt" \
+    "$SCRIPT_DIR/usr/share/dm-office-tools/dictionary/english_to_hindi_dictionary.txt"
+cp -f \
+    "$PROJECT_DIR/dictionary/hindi_to_english_dictionary.txt" \
+    "$SCRIPT_DIR/usr/share/dm-office-tools/dictionary/hindi_to_english_dictionary.txt"
 
 echo "[1/4] Stable sources ........... SYNCED"
 
@@ -108,6 +132,10 @@ trap 'rm -rf "$STAGING_DIR"' EXIT
 
 cp -a "$SCRIPT_DIR/DEBIAN" "$STAGING_DIR/"
 cp -a "$SCRIPT_DIR/usr" "$STAGING_DIR/"
+
+# dpkg-deb strict permissions चाहता है — setgid bits हटाएँ
+chmod -R g-s "$STAGING_DIR"
+chmod 755 "$STAGING_DIR/DEBIAN"
 
 dpkg-deb --build --root-owner-group "$STAGING_DIR" "$OUTPUT"
 

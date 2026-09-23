@@ -81,7 +81,9 @@ do
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h" || \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e" || \
        echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_english_to_hindi.sh" || \
-       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_hindi_to_english.sh"; then
+       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_hindi_to_english.sh" || \
+       echo "$COMMAND" | grep -Fq "run_english_to_hindi.sh" || \
+       echo "$COMMAND" | grep -Fq "run_hindi_to_english.sh"; then
 
         NEW_KEYS="$(echo "$NEW_KEYS" | \
             sed "s#'$KEY', ##; s#,'$KEY'##; s#'$KEY'##")"

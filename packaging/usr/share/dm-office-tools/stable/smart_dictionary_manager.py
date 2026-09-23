@@ -4,14 +4,14 @@ import shutil
 import tempfile
 
 
+try:
+    from soht_version import APP_VERSION
+except ImportError:  # direct execution from anywhere
+    APP_VERSION = "2.0.7"
+
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk, Pango
-
-
-APP_VERSION = "2.0.5"
-
-
 class DictionaryApp(Gtk.Window):
     def __init__(self):
         super().__init__(title="📖 SOHT Smart Dictionary Manager")

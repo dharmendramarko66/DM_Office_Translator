@@ -113,39 +113,69 @@ H2E_COMMAND="/usr/bin/dm-office-tools-h2e"
 E2H_BINDING="<Alt>space"
 H2E_BINDING="<Alt>h"
 
+E2H_NAME="SOHT English to Hindi"
+H2E_NAME="SOHT Hindi to English"
+
 CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || echo "@as []")"
 
-remove_slot() {
-    local SLOT="$1"
+# ---------------------------------------------------------
+# मौजूदा slots को classify करें।
+#
+# SOHT के हर generation के commands पहचाने जाते हैं —
+# /usr/bin wrappers, /opt paths, और legacy
+# ~/.dm_office_tools/current/ runtime — ताकि upgrade पर
+# पुराने duplicate/stale slots न बचें। Stale slot में
+# <Alt>h binding GNOME को मिलती रहती थी, इसीलिए Alt+H
+# काम नहीं करता था।
+# ---------------------------------------------------------
 
-    CUSTOM_KEYS="$(echo "$CUSTOM_KEYS" | \
-        sed "s#'$SLOT', ##; s#,'$SLOT'##; s#'$SLOT'##")"
+E2H_SLOT=""
+H2E_SLOT=""
+OTHER_SLOTS=()
 
-    dconf reset -f "$SLOT" 2>/dev/null || true
-}
+for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+do
+    [ -z "$KEY" ] && continue
 
-add_slot() {
-    local SLOT="$1"
+    COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
 
-    if [ "$CUSTOM_KEYS" = "@as []" ] || [ -z "$CUSTOM_KEYS" ]; then
-        CUSTOM_KEYS="['$SLOT']"
+    if echo "$COMMAND" | grep -Eq "dm-office-tools-h2e|run_hindi_to_english[.]sh"; then
+        if [ -z "$H2E_SLOT" ]; then
+            H2E_SLOT="$KEY"
+        else
+            dconf reset -f "$KEY" 2>/dev/null || true
+        fi
+    elif echo "$COMMAND" | grep -Eq "dm-office-tools-e2h|run_english_to_hindi[.]sh"; then
+        if [ -z "$E2H_SLOT" ]; then
+            E2H_SLOT="$KEY"
+        else
+            dconf reset -f "$KEY" 2>/dev/null || true
+        fi
     else
-        CUSTOM_KEYS="$(echo "$CUSTOM_KEYS" | \
-            sed "s#]#, '$SLOT']#")"
+        OTHER_SLOTS+=("$KEY")
     fi
+done
 
-    gsettings set "$CUSTOM_SCHEMA" custom-keybindings "$CUSTOM_KEYS"
+slot_in_use() {
+    local CANDIDATE="$1"
+    local ITEM
+
+    for ITEM in "$E2H_SLOT" "$H2E_SLOT" ${OTHER_SLOTS[@]+"${OTHER_SLOTS[@]}"}
+    do
+        [ "$ITEM" = "$CANDIDATE" ] && return 0
+    done
+
+    return 1
 }
 
 get_free_slot() {
     local index=0
     local slot
 
-    while true
-    do
+    while true; do
         slot="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${index}/"
 
-        if ! echo "$CUSTOM_KEYS" | grep -Fq "$slot"; then
+        if ! slot_in_use "$slot"; then
             echo "$slot"
             return
         fi
@@ -154,85 +184,38 @@ get_free_slot() {
     done
 }
 
-# =========================================================
-# E2H — Alt+Space
-# =========================================================
+[ -n "$E2H_SLOT" ] || E2H_SLOT="$(get_free_slot)"
+[ -n "$H2E_SLOT" ] || H2E_SLOT="$(get_free_slot)"
 
-E2H_SLOT=""
-E2H_FOUND=0
+# ---------------------------------------------------------
+# अपने दोनों slots को array में सबसे पहले रखें।
+#
+# एक ही binding (जैसे <Alt>h) कई slots में हो तो GNOME
+# array के पहले slot को priority देता है — इसलिए चाहे कोई
+# भी पुराना/conflicting slot रह गया हो, SOHT का shortcut
+# ही चलेगा। (Unrelated user slots delete नहीं होते।)
+# ---------------------------------------------------------
 
-for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
+FINAL_LIST="'$E2H_SLOT', '$H2E_SLOT'"
+
+for KEY in ${OTHER_SLOTS[@]+"${OTHER_SLOTS[@]}"}
 do
-    [ -z "$KEY" ] && continue
-
-    COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
-
-    if echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h" || \
-       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_english_to_hindi.sh"; then
-
-        if [ "$E2H_FOUND" -eq 0 ]; then
-            E2H_SLOT="$KEY"
-            E2H_FOUND=1
-        else
-            remove_slot "$KEY"
-        fi
-    fi
+    FINAL_LIST="$FINAL_LIST, '$KEY'"
 done
 
-if [ "$E2H_FOUND" -eq 0 ]; then
-    # Never overwrite an unrelated user's Alt+Space shortcut.
-    # Create a new SOHT slot instead.
-    E2H_SLOT="$(get_free_slot)"
-    add_slot "$E2H_SLOT"
-fi
+gsettings set "$CUSTOM_SCHEMA" custom-keybindings "[$FINAL_LIST]"
 
-gsettings set "$CUSTOM_SCHEMA" custom-keybindings "$CUSTOM_KEYS"
-
-dconf write "${E2H_SLOT}name" "'SOHT English to Hindi'"
+dconf write "${E2H_SLOT}name" "'$E2H_NAME'"
 dconf write "${E2H_SLOT}command" "'$E2H_COMMAND'"
 dconf write "${E2H_SLOT}binding" "'$E2H_BINDING'"
 
-# =========================================================
-# H2E — Alt+H
-# =========================================================
-
-H2E_SLOT=""
-H2E_FOUND=0
-
-for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
-do
-    [ -z "$KEY" ] && continue
-
-    COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
-
-    if echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e" || \
-       echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_hindi_to_english.sh"; then
-
-        if [ "$H2E_FOUND" -eq 0 ]; then
-            H2E_SLOT="$KEY"
-            H2E_FOUND=1
-        else
-            remove_slot "$KEY"
-        fi
-    fi
-done
-
-if [ "$H2E_FOUND" -eq 0 ]; then
-    # Never overwrite an unrelated user's Alt+H shortcut.
-    # Create a new SOHT slot instead.
-    H2E_SLOT="$(get_free_slot)"
-    add_slot "$H2E_SLOT"
-fi
-
-gsettings set "$CUSTOM_SCHEMA" custom-keybindings "$CUSTOM_KEYS"
-
-dconf write "${H2E_SLOT}name" "'SOHT Hindi to English'"
+dconf write "${H2E_SLOT}name" "'$H2E_NAME'"
 dconf write "${H2E_SLOT}command" "'$H2E_COMMAND'"
 dconf write "${H2E_SLOT}binding" "'$H2E_BINDING'"
 
-# =========================================================
+# ---------------------------------------------------------
 # Verify final shortcuts
-# =========================================================
+# ---------------------------------------------------------
 
 FINAL_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings)"
 
