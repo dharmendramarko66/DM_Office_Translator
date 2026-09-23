@@ -25,7 +25,7 @@ def _run_version_flag(script_name):
 
 def test_version_constant_single_source():
     # यही एक जगह version बदलनी चाहिए।
-    assert soht_version.APP_VERSION == "2.0.8"
+    assert soht_version.APP_VERSION == "2.0.9"
 
 
 def test_e2h_version_flag():

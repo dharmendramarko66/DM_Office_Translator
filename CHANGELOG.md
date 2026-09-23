@@ -3,6 +3,15 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [2.0.9] — 2026-09-23
+
+### Fixed
+- **Alt+Space conflict (स्थायी समाधान):** Ubuntu/GNOME का built-in "Activate window menu"
+  भी Alt+Space पर बैठा होता है, जिससे कई मशीनों पर English → Hindi shortcut की जगह window
+  menu खुल जाता था। अब postinst खुद जाँच कर conflict होने पर उसे disable कर देता है।
+- postrm अब uninstall पर GNOME की window-menu setting को default पर वापस ला देता है।
+- postrm अब v2.0.8 वाले नए shortcut नामों ("DM Office Translator — ...") को भी पहचानता है।
+
 ## [2.0.8] — 2026-09-23
 
 ### Branding / नाम सुसंगतता

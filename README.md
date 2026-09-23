@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 2.0.8 Stable
+**Version / संस्करण:** 2.0.9 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,15 @@
 
 ---
 
-## What's New in v2.0.8 / v2.0.8 में नया क्या है
+## What's New in v2.0.9 / v2.0.9 में नया क्या है
+
+- **Alt+Space conflict का स्थायी समाधान / Permanent fix for Alt+Space conflict**
+  - Ubuntu में GNOME का built-in "Activate window menu" भी Alt+Space पर बैठा होता है, जिससे कई मशीनों पर English → Hindi shortcut की जगह window menu खुल जाता था।
+  - अब install/upgrade के समय installer खुद जाँच कर यह conflict हटा देता है — नई मशीनों पर कुछ भी मैन्युअल करने की ज़रूरत नहीं।
+  - Tool uninstall करने पर GNOME की यह setting अपने default पर वापस आ जाती है।
+
+## What was new in v2.0.8 / v2.0.8 में नया क्या था
+
 
 - **एक ही नाम हर जगह — "DM Office Translator" / One name everywhere**
   - GNOME Settings में keyboard shortcuts अब **"DM Office Translator — English to Hindi"** और **"DM Office Translator — Hindi to English"** नाम से दिखेंगे (पहले "SOHT English to Hindi" जैसे नाम थे)। Upgrade पर नाम अपने आप बदल जाएँगे।
@@ -302,8 +310,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_2.0.8_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_2.0.8_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_2.0.9_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_2.0.9_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -332,7 +340,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_2.0.8_amd64.deb
+sudo apt install ./dm-office-tools_2.0.9_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -346,7 +354,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 2.0.8
+Version: 2.0.9
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -408,7 +416,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **2.0.8 Stable** | ✅ Current Release / वर्तमान रिलीज | Consistent branding — every user-visible name is now "DM Office Translator" (GNOME shortcut names, Dictionary Manager title, docs). Internal package name `dm-office-tools` unchanged. / एक ही नाम — "DM Office Translator" (GNOME shortcut नाम, Dictionary Manager title, docs)। Internal package नाम `dm-office-tools` वही रहा। |
+| **2.0.9 Stable** | ✅ Current Release / वर्तमान रिलीज | Installer now automatically clears GNOME's built-in Alt+Space (window menu) conflict so the English → Hindi shortcut works on every machine. / Installer अब GNOME के Alt+Space window-menu conflict को खुद हटा देता है — हर मशीन पर English → Hindi shortcut काम करेगा। |
+| **2.0.8 Stable** | Previous Release / पिछली रिलीज | Consistent branding — every user-visible name is now "DM Office Translator" (GNOME shortcut names, Dictionary Manager title, docs). Internal package name `dm-office-tools` unchanged. / एक ही नाम — "DM Office Translator" (GNOME shortcut नाम, Dictionary Manager title, docs)। Internal package नाम `dm-office-tools` वही रहा। |
 | **2.0.7 Stable** | Previous Release / पिछली रिलीज | Hardened release: unified version source, requests-based online fallback (no hardcoded IPs), single batched request, offline-only mode, safer phonetic corrections, X11 clipboard fallback, tests & CI. / Hardened रिलीज़: एकीकृत version स्रोत, requests-आधारित online fallback, एक batched request, offline-only मोड, सुरक्षित फोनेटिक सुधार, X11 clipboard fallback, tests और CI। |
 | **2.0.6 Stable** | Previous Release / पिछली रिलीज | Dictionary persistence fixes. / डिक्शनरी persistence सुधार। |
 | **2.0.5 Stable** | Previous Release / पिछली रिलीज | Improved installer, persistent user dictionaries, automatic keyboard shortcuts, stable `/usr/share/dm-office-tools/stable/` runtime and legacy `current/` cleanup. / बेहतर installer, persistent user dictionaries, automatic keyboard shortcuts, stable `/usr/share/dm-office-tools/stable/` runtime और legacy `current/` cleanup। |
@@ -453,9 +462,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 2.0.8 Stable
-- **Release / रिलीज:** v2.0.8
-- **Package / पैकेज:** `dm-office-tools_2.0.8_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 2.0.9 Stable
+- **Release / रिलीज:** v2.0.9
+- **Package / पैकेज:** `dm-office-tools_2.0.9_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

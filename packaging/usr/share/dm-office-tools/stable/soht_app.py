@@ -12,7 +12,7 @@ from gi.repository import Gtk, Gdk, GdkPixbuf
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "2.0.8"
+    APP_VERSION = "2.0.9"
 
 INSTALL_DIR = "/usr/share/dm-office-tools"
 ICON_PATH = "/usr/share/dm-office-tools/dm-office-translator.png"

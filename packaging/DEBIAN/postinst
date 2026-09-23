@@ -214,6 +214,20 @@ dconf write "${H2E_SLOT}command" "'$H2E_COMMAND'"
 dconf write "${H2E_SLOT}binding" "'$H2E_BINDING'"
 
 # ---------------------------------------------------------
+# GNOME का built-in "Activate window menu" भी Ubuntu में
+# <Alt>space पर बैठा होता है और वह E2H shortcut को दबा
+# देता है। अगर वहीं है तो disable कर दें — user की कोई
+# दूसरी binding नहीं छेड़ी जाती।
+# ---------------------------------------------------------
+
+WIN_MENU="$(gsettings get org.gnome.desktop.wm.keybindings activate-window-menu 2>/dev/null || true)"
+
+if echo "$WIN_MENU" | grep -qi "alt" && echo "$WIN_MENU" | grep -qi "space"; then
+    gsettings set org.gnome.desktop.wm.keybindings activate-window-menu "[]"
+    echo "GNOME Alt+Space window-menu conflict ... CLEARED"
+fi
+
+# ---------------------------------------------------------
 # Verify final shortcuts
 # ---------------------------------------------------------
 

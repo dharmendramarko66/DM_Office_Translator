@@ -78,6 +78,8 @@ do
 
     if [[ "$NAME" == "'SOHT English to Hindi'" ]] || \
        [[ "$NAME" == "'SOHT Hindi to English'" ]] || \
+       [[ "$NAME" == "'DM Office Translator — English to Hindi'" ]] || \
+       [[ "$NAME" == "'DM Office Translator — Hindi to English'" ]] || \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h" || \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e" || \
        echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_english_to_hindi.sh" || \
@@ -98,6 +100,19 @@ if [[ "$REMOVED" -eq 1 ]]; then
     echo "[OK] SOHT keyboard shortcuts removed."
 else
     echo "[OK] No SOHT keyboard shortcuts found."
+fi
+
+# ---------------------------------------------------------
+# अगर install के समय GNOME का window-menu (Alt+Space)
+# disable किया गया था और अब भी खाली है, तो default पर
+# वापस ले आएँ।
+# ---------------------------------------------------------
+
+WIN_MENU="$(gsettings get org.gnome.desktop.wm.keybindings activate-window-menu 2>/dev/null || true)"
+
+if [[ "$WIN_MENU" == "@as []" || "$WIN_MENU" == "[]" || -z "$WIN_MENU" ]]; then
+    gsettings set org.gnome.desktop.wm.keybindings activate-window-menu "['<Alt>space']"
+    echo "[OK] GNOME window-menu (Alt+Space) restored."
 fi
 
 SHORTCUT_SCRIPT
