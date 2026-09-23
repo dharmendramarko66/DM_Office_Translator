@@ -1,6 +1,6 @@
 #!/bin/bash
 # =========================================================
-# DM Office Tools — apt रेपो (GitHub Pages) publish helper
+# DM Office Translator — apt रेपो (GitHub Pages) publish helper
 #
 # नई .deb को apt-repo में publish करने का एक ही command:
 #   bash packaging/update-apt-repo.sh

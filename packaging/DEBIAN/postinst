@@ -113,8 +113,8 @@ H2E_COMMAND="/usr/bin/dm-office-tools-h2e"
 E2H_BINDING="<Alt>space"
 H2E_BINDING="<Alt>h"
 
-E2H_NAME="SOHT English to Hindi"
-H2E_NAME="SOHT Hindi to English"
+E2H_NAME="DM Office Translator — English to Hindi"
+H2E_NAME="DM Office Translator — Hindi to English"
 
 CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || echo "@as []")"
 
@@ -230,13 +230,13 @@ do
     COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
     BINDING="$(dconf read "${KEY}binding" 2>/dev/null || true)"
 
-    if [ "$NAME" = "'SOHT English to Hindi'" ] && \
+    if [ "$NAME" = "'DM Office Translator — English to Hindi'" ] && \
        [ "$BINDING" = "'<Alt>space'" ] && \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h"; then
         E2H_OK=1
     fi
 
-    if [ "$NAME" = "'SOHT Hindi to English'" ] && \
+    if [ "$NAME" = "'DM Office Translator — Hindi to English'" ] && \
        [ "$BINDING" = "'<Alt>h'" ] && \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e"; then
         H2E_OK=1

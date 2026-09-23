@@ -1,5 +1,5 @@
 #!/bin/bash
-# DM Office Tools — Hindi → English translator launcher.
+# DM Office Translator — Hindi → English translator launcher.
 #
 # Offline-only मोड:  SOHT_OFFLINE=1 dm-office-tools-h2e
 # (या ~/.dm_office_tools/offline_mode फ़ाइल बनाएँ)

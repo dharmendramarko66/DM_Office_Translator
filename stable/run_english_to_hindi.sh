@@ -1,5 +1,5 @@
 #!/bin/bash
-# DM Office Tools — English → Hindi translator launcher.
+# DM Office Translator — English → Hindi translator launcher.
 #
 # v2.0.7: IPv4 bootstrap/cache layer हटा दिया गया — इंजन अब
 # python-requests (सामान्य DNS + उचित timeout) का उपयोग करता

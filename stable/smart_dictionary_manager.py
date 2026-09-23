@@ -7,14 +7,14 @@ import tempfile
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "2.0.7"
+    APP_VERSION = "2.0.8"
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk, Pango
 class DictionaryApp(Gtk.Window):
     def __init__(self):
-        super().__init__(title="📖 SOHT Smart Dictionary Manager")
+        super().__init__(title="📖 DM Office Translator — Dictionary Manager")
         self.set_default_size(560, 720)
         self.set_resizable(False)
         self.set_position(Gtk.WindowPosition.CENTER)
