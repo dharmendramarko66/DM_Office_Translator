@@ -1,17 +1,19 @@
 Package: dm-office-tools
-Version: 2.0.6
+Version: 2.0.7
 Architecture: amd64
 Maintainer: Dharmendra Marko
 Depends: python3, python3-gi, python3-requests, wl-clipboard
-Filename: apt-repo/pool/main/d/dm-office-tools/dm-office-tools_2.0.6_amd64.deb
-Size: 2134316
-MD5sum: e240d80b968b34ba55bf7dede991955a
-SHA1: 0cda938e60e50d8aa5a781679d44c0142a18f246
-SHA256: b1c3c608ac01e0f3dded9f57a6e8540280eac3cfac6fdfd36b807a5923922672
+Suggests: xclip | xsel
+Filename: apt-repo/pool/main/d/dm-office-tools/dm-office-tools_2.0.7_amd64.deb
+Size: 2165918
+MD5sum: 71d8734b54f3ef23437e35010880ddaa
+SHA1: c515517f078f8c00dcd8b031acb2e2092fdef858
+SHA256: 6a7125e46f0689d7c6031026699f01b4278863aba564c4c91f8258bcb97d9122
 Section: office
 Priority: optional
-Homepage: https://github.com/dharmendramarko66/DM_Office_Tools
+Homepage: https://github.com/dharmendramarko66/DM_Office_Translator
 Description: DM Office Translator
  Smart Office Hybrid Translator (SOHT) for English-Hindi and Hindi-English
  data entry in Court and Government offices with Dictionary Manager and
  keyboard shortcuts.
+
