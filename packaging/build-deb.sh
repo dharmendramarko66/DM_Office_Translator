@@ -137,6 +137,7 @@ cp -a "$SCRIPT_DIR/usr" "$STAGING_DIR/"
 chmod -R g-s "$STAGING_DIR"
 chmod 755 "$STAGING_DIR/DEBIAN"
 
+find "$STAGING_DIR" -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 dpkg-deb --build --root-owner-group "$STAGING_DIR" "$OUTPUT"
 
 echo
