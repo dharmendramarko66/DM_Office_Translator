@@ -7,3 +7,4 @@
 __pycache__/
 *.pyc
 !apt-repo/pool/**/*.deb
+.pytest_cache/
