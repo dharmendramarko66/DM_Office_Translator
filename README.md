@@ -377,7 +377,51 @@ dm-office-tools-h2e --version
 - ✔ Keyboard Shortcut: `Alt + Space` — English → Hindi
 - ✔ Keyboard Shortcut: `Alt + H` — Hindi → English
 
+अपडेट करने का तरीका नीचे "Updating DM Office Translator" section में दिया है।
 
+
+
+## Updating DM Office Translator / अपडेट कैसे करें
+
+DM Office Translator को अपडेट करना बहुत आसान है — एक बार apt repository जुड़ जाने के बाद हर नया version सिर्फ़ दो commands से अपने आप आ जाता है:
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+(दोनों एक साथ भी चला सकते हैं: `sudo apt update && sudo apt upgrade`)
+
+अगर नया version उपलब्ध हुआ हो तो यह `dm-office-tools` को update कर देगा। आपकी dictionaries और keyboard shortcuts सुरक्षित रहते हैं। अपडेट के बाद version जाँच लें:
+
+```bash
+dm-office-tools --version
+```
+
+### One-Time apt Repository Setup (Recommended) / एक बार का apt रेपो सेटअप (अनुशंसित)
+
+अगर आपने tool पहले `.deb` फ़ाइल से install किया था, तो नीचे वाले commands एक बार चला दीजिए — इसके बाद हर अगला अपडेट `sudo apt update && sudo apt upgrade` से अपने आप मिलता रहेगा, बार-बार `.deb` डाउनलोड करने की ज़रूरत नहीं।
+
+```bash
+wget -qO- https://dharmendramarko66.github.io/DM_Office_Translator/apt-repo/dm-office-translator-apt-public.asc | sudo gpg --dearmor -o /usr/share/keyrings/dm-office-translator-apt.gpg
+
+echo "deb [signed-by=/usr/share/keyrings/dm-office-translator-apt.gpg] https://dharmendramarko66.github.io/DM_Office_Translator/apt-repo noble main" | sudo tee /etc/apt/sources.list.d/dm-office-translator.list
+
+sudo apt update
+```
+
+अब `dm-office-tools` के हर नए version की जानकारी आपको अपने आप मिल जाएगी।
+
+### Update Without the Repository / रेपो के बिना अपडेट
+
+अगर apt repository जोड़ना नहीं चाहते, तो GitHub Release पेज से नई `.deb` डाउनलोड करके install कर सकते हैं:
+
+```bash
+cd ~/Downloads
+sudo apt install ./dm-office-tools_<new-version>_amd64.deb
+```
+
+नया version आया है या नहीं, यह GitHub Release पेज या `CHANGELOG.md` में देख सकते हैं।
 
 ## Uninstallation / अनइंस्टॉलेशन
 
