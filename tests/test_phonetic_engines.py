@@ -24,6 +24,42 @@ class TestE2HPhoneticEngine:
     def test_known_words(self, e2h, word, expected):
         assert e2h.e2h_offline_transliterate_word(word) == expected
 
+    @pytest.mark.parametrize(
+        "word,expected",
+        [
+            ("olkar", "ओलकर"),
+            ("arjun", "अरजुन"),
+            ("inder", "इनदेर"),
+            ("umesh", "उमेश"),
+            ("amit", "अमित"),
+            ("omprakash", "ओमप्रकाश"),
+            ("aarti", "आरति"),
+        ],
+    )
+    def test_vowel_start_words(self, e2h, word, expected):
+        # v2.0.10: शब्द के आरम्भ में स्वतंत्र स्वर आना चाहिए।
+        assert e2h.e2h_offline_transliterate_word(word) == expected
+
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("ोल्कर", "ओल्कर"),
+            ("ारती", "आरती"),
+            ("िन्दर", "इन्दर"),
+            ("ूमेश", "ऊमेश"),
+            ("ेकता", "एकता"),
+            ("ैरावत", "ऐरावत"),
+            ("ौरत", "औरत"),
+            ("ुमर", "उमर"),
+        ],
+    )
+    def test_leading_matra_normalized(self, e2h, raw, expected):
+        assert e2h.fix_leading_matra(raw) == expected
+
+    def test_leading_matra_idempotent(self, e2h):
+        once = e2h.fix_leading_matra("ोल्कर")
+        assert e2h.fix_leading_matra(once) == once
+
     def test_compound_correction_still_works(self, e2h):
         # Compound शब्द के भीतर सुधार लागू होना चाहिए।
         assert (

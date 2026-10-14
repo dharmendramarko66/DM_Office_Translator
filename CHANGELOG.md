@@ -3,6 +3,16 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [2.0.10] — 2026-10-14
+
+### Fixed
+- **Vowel से शुरू होने वाले शब्दों का गलत transliteration:** Google Input Tools कुछ
+  शब्दों का output मात्रा से शुरू कर देता था (जैसे `Olkar` → "ोल्कर")। देवनागरी में
+  कोई शब्द मात्रा (ा ि ी ु ू ृ े ै ॉ ो ौ) से शुरू नहीं हो सकता — अब ऐसा output
+  स्वतंत्र स्वर (आ इ ई उ ऊ ऋ ए ऐ ऑ ओ औ) में बदल दिया जाता है (`Olkar` → "ओल्कर")।
+- Fix online (Google Input Tools) और offline — दोनों paths पर लागू है; नए unit +
+  end-to-end regression tests भी जोड़े गए हैं।
+
 ## [2.0.9] — 2026-09-23
 
 ### Fixed

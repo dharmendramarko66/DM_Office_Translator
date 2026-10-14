@@ -29,7 +29,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "2.0.9"
+    APP_VERSION = "2.0.10"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -275,6 +275,48 @@ def _build_correction_patterns():
     ]
 
 
+# ---------------------------------------------------------
+# मात्रा-से-शुरू सुधार (v2.0.10)
+#
+# देवनागरी में कोई शब्द मात्रा (ा ि ी ु ू ृ े ै ॉ ो ौ) से
+# शुरू नहीं हो सकता — शब्द के आरम्भ में स्वतंत्र स्वर आता है।
+# Google Input Tools कुछ शब्दों का output मात्रा से शुरू कर
+# देता है (जैसे Olkar → "ोल्कर"), इसलिए ऐसे output को सही
+# स्वतंत्र स्वर में बदल दिया जाता है।
+# ---------------------------------------------------------
+
+LEADING_MATRA_TO_VOWEL = {
+    "\u093e": "\u0906",  # ा -> आ
+    "\u093f": "\u0907",  # ि -> इ
+    "\u0940": "\u0908",  # ी -> ई
+    "\u0941": "\u0909",  # ु -> उ
+    "\u0942": "\u090a",  # ू -> ऊ
+    "\u0943": "\u090b",  # ृ -> ऋ
+    "\u0944": "\u090c",  # ॄ -> ॠ
+    "\u0945": "\u090d",  # ॅ -> ऍ
+    "\u0947": "\u090f",  # े -> ए
+    "\u0948": "\u0910",  # ै -> ऐ
+    "\u0949": "\u0911",  # ॉ -> ऑ
+    "\u094b": "\u0913",  # ो -> ओ
+    "\u094c": "\u0914",  # ौ -> औ
+}
+
+
+def fix_leading_matra(text):
+    """अगर transliteration मात्रा से शुरू हुई हो तो उसे स्वतंत्र
+    स्वर में बदल दें (जैसे "ोल्कर" → "ओल्कर")। यह operation
+    idempotent है।"""
+    if not text:
+        return text
+
+    replacement = LEADING_MATRA_TO_VOWEL.get(text[0])
+
+    if replacement:
+        return replacement + text[1:]
+
+    return text
+
+
 def e2h_offline_transliterate_word(word):
     """Offline Roman Hindi/Urdu → Devanagari phonetic fallback।"""
 
@@ -467,7 +509,7 @@ def e2h_offline_transliterate_word(word):
     for pattern, target in _build_correction_patterns():
         value = pattern.sub(target, value)
 
-    return value
+    return fix_leading_matra(value)
 
 
 # ---------------------------------------------------------
@@ -512,8 +554,12 @@ def google_transliterate_batch(words):
         if len(parts) != len(words):
             return None
 
-        # हिन्दी अंकों को अंग्रेज़ी अंकों में बदलें।
-        return [part.translate(DEVANAGARI_DIGITS) for part in parts]
+        # हिन्दी अंकों को अंग्रेज़ी अंकों में बदलें; मात्रा-से-शुरू
+        # output को स्वतंत्र स्वर में ठीक करें (v2.0.10)।
+        return [
+            fix_leading_matra(part).translate(DEVANAGARI_DIGITS)
+            for part in parts
+        ]
 
     except (
         requests.RequestException,

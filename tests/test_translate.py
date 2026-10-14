@@ -40,6 +40,35 @@ class TestE2HTranslate:
         assert e2h.offline_only_mode() is False
 
 
+class TestE2HVowelStart:
+    """v2.0.10: vowel से शुरू होने वाले शब्द (जैसे Olkar) अब
+    स्वतंत्र स्वर से शुरू होते हैं — मात्रा से नहीं।"""
+
+    def _patch_paths(self, monkeypatch, e2h, dict_dir):
+        monkeypatch.setattr(e2h, "USER_DICT_DIR", str(dict_dir))
+        monkeypatch.setattr(e2h, "SYSTEM_DICT_DIR", "/nonexistent")
+
+    def test_offline_vowel_start_word(self, e2h, dict_dir, monkeypatch, offline):
+        self._patch_paths(monkeypatch, e2h, dict_dir)
+        assert e2h.translate("Olkar") == "ओलकर"
+
+    def test_google_batch_leading_matra_fixed(self, e2h, monkeypatch):
+        """Google का असली response structure mock करके देखें कि
+        मात्रा-से-शुरू output ठीक हो जाता है।"""
+
+        class FakeResponse:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                # Google Input Tools का वास्तविक structure:
+                # ["SUCCESS", [["olkar", ["ोल्कर"], [], {"num": 1}]]]
+                return ["SUCCESS", [["olkar", ["ोल्कर"], [], {"num": 1}]]]
+
+        monkeypatch.setattr(e2h.requests, "get", lambda *a, **k: FakeResponse())
+        assert e2h.google_transliterate_batch(["olkar"]) == ["ओल्कर"]
+
+
 class TestH2ETranslate:
     def _patch_paths(self, monkeypatch, h2e, dict_dir):
         monkeypatch.setattr(h2e, "USER_DICT_DIR", str(dict_dir))
