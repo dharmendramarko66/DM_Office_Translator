@@ -109,12 +109,15 @@ CUSTOM_SCHEMA="org.gnome.settings-daemon.plugins.media-keys"
 
 E2H_COMMAND="/usr/bin/dm-office-tools-e2h"
 H2E_COMMAND="/usr/bin/dm-office-tools-h2e"
+TRANSLIT_COMMAND="/usr/bin/dm-office-tools-translit"
 
 E2H_BINDING="<Alt>space"
 H2E_BINDING="<Alt>h"
+TRANSLIT_BINDING="<Alt>t"
 
 E2H_NAME="DM Office Translator — English to Hindi"
 H2E_NAME="DM Office Translator — Hindi to English"
+TRANSLIT_NAME="DM Office Translator — Transliteration mode"
 
 CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || echo "@as []")"
 
@@ -131,6 +134,7 @@ CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || 
 
 E2H_SLOT=""
 H2E_SLOT=""
+TRANSLIT_SLOT=""
 OTHER_SLOTS=()
 
 for KEY in $(echo "$CUSTOM_KEYS" | sed "s/@as //" | tr -d "[],'")
@@ -139,7 +143,13 @@ do
 
     COMMAND="$(dconf read "${KEY}command" 2>/dev/null || true)"
 
-    if echo "$COMMAND" | grep -Eq "dm-office-tools-h2e|run_hindi_to_english[.]sh"; then
+    if echo "$COMMAND" | grep -Eq "dm-office-tools-translit"; then
+        if [ -z "$TRANSLIT_SLOT" ]; then
+            TRANSLIT_SLOT="$KEY"
+        else
+            dconf reset -f "$KEY" 2>/dev/null || true
+        fi
+    elif echo "$COMMAND" | grep -Eq "dm-office-tools-h2e|run_hindi_to_english[.]sh"; then
         if [ -z "$H2E_SLOT" ]; then
             H2E_SLOT="$KEY"
         else
@@ -160,7 +170,7 @@ slot_in_use() {
     local CANDIDATE="$1"
     local ITEM
 
-    for ITEM in "$E2H_SLOT" "$H2E_SLOT" ${OTHER_SLOTS[@]+"${OTHER_SLOTS[@]}"}
+    for ITEM in "$E2H_SLOT" "$H2E_SLOT" "$TRANSLIT_SLOT" ${OTHER_SLOTS[@]+"${OTHER_SLOTS[@]}"}
     do
         [ "$ITEM" = "$CANDIDATE" ] && return 0
     done
@@ -186,6 +196,7 @@ get_free_slot() {
 
 [ -n "$E2H_SLOT" ] || E2H_SLOT="$(get_free_slot)"
 [ -n "$H2E_SLOT" ] || H2E_SLOT="$(get_free_slot)"
+[ -n "$TRANSLIT_SLOT" ] || TRANSLIT_SLOT="$(get_free_slot)"
 
 # ---------------------------------------------------------
 # अपने दोनों slots को array में सबसे पहले रखें।
@@ -196,7 +207,7 @@ get_free_slot() {
 # ही चलेगा। (Unrelated user slots delete नहीं होते।)
 # ---------------------------------------------------------
 
-FINAL_LIST="'$E2H_SLOT', '$H2E_SLOT'"
+FINAL_LIST="'$E2H_SLOT', '$H2E_SLOT', '$TRANSLIT_SLOT'"
 
 for KEY in ${OTHER_SLOTS[@]+"${OTHER_SLOTS[@]}"}
 do
@@ -212,6 +223,10 @@ dconf write "${E2H_SLOT}binding" "'$E2H_BINDING'"
 dconf write "${H2E_SLOT}name" "'$H2E_NAME'"
 dconf write "${H2E_SLOT}command" "'$H2E_COMMAND'"
 dconf write "${H2E_SLOT}binding" "'$H2E_BINDING'"
+
+dconf write "${TRANSLIT_SLOT}name" "'$TRANSLIT_NAME'"
+dconf write "${TRANSLIT_SLOT}command" "'$TRANSLIT_COMMAND'"
+dconf write "${TRANSLIT_SLOT}binding" "'$TRANSLIT_BINDING'"
 
 # ---------------------------------------------------------
 # GNOME का built-in "Activate window menu" भी Ubuntu में
@@ -235,6 +250,7 @@ FINAL_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings)"
 
 E2H_OK=0
 H2E_OK=0
+TRANSLIT_OK=0
 
 for KEY in $(echo "$FINAL_KEYS" | sed "s/@as //" | tr -d "[],'")
 do
@@ -255,12 +271,19 @@ do
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e"; then
         H2E_OK=1
     fi
+
+    if [ "$NAME" = "'DM Office Translator — Transliteration mode'" ] && \
+       [ "$BINDING" = "'<Alt>t'" ] && \
+       echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-translit"; then
+        TRANSLIT_OK=1
+    fi
 done
 
 [ "$E2H_OK" -eq 1 ] && echo "E2H Alt+Space ........ OK"
 [ "$H2E_OK" -eq 1 ] && echo "H2E Alt+H ............ OK"
+[ "$TRANSLIT_OK" -eq 1 ] && echo "TRANSLIT Alt+T ....... OK"
 
-if [ "$E2H_OK" -ne 1 ] || [ "$H2E_OK" -ne 1 ]; then
+if [ "$E2H_OK" -ne 1 ] || [ "$H2E_OK" -ne 1 ] || [ "$TRANSLIT_OK" -ne 1 ]; then
     echo "Keyboard shortcut verification failed."
     exit 1
 fi
@@ -302,5 +325,6 @@ fi
 echo "[OK] DM Office Translator configured successfully."
 echo "[OK] English → Hindi : Alt+Space"
 echo "[OK] Hindi → English : Alt+H"
+echo "[OK] Transliteration mode : Alt+T (on/off)"
 
 exit 0

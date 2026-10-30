@@ -3,6 +3,18 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [2.0.11] — 2026-10-30
+
+### Added
+- **Transliteration mode (Hindi → English):** अब `Alt+T` से मोड बदल सकते हैं।
+  चालू होने पर translation की जगह transliteration होता है — `निर्भय` → `Nirbhay`
+  (न कि `Fearless`)। बंद होने पर पहले की तरह dictionary translation चलता है।
+  - नया command: `dm-office-tools-translit on|off|status`
+  - नया GNOME shortcut slot: **Alt+T** (installer खुद जोड़ता/हटाता है)
+  - मोड `~/.dm_office_tools/transliteration_mode` marker फ़ाइल से याद रहता है;
+    `SOHT_TRANSLIT=1` environment variable भी काम करता है।
+- नए tests: transliteration mode, marker/env switching, और dictionary-mode regression।
+
 ## [2.0.10] — 2026-10-14
 
 ### Fixed

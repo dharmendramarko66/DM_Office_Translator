@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 2.0.10 Stable
+**Version / संस्करण:** 2.0.11 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,16 @@
 
 ---
 
-## What's New in v2.0.10 / v2.0.10 में नया क्या है
+## What's New in v2.0.11 / v2.0.11 में नया क्या है
+
+- **Transliteration mode (Alt+T) / ट्रांसलिटरेशन मोड**
+  - Hindi → English में अब आप चुन सकते हैं — translation या transliteration।
+  - `Alt+T` दबाकर मोड बदलिए: चालू होने पर **निर्भय → Nirbhay** (न कि Fearless), और नाम/गाँव/पते अपने मूल उच्चारण में आते हैं।
+  - बंद होने पर पहले की तरह dictionary translation चलता है (जिला → Dist, ग्राम → Gram)।
+  - स्थिति screen पर notification से दिख जाती है; command से भी: `dm-office-tools-translit on|off|status`
+
+## What was new in v2.0.10 / v2.0.10 में नया क्या था
+
 
 - **Vowel से शुरू होने वाले शब्द अब सही / Words starting with a vowel now correct**
   - Google Input Tools कुछ शब्दों का output मात्रा से शुरू कर देता था (जैसे `Olkar` → "ोल्कर"), जो देवनागरी में कभी सही नहीं होता — कोई भी शब्द मात्रा से शुरू नहीं होता।
@@ -310,6 +319,7 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 |---|---|---|
 | **Alt + Space** | English → Hindi Translation | `/bin/bash /usr/share/dm-office-tools/stable/run_english_to_hindi.sh` |
 | **Alt + H** | Hindi → English Translation | `/bin/bash /usr/share/dm-office-tools/stable/run_hindi_to_english.sh` |
+| **Alt + T** | Transliteration mode on/off (निर्भय → Nirbhay) | `/usr/bin/dm-office-tools-translit` |
 
 *Note: The shortcuts execute the system-installed translators from `/usr/share/dm-office-tools/stable/`.*
 
@@ -318,8 +328,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_2.0.10_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_2.0.10_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_2.0.11_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_2.0.11_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -348,7 +358,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_2.0.10_amd64.deb
+sudo apt install ./dm-office-tools_2.0.11_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -362,7 +372,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 2.0.10
+Version: 2.0.11
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -468,7 +478,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **2.0.10 Stable** | ✅ Current Release / वर्तमान रिलीज | Vowel-start words (e.g. Olkar) are no longer transliterated with a leading matra — the independent vowel is used. / Vowel से शुरू होने वाले शब्द अब मात्रा से नहीं, स्वतंत्र स्वर से शुरू होते हैं (Olkar → ओल्कर)। |
+| **2.0.11 Stable** | ✅ Current Release / वर्तमान रिलीज | Transliteration mode for Hindi → English (Alt+T): निर्भय → Nirbhay instead of Fearless; translation stays available as before. / Hindi → English में transliteration मोड (Alt+T) — निर्भय → Nirbhay, और translation पहले की तरह उपलब्ध। |
+| **2.0.10 Stable** | Previous Release / पिछली रिलीज | Vowel-start words (e.g. Olkar) are no longer transliterated with a leading matra — the independent vowel is used. / Vowel से शुरू होने वाले शब्द अब मात्रा से नहीं, स्वतंत्र स्वर से शुरू होते हैं (Olkar → ओल्कर)। |
 | **2.0.9 Stable** | Previous Release / पिछली रिलीज | Installer now automatically clears GNOME's built-in Alt+Space (window menu) conflict so the English → Hindi shortcut works on every machine. / Installer अब GNOME के Alt+Space window-menu conflict को खुद हटा देता है — हर मशीन पर English → Hindi shortcut काम करेगा। |
 | **2.0.8 Stable** | Previous Release / पिछली रिलीज | Consistent branding — every user-visible name is now "DM Office Translator" (GNOME shortcut names, Dictionary Manager title, docs). Internal package name `dm-office-tools` unchanged. / एक ही नाम — "DM Office Translator" (GNOME shortcut नाम, Dictionary Manager title, docs)। Internal package नाम `dm-office-tools` वही रहा। |
 | **2.0.7 Stable** | Previous Release / पिछली रिलीज | Hardened release: unified version source, requests-based online fallback (no hardcoded IPs), single batched request, offline-only mode, safer phonetic corrections, X11 clipboard fallback, tests & CI. / Hardened रिलीज़: एकीकृत version स्रोत, requests-आधारित online fallback, एक batched request, offline-only मोड, सुरक्षित फोनेटिक सुधार, X11 clipboard fallback, tests और CI। |
@@ -515,9 +526,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 2.0.10 Stable
-- **Release / रिलीज:** v2.0.10
-- **Package / पैकेज:** `dm-office-tools_2.0.10_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 2.0.11 Stable
+- **Release / रिलीज:** v2.0.11
+- **Package / पैकेज:** `dm-office-tools_2.0.11_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

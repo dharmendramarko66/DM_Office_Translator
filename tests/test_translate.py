@@ -99,6 +99,40 @@ class TestH2ETranslate:
         assert h2e.translate("   ") is None
 
 
+class TestH2ETransliterationMode:
+    """v2.0.11: transliteration mode में translation नहीं, transliteration
+    होता है — निर्भय → Nirbhay (न कि Fearless)।"""
+
+    def _patch(self, monkeypatch, h2e, dict_dir, tmp_path):
+        monkeypatch.setattr(h2e, "USER_DICT_DIR", str(dict_dir))
+        monkeypatch.setattr(h2e, "SYSTEM_DICT_DIR", "/nonexistent")
+        monkeypatch.setattr(h2e, "USER_DATA_DIR", str(tmp_path))
+
+    def test_env_var_enables_mode(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, h2e, dict_dir, tmp_path)
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+        assert h2e.transliteration_mode() is True
+
+    def test_marker_file_enables_mode(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, h2e, dict_dir, tmp_path)
+        monkeypatch.delenv("SOHT_TRANSLIT", raising=False)
+        assert h2e.transliteration_mode() is False
+        marker = tmp_path / "transliteration_mode"
+        marker.write_text("", encoding="utf-8")
+        assert h2e.transliteration_mode() is True
+
+    def test_transliteration_output(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, h2e, dict_dir, tmp_path)
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+        assert h2e.translate("निर्भय") == "Nirbhay"
+
+    def test_default_mode_uses_dictionary(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, h2e, dict_dir, tmp_path)
+        monkeypatch.delenv("SOHT_TRANSLIT", raising=False)
+        # सामान्य मोड में dictionary translation ही चलता है।
+        assert h2e.translate("जबलपुर") == "Jabalpur"
+
+
 class TestH2EOnlinePath:
     """Online (Google) branch के regression tests।
 

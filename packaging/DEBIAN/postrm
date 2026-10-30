@@ -82,6 +82,7 @@ do
        [[ "$NAME" == "'DM Office Translator — Hindi to English'" ]] || \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-e2h" || \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-h2e" || \
+       echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-translit" || \
        echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_english_to_hindi.sh" || \
        echo "$COMMAND" | grep -Fq "/opt/dm-office-tools/stable/run_hindi_to_english.sh" || \
        echo "$COMMAND" | grep -Fq "run_english_to_hindi.sh" || \

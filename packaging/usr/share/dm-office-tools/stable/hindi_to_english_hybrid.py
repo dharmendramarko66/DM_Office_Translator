@@ -27,7 +27,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "2.0.10"
+    APP_VERSION = "2.0.11"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -68,6 +68,24 @@ ONLINE_TIMEOUT = (0.5, 1.5)
 # प्रति translation में अधिकतम Google requests (हर unresolved
 # Hindi segment के लिए एक — आमतौर पर 1-2 ही होते हैं)।
 MAX_ONLINE_REQUESTS = 3
+
+
+def transliteration_mode():
+    """Hindi → English में translation की जगह transliteration।
+
+    उदाहरण: निर्भय → Nirbhay (न कि Fearless)।
+
+    सक्रिय करने के दो तरीके:
+      1. Environment variable:  SOHT_TRANSLIT=1
+      2. Marker फ़ाइल बनाएँ:     ~/.dm_office_tools/transliteration_mode
+         (Alt+T shortcut इसे चालू/बंद करता है)
+    """
+    value = os.environ.get("SOHT_TRANSLIT", "").strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    return os.path.isfile(
+        os.path.join(USER_DATA_DIR, "transliteration_mode")
+    )
 
 
 def offline_only_mode():
@@ -409,6 +427,23 @@ def translate(text):
     if not text or not text.strip():
         print("Clipboard is empty or contains only whitespace.")
         return None
+
+    # Transliteration mode (v2.0.11) — dictionary translation और
+    # Google translation दोनों छोड़कर पूरा text transliterate करें:
+    # निर्भय → Nirbhay (न कि Fearless)।
+    if transliteration_mode():
+        print(
+            "[सूचना] Transliteration mode सक्रिय है — "
+            "निर्भय → Nirbhay (translation नहीं)।"
+        )
+        result = h2e_offline_transliterate(text)
+        result = re.sub(r" +", " ", result).strip()
+        result = re.sub(
+            r"(?<![A-Za-z])([a-z])",
+            lambda m: m.group(1).upper(),
+            result,
+        )
+        return result
 
     output = text
 

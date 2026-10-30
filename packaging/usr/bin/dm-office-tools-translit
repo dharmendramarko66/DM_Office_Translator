@@ -1,0 +1,45 @@
+#!/bin/bash
+# DM Office Translator — Hindi → English transliteration mode toggle
+#
+# Alt+T shortcut इसे चलाता है। चालू होने पर Hindi → English
+# (Alt+H) translation की जगह transliteration करेगा:
+#     निर्भय → Nirbhay   (न कि Fearless)
+#
+# Usage:
+#   dm-office-tools-translit          # toggle (चालू/बंद)
+#   dm-office-tools-translit on       # चालू
+#   dm-office-tools-translit off      # बंद
+#   dm-office-tools-translit status   # केवल स्थिति देखें
+
+MARKER="$HOME/.dm_office_tools/transliteration_mode"
+
+mkdir -p "$(dirname "$MARKER")" 2>/dev/null || true
+
+case "${1:-toggle}" in
+    on)
+        : > "$MARKER" ;;
+    off)
+        rm -f "$MARKER" ;;
+    status)
+        ;;
+    *)
+        if [ -e "$MARKER" ]; then
+            rm -f "$MARKER"
+        else
+            : > "$MARKER"
+        fi ;;
+esac
+
+if [ -e "$MARKER" ]; then
+    MSG="Transliteration mode: ON — निर्भय → Nirbhay"
+else
+    MSG="Transliteration mode: OFF — translation चालू (निर्भय → Fearless)"
+fi
+
+echo "$MSG"
+
+if command -v notify-send >/dev/null 2>&1; then
+    notify-send "DM Office Translator" "$MSG" 2>/dev/null || true
+fi
+
+exit 0

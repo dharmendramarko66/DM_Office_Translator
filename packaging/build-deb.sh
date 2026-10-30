@@ -40,6 +40,7 @@ REQUIRED_FILES=(
     "$SCRIPT_DIR/usr/bin/dm-office-tools-e2h"
     "$SCRIPT_DIR/usr/bin/dm-office-tools-h2e"
     "$SCRIPT_DIR/usr/bin/dm-office-tools-dictionary"
+    "$SCRIPT_DIR/usr/bin/dm-office-tools-translit"
     "$SCRIPT_DIR/usr/bin/dm-office-tools"
     "$SCRIPT_DIR/usr/share/applications/dm-office-tools.desktop"
     "$SCRIPT_DIR/usr/share/dm-office-tools/stable/english_to_hindi_hybrid.py"
@@ -109,6 +110,7 @@ chmod 755 \
     "$SCRIPT_DIR/usr/bin/dm-office-tools-e2h" \
     "$SCRIPT_DIR/usr/bin/dm-office-tools-h2e" \
     "$SCRIPT_DIR/usr/bin/dm-office-tools-dictionary" \
+    "$SCRIPT_DIR/usr/bin/dm-office-tools-translit" \
     "$SCRIPT_DIR/usr/bin/dm-office-tools" \
     "$SCRIPT_DIR/usr/share/dm-office-tools/stable/run_english_to_hindi.sh" \
     "$SCRIPT_DIR/usr/share/dm-office-tools/stable/run_hindi_to_english.sh"
