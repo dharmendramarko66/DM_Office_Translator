@@ -7,7 +7,7 @@ import tempfile
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.0.0"
+    APP_VERSION = "3.0.2"
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")

@@ -3,6 +3,17 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.2] — 2026-11-05
+
+### Reverted
+- v3.0.1 में की गई dictionary entries (जिला=District, के पास=near, के सामने=opposite,
+  Authorized=अधिकृत, Proprietor=मालिक आदि) **वापस लौटा दी गई हैं**। Dictionary और
+  default (transliteration off) मोड बिल्कुल पहले जैसा चलता है — इसमें कोई बदलाव नहीं चाहिए था।
+- केवल Alt+T का **Online mode** बना रहता है: चालू होने पर dictionary skip और पूरा text
+  Google से translate (Hindi → English और English → Hindi, दोनों)।
+- नोट: dictionary मोड में शब्द-क्रम हिन्दी जैसा ही रहता है; प्राकृतिक वाक्य-क्रम के लिए
+  Alt+T (Online mode) उपयोग करें।
+
 ## [3.0.0] — 2026-11-05
 
 ### Changed
