@@ -3,6 +3,17 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.3] — 2026-11-05
+
+### Changed
+- **Default (transliteration off) मोड अब लिप्यांतरण करता है, भाषांतरण नहीं:** Hindi → English में
+  पहले dictionary चलती है और जो शब्द बचें उनका offline phonetic लिप्यांतरण होता है
+  (`गोहचर` → `Gohchar`)। पहले यहाँ Google से भाषांतरण होता था, जिससे नाम/गाँव भी अनुवाद हो जाते थे।
+- इससे default मोड पूरी तरह offline और तेज़ हो गया (कोई network प्रतीक्षा नहीं)।
+- **भाषांतरण (translation) अब केवल Alt+T (Online mode) में** — dictionary skip करके पूरा text
+  Google से, दोनों दिशाओं में।
+- नए/अद्यतन tests: default मोड का लिप्यांतरण व्यवहार, dictionary regression।
+
 ## [3.0.2] — 2026-11-05
 
 ### Reverted

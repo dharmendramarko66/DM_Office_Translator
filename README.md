@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.0.2 Stable
+**Version / संस्करण:** 3.0.3 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -337,8 +337,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.0.2_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.0.2_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.0.3_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.0.3_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -367,7 +367,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.0.2_amd64.deb
+sudo apt install ./dm-office-tools_3.0.3_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -381,7 +381,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.0.2
+Version: 3.0.3
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -487,7 +487,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.0.2 Stable** | ✅ Current Release / वर्तमान रिलीज | Reverts the v3.0.1 dictionary edits; dictionary and default mode are exactly as before. Only Alt+T (Online mode) skips the dictionary and uses Google translation. / v3.0.1 की dictionary changes वापस; default मोड पहले जैसा, सिर्फ़ Alt+T पर Google अनुवाद। |
+| **3.0.3 Stable** | ✅ Current Release / वर्तमान रिलीज | Default mode transliterates words missing from the dictionary (no Google translation, fully offline); only Alt+T (Online mode) translates via Google. / Default मोड में बचे शब्दों का लिप्यांतरण; भाषांतरण केवल Alt+T पर। |
+| **3.0.2 Stable** | Previous Release / पिछली रिलीज | Reverts the v3.0.1 dictionary edits; dictionary and default mode are exactly as before. Only Alt+T (Online mode) skips the dictionary and uses Google translation. / v3.0.1 की dictionary changes वापस; default मोड पहले जैसा, सिर्फ़ Alt+T पर Google अनुवाद। |
 | **3.0.0 Stable** | Previous Release / पिछली रिलीज | Alt+T "Online mode" now works in both directions: dictionary is skipped and the whole text is translated by Google (H2E and E2H). Default mode unchanged. / Alt+T का Online mode अब दोनों दिशाओं में — dictionary skip, पूरा अनुवाद Google से। Default मोड वैसा ही। |
 | **2.0.12 Stable** | Previous Release / पिछली रिलीज | Alt+T is now an "Online mode": the dictionary is skipped and the whole text is translated by Google (names transliterated, words translated). / Alt+T अब Online mode — dictionary skip, पूरा अनुवाद Google से (नाम transliterate, शब्द translate)। |
 | **2.0.11 Stable** | Previous Release / पिछली रिलीज | Transliteration mode for Hindi → English (Alt+T): निर्भय → Nirbhay instead of Fearless; translation stays available as before. / Hindi → English में transliteration मोड (Alt+T) — निर्भय → Nirbhay, और translation पहले की तरह उपलब्ध। |
@@ -538,9 +539,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.0.2 Stable
-- **Release / रिलीज:** v3.0.2
-- **Package / पैकेज:** `dm-office-tools_3.0.2_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.0.3 Stable
+- **Release / रिलीज:** v3.0.3
+- **Package / पैकेज:** `dm-office-tools_3.0.3_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

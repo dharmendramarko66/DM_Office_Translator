@@ -218,12 +218,8 @@ class TestH2EOnlineMode:
 
 
 class TestH2EOnlinePath:
-    """Online (Google) branch के regression tests।
-
-    v2.0.7 से पहले एक variable-scoping bug (UnboundLocalError)
-    था — जिन पतों में कोई शब्द dictionary से बाहर था, translation
-    पूरी तरह fail हो जाता था। ये tests online path को mock करके
-    उसी स्थिति को cover करते हैं।"""
+    """v3.0.3: default (dictionary) मोड में बचे शब्दों का लिप्यांतरण होता है —
+    कोई Google भाषांतरण नहीं, इसलिए network भी नहीं।"""
 
     def _patch_paths(self, monkeypatch, h2e, dict_dir):
         monkeypatch.delenv("SOHT_OFFLINE", raising=False)
@@ -234,42 +230,21 @@ class TestH2EOnlinePath:
         monkeypatch.setattr(h2e, "clear_google_failure_cooldown", lambda: None)
         monkeypatch.setattr(h2e, "google_temporarily_disabled", False)
 
-    def test_online_failure_falls_back(self, h2e, dict_dir, monkeypatch):
-        import requests
-
-        class FailingSession:
+    def test_default_mode_never_calls_network(self, h2e, dict_dir, monkeypatch):
+        class ExplodingSession:
             def get(self, *args, **kwargs):
-                raise requests.exceptions.ConnectTimeout("no network")
+                raise AssertionError("network should not be called")
 
         self._patch_paths(monkeypatch, h2e, dict_dir)
-        monkeypatch.setattr(h2e, "session", FailingSession())
+        monkeypatch.setattr(h2e, "session", ExplodingSession())
 
-        # गोहचर dictionary में नहीं है — पहले यहाँ crash होता था।
+        # गोहचर dictionary में नहीं है → लिप्यांतरण (Gohchar), भाषांतरण नहीं।
         result = h2e.translate("ग्राम गोहचर जिला जबलपुर")
         assert result == "Gram Gohachar Dist Jabalpur"
 
-    def test_online_success_replaces_in_place(self, h2e, dict_dir, monkeypatch):
-        class FakeResponse:
-            status_code = 200
-
-            def raise_for_status(self):
-                pass
-
-            def json(self):
-                # translate.googleapis.com का वास्तविक structure:
-                # data[0] = [["translated", "source", ...], ...]
-                return [[["Gohchar"]]]
-
-        class SuccessSession:
-            def get(self, url, timeout=None):
-                return FakeResponse()
-
+    def test_unknown_word_transliterated(self, h2e, dict_dir, monkeypatch):
         self._patch_paths(monkeypatch, h2e, dict_dir)
-        monkeypatch.setattr(h2e, "session", SuccessSession())
-
-        result = h2e.translate("ग्राम गोहचर जिला जबलपुर")
-        # दोनों occurrences अपनी जगह पर replace होनी चाहिए।
-        assert result == "Gram Gohchar Dist Jabalpur"
+        assert h2e.translate("गोहचर") == "Gohachar"
 
     def test_all_dictionary_no_network_call(self, h2e, dict_dir, monkeypatch):
         class ExplodingSession:
@@ -279,6 +254,6 @@ class TestH2EOnlinePath:
         self._patch_paths(monkeypatch, h2e, dict_dir)
         monkeypatch.setattr(h2e, "session", ExplodingSession())
 
-        # सारे शब्द dictionary में हैं — Google को बिल्कुल call नहीं।
         result = h2e.translate("सिद्ध बाबा के पास जिला जबलपुर म.प्र.")
         assert result == "Siddh Baba Ke Pas Dist Jabalpur M.P."
+

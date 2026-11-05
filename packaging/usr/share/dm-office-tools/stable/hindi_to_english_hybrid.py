@@ -27,7 +27,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.0.2"
+    APP_VERSION = "3.0.3"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -496,19 +496,15 @@ def translate(text):
     if offline:
         print("[सूचना] Offline-only मोड सक्रिय है — network उपयोग नहीं होगा।")
 
-    # प्रत्येक unresolved Hindi segment का अनुवाद Google से।
-    #
-    # v2.0.7 fix: पहले सारे segments का text मिलाकर एक ही
-    # request जाती थी लेकिन केवल पहला segment ही replace होता
-    # था (बाकी text drop) — और एक variable-scoping bug
-    # (UnboundLocalError) की वजह से जिन पतों में कोई शब्द
-    # dictionary से बाहर था, translation पूरी तरह fail हो
-    # जाता था। अब प्रत्येक segment अपनी जगह पर replace होता
-    # है और किसी भी failure पर offline fallback चलता है।
+    # v3.0.3 — default (transliteration off) मोड में dictionary में न मिले
+    # शब्दों का लिप्यांतरण (transliteration) होता है, भाषांतरण (translation)
+    # नहीं। पूरा भाषांतरण केवल Alt+T (Online mode) में Google से होता है —
+    # इसीलिए नीचे Google वाला हिस्सा सिर्फ़ skip_dictionary पर चलता है।
     online_results = {}
 
     if (
-        has_unresolved_hindi
+        skip_dictionary
+        and has_unresolved_hindi
         and not offline
         and not google_temporarily_disabled
         and not google_cooldown_active()
