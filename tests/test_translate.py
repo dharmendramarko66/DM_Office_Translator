@@ -40,6 +40,56 @@ class TestE2HTranslate:
         assert e2h.offline_only_mode() is False
 
 
+class TestE2HOnlineMode:
+    """v3.0.0: English → Hindi में Alt+T का "Online mode" dictionary
+    skip करके पूरा अनुवाद Google से करता है।"""
+
+    def _patch(self, monkeypatch, e2h, dict_dir, tmp_path):
+        monkeypatch.setattr(e2h, "USER_DICT_DIR", str(dict_dir))
+        monkeypatch.setattr(e2h, "SYSTEM_DICT_DIR", "/nonexistent")
+        monkeypatch.setattr(e2h, "USER_DATA_DIR", str(tmp_path))
+
+    def test_env_var_enables_mode(self, e2h, monkeypatch, tmp_path, offline):
+        monkeypatch.setattr(e2h, "USER_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+        assert e2h.transliteration_mode() is True
+
+    def test_marker_enables_mode(self, e2h, monkeypatch, tmp_path, offline):
+        monkeypatch.setattr(e2h, "USER_DATA_DIR", str(tmp_path))
+        monkeypatch.delenv("SOHT_TRANSLIT", raising=False)
+        assert e2h.transliteration_mode() is False
+        (tmp_path / "transliteration_mode").write_text("", encoding="utf-8")
+        assert e2h.transliteration_mode() is True
+
+    def test_dictionary_skipped_google_used(self, e2h, dict_dir, monkeypatch, tmp_path):
+        self._patch(monkeypatch, e2h, dict_dir, tmp_path)
+        monkeypatch.delenv("SOHT_OFFLINE", raising=False)
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+
+        class FakeResponse:
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                # dictionary "jabalpur" का "जबलपुर" देती है;
+                # Online mode में Google का पूरा वाक्य मान्य होगा।
+                return [[["जबलपुर शहर में अदालत", "jabalpur city court", None, None]]]
+
+        monkeypatch.setattr(e2h.requests, "get", lambda *a, **k: FakeResponse())
+        assert e2h.translate("jabalpur city court") == "जबलपुर शहर में अदालत"
+
+    def test_offline_falls_back_to_transliteration(self, e2h, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, e2h, dict_dir, tmp_path)
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+        # offline — Google नहीं, phonetic transliteration।
+        assert e2h.translate("jabalpur") == "जबलपुर"
+
+    def test_default_mode_uses_dictionary(self, e2h, dict_dir, monkeypatch, tmp_path, offline):
+        self._patch(monkeypatch, e2h, dict_dir, tmp_path)
+        monkeypatch.delenv("SOHT_TRANSLIT", raising=False)
+        assert e2h.translate("jabalpur") == "जबलपुर"
+
+
 class TestE2HVowelStart:
     """v2.0.10: vowel से शुरू होने वाले शब्द (जैसे Olkar) अब
     स्वतंत्र स्वर से शुरू होते हैं — मात्रा से नहीं।"""
@@ -99,14 +149,19 @@ class TestH2ETranslate:
         assert h2e.translate("   ") is None
 
 
-class TestH2ETransliterationMode:
-    """v2.0.11: transliteration mode में translation नहीं, transliteration
-    होता है — निर्भय → Nirbhay (न कि Fearless)।"""
+class TestH2EOnlineMode:
+    """v2.0.12: Alt+T का "Online mode" dictionary पूरी तरह skip करके
+    Google से translation करता है (नाम transliterate, शब्द translate)।
+    Network न हो तो phonetic transliteration fallback चलता है।"""
 
     def _patch(self, monkeypatch, h2e, dict_dir, tmp_path):
         monkeypatch.setattr(h2e, "USER_DICT_DIR", str(dict_dir))
         monkeypatch.setattr(h2e, "SYSTEM_DICT_DIR", "/nonexistent")
         monkeypatch.setattr(h2e, "USER_DATA_DIR", str(tmp_path))
+        monkeypatch.setattr(h2e, "GOOGLE_FAILURE_FILE", "/nonexistent/f")
+        monkeypatch.setattr(h2e, "set_google_failure_cooldown", lambda: None)
+        monkeypatch.setattr(h2e, "clear_google_failure_cooldown", lambda: None)
+        monkeypatch.setattr(h2e, "google_temporarily_disabled", False)
 
     def test_env_var_enables_mode(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
         self._patch(monkeypatch, h2e, dict_dir, tmp_path)
@@ -121,10 +176,39 @@ class TestH2ETransliterationMode:
         marker.write_text("", encoding="utf-8")
         assert h2e.transliteration_mode() is True
 
-    def test_transliteration_output(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
+    def test_offline_falls_back_to_transliteration(
+        self, h2e, dict_dir, monkeypatch, tmp_path, offline
+    ):
+        # Network नहीं है — phonetic transliteration ही चलेगा।
         self._patch(monkeypatch, h2e, dict_dir, tmp_path)
         monkeypatch.setenv("SOHT_TRANSLIT", "1")
         assert h2e.translate("निर्भय") == "Nirbhay"
+
+    def test_dictionary_skipped_google_used(
+        self, h2e, dict_dir, monkeypatch, tmp_path
+    ):
+        """ON mode में dictionary नहीं, Google का output मान्य होना चाहिए।"""
+        self._patch(monkeypatch, h2e, dict_dir, tmp_path)
+        monkeypatch.delenv("SOHT_OFFLINE", raising=False)
+        monkeypatch.setenv("SOHT_TRANSLIT", "1")
+
+        class FakeResponse:
+            status_code = 200
+
+            def raise_for_status(self):
+                pass
+
+            def json(self):
+                # dictionary "जिला जबलपुर" का "Dist Jabalpur" देती है;
+                # Google से अलग output आना चाहिए।
+                return [[["District Jabalpur"]]]
+
+        class SuccessSession:
+            def get(self, url, timeout=None):
+                return FakeResponse()
+
+        monkeypatch.setattr(h2e, "session", SuccessSession())
+        assert h2e.translate("जिला जबलपुर") == "District Jabalpur"
 
     def test_default_mode_uses_dictionary(self, h2e, dict_dir, monkeypatch, tmp_path, offline):
         self._patch(monkeypatch, h2e, dict_dir, tmp_path)

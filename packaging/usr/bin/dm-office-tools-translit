@@ -31,9 +31,9 @@ case "${1:-toggle}" in
 esac
 
 if [ -e "$MARKER" ]; then
-    MSG="Transliteration mode: ON — निर्भय → Nirbhay"
+    MSG="Online mode: ON — dictionary skip (Google translation)"
 else
-    MSG="Transliteration mode: OFF — translation चालू (निर्भय → Fearless)"
+    MSG="Online mode: OFF — dictionary + Google (default)"
 fi
 
 echo "$MSG"

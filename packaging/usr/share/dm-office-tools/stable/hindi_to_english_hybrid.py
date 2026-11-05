@@ -27,7 +27,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "2.0.11"
+    APP_VERSION = "3.0.0"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -428,22 +428,19 @@ def translate(text):
         print("Clipboard is empty or contains only whitespace.")
         return None
 
-    # Transliteration mode (v2.0.11) — dictionary translation और
-    # Google translation दोनों छोड़कर पूरा text transliterate करें:
-    # निर्भय → Nirbhay (न कि Fearless)।
-    if transliteration_mode():
+    # v2.0.12 — "Online mode" (पहले transliteration mode): dictionary
+    # पूरी तरह skip करके पूरा text Google से translate किया जाता है।
+    # Google नाम transliterate करता है और सामान्य शब्द translate करता
+    # है — जैसे "वार्ड क्रमांक" → "Ward No.", "मंदिर के सामने" →
+    # "opposite Temple"। Network न हो तो offline phonetic transliteration
+    # fallback चलता है।
+    skip_dictionary = transliteration_mode()
+
+    if skip_dictionary:
         print(
-            "[सूचना] Transliteration mode सक्रिय है — "
-            "निर्भय → Nirbhay (translation नहीं)।"
+            "[सूचना] Online mode सक्रिय है — dictionary skip, "
+            "Google translation (offline में phonetic fallback)।"
         )
-        result = h2e_offline_transliterate(text)
-        result = re.sub(r" +", " ", result).strip()
-        result = re.sub(
-            r"(?<![A-Za-z])([a-z])",
-            lambda m: m.group(1).upper(),
-            result,
-        )
-        return result
 
     output = text
 
@@ -452,7 +449,7 @@ def translate(text):
 
     segments = []
 
-    if combined is not None:
+    if combined is not None and not skip_dictionary:
         accepted_matches = []
         last_end = -1
 

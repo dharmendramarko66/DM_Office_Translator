@@ -117,7 +117,7 @@ TRANSLIT_BINDING="<Alt>t"
 
 E2H_NAME="DM Office Translator — English to Hindi"
 H2E_NAME="DM Office Translator — Hindi to English"
-TRANSLIT_NAME="DM Office Translator — Transliteration mode"
+TRANSLIT_NAME="DM Office Translator — Online mode (skip dictionary)"
 
 CUSTOM_KEYS="$(gsettings get "$CUSTOM_SCHEMA" custom-keybindings 2>/dev/null || echo "@as []")"
 
@@ -272,7 +272,7 @@ do
         H2E_OK=1
     fi
 
-    if [ "$NAME" = "'DM Office Translator — Transliteration mode'" ] && \
+    if [ "$NAME" = "'DM Office Translator — Online mode (skip dictionary)'" ] && \
        [ "$BINDING" = "'<Alt>t'" ] && \
        echo "$COMMAND" | grep -Fq "/usr/bin/dm-office-tools-translit"; then
         TRANSLIT_OK=1
@@ -325,6 +325,6 @@ fi
 echo "[OK] DM Office Translator configured successfully."
 echo "[OK] English → Hindi : Alt+Space"
 echo "[OK] Hindi → English : Alt+H"
-echo "[OK] Transliteration mode : Alt+T (on/off)"
+echo "[OK] Online mode (skip dictionary) : Alt+T (on/off)"
 
 exit 0

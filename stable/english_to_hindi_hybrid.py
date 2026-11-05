@@ -29,7 +29,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "2.0.11"
+    APP_VERSION = "3.0.0"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -49,6 +49,10 @@ GOOGLE_INPUT_TOOLS_URL = "https://inputtools.google.com/request"
 # Online request limits — एक batch में कितने characters जाएँ
 ONLINE_BATCH_CHAR_LIMIT = 1200
 ONLINE_TIMEOUT = (0.8, 1.5)
+
+# v3.0.0 — "Online mode" (Alt+T) में पूरा text Google Translate से
+# English → Hindi अनुवाद होता है (dictionary skip)।
+GOOGLE_TRANSLATE_URL = "https://translate.googleapis.com/translate_a/single"
 MAX_ONLINE_REQUESTS = 3
 
 # Regex patterns पहले से प्री-कम्पाइल
@@ -77,6 +81,78 @@ def offline_only_mode():
 # ---------------------------------------------------------
 
 CLIPBOARD_NOTES_SHOWN = False
+
+
+def transliteration_mode():
+    """Alt+T का "Online mode" — dictionary skip करके पूरा अनुवाद Google से।
+
+    English → Hindi में: dictionary की entries छोड़कर पूरा वाक्य Google
+    Translate से हिन्दी में बदला जाता है (नाम/शब्द दोनों अनुवादित)।
+
+    सक्रिय करने के दो तरीके:
+      1. Environment variable:  SOHT_TRANSLIT=1
+      2. Marker फ़ाइल:           ~/.dm_office_tools/transliteration_mode
+         (Alt+T shortcut इसे चालू/बंद करता है — H2E भी यही देखता है)
+    """
+    value = os.environ.get("SOHT_TRANSLIT", "").strip().lower()
+    if value in ("1", "true", "yes", "on"):
+        return True
+    return os.path.isfile(
+        os.path.join(USER_DATA_DIR, "transliteration_mode")
+    )
+
+
+def google_translate_text(text):
+    """पूरे text का Google Translate से English → Hindi अनुवाद।
+
+    सफल होने पर अनुवादित text, वरना None (तब offline fallback चलेगा)।
+    """
+    try:
+        response = requests.get(
+            GOOGLE_TRANSLATE_URL,
+            params={
+                "client": "gtx",
+                "sl": "en",
+                "tl": "hi",
+                "dt": "t",
+                "q": text,
+            },
+            timeout=ONLINE_TIMEOUT,
+            headers={"User-Agent": f"SOHT-E2H/{APP_VERSION}"},
+        )
+        response.raise_for_status()
+
+        data = response.json()
+
+        if not (
+            isinstance(data, list)
+            and len(data) > 0
+            and isinstance(data[0], list)
+        ):
+            return None
+
+        parts = []
+
+        for item in data[0]:
+            if (
+                isinstance(item, list)
+                and len(item) > 0
+                and isinstance(item[0], str)
+            ):
+                parts.append(item[0])
+
+        result = "".join(parts).strip()
+
+        return result or None
+
+    except (
+        requests.RequestException,
+        ValueError,
+        IndexError,
+        KeyError,
+        TypeError,
+    ):
+        return None
 
 
 def read_clipboard():
@@ -602,12 +678,34 @@ def translate(text):
         print("Clipboard is empty or contains only whitespace.")
         return None
 
+    # v3.0.0 — "Online mode" (Alt+T): dictionary पूरी तरह skip करके
+    # पूरा text Google Translate से English → Hindi बदला जाता है।
+    # Network न हो तो offline phonetic transliteration fallback चलता है।
+    skip_dictionary = transliteration_mode()
+
+    if skip_dictionary:
+        print(
+            "[सूचना] Online mode सक्रिय है — dictionary skip, "
+            "Google translation (English → Hindi)।"
+        )
+
+        if not offline_only_mode():
+            translated = google_translate_text(text)
+
+            if translated:
+                return translated
+
+        print(
+            "[सूचना] Google उपलब्ध नहीं — offline phonetic "
+            "transliteration fallback चल रहा है।"
+        )
+
     output = text
 
     # Dictionary pass — एक ही combined regex, single sweep।
     combined, key_to_marker, protected = load_dictionary()
 
-    if combined is not None:
+    if combined is not None and not skip_dictionary:
         output = combined.sub(
             lambda match: key_to_marker.get(
                 match.group(0).lower(), match.group(0)
@@ -652,12 +750,12 @@ def translate(text):
     offline = offline_only_mode()
     online_used = False
 
-    if pending and not offline:
+    if pending and not offline and not skip_dictionary:
         print("[सूचना] Google Input Tools online fallback उपलब्ध है।")
     elif offline:
         print("[सूचना] Offline-only मोड सक्रिय है — network उपयोग नहीं होगा।")
 
-    if pending and not offline:
+    if pending and not offline and not skip_dictionary:
         requests_made = 0
 
         for chunk in _chunk_words(unique_pending):

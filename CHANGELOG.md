@@ -3,6 +3,32 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.0] — 2026-11-05
+
+### Changed
+- **Alt+T का "Online mode" अब English → Hindi में भी:** चालू होने पर dictionary skip होती है
+  और पूरा वाक्य Google Translate से हिन्दी में आता है (`jabalpur city court` →
+  `जबलपुर शहर में अदालत`)। पहले E2H में यह मोड सिर्फ़ offline transliteration करता था।
+- **बंद (default) मोड में कोई बदलाव नहीं:** dictionary पहले, फिर बाकी शब्दों के लिए online
+  transliteration — जैसा पहले से चल रहा था।
+- Network न हो तो Online mode में भी offline phonetic transliteration fallback चलता है।
+- नए tests: E2H online-mode (dictionary skip + Google), offline fallback, default-mode
+  regression (कुल 70 tests)।
+
+## [2.0.12] — 2026-11-05
+
+### Changed
+- **Alt+T का मोड अब "Online mode" है:** चालू होने पर dictionary पूरी तरह skip होती है
+  और पूरा text Google से translate होता है — Google नाम transliterate करता है और
+  सामान्य शब्दों का अनुवाद करता है (जैसे `सरदार पटेल वार्ड क्रमांक 04, तहसील जबलपुर`
+  → `Sardar Patel Ward No. 04, Tehsil Jabalpur`)। पहले यह मोड पूरा text offline
+  transliterate करता था, जिससे "वार्ड क्रमांक" जैसे शब्द भी अंग्रेज़ी में नहीं आते थे।
+- बंद होने पर पहले की तरह dictionary पहले चलती है; जो शब्द dictionary में न हों
+  उनके लिए Google।
+- Network न हो तो Online mode में भी offline phonetic transliteration fallback चलता है।
+- Shortcut का नाम अब "DM Office Translator — Online mode (skip dictionary)"।
+- नए tests: dictionary-skip + Google path, offline fallback, dictionary-mode regression।
+
 ## [2.0.11] — 2026-10-30
 
 ### Added
