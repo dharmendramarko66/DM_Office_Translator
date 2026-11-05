@@ -53,3 +53,22 @@ def dict_dir(tmp_path):
 def offline(monkeypatch):
     """Offline-only मोड — network calls बिल्कुल नहीं।"""
     monkeypatch.setenv("SOHT_OFFLINE", "1")
+
+
+@pytest.fixture(autouse=True)
+def isolate_user_modes(monkeypatch, tmp_path):
+    """हर test को user की अपनी settings से अलग रखें।
+
+    v3.0.5: अगर developer की मशीन पर Alt+T (Online mode) चालू है या
+    SOHT_TRANSLIT environment variable सेट है, तो tests गलत तरीके से
+    fail हो रहे थे। अब हर test खाली USER_DATA_DIR के साथ चलता है और
+    SOHT_TRANSLIT हटा दिया जाता है — tests हमेशा एक जैसे चलेंगे।
+    """
+    monkeypatch.delenv("SOHT_TRANSLIT", raising=False)
+
+    for module_name in ("soht_e2h_under_test", "soht_h2e_under_test"):
+        module = sys.modules.get(module_name)
+        if module is not None:
+            monkeypatch.setattr(
+                module, "USER_DATA_DIR", str(tmp_path), raising=False
+            )

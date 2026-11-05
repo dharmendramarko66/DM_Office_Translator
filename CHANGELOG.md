@@ -3,6 +3,15 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.5] — 2026-11-05
+
+### Fixed
+- **Tests अब मशीन की settings से प्रभावित नहीं:** यदि Alt+T (Online mode) चालू रह गया हो या
+  `SOHT_TRANSLIT` सेट हो, तो 4 tests fail हो रहे थे (dictionary मोड मानकर लिखे गए थे)।
+  अब conftest में एक autouse fixture हर test के लिए `SOHT_TRANSLIT` हटा देता है और
+  `USER_DATA_DIR` अस्थायी फ़ोल्डर पर ले जाता है।
+- Tool के व्यवहार में कोई बदलाव नहीं — यह release सिर्फ़ test reliability के लिए है।
+
 ## [3.0.4] — 2026-11-05
 
 ### Fixed
