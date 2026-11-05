@@ -27,7 +27,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.0.3"
+    APP_VERSION = "3.0.4"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -61,7 +61,7 @@ session.headers.update({"User-Agent": f"SOHT-H2E/{APP_VERSION}"})
 google_temporarily_disabled = False
 
 GOOGLE_FAILURE_FILE = os.path.join(USER_DATA_DIR, "google_failure_until")
-GOOGLE_FAILURE_COOLDOWN = 60 * 60  # 60 minutes
+GOOGLE_FAILURE_COOLDOWN = 10 * 60  # 10 minutes (v3.0.4)
 
 ONLINE_TIMEOUT = (0.5, 1.5)
 
@@ -538,6 +538,10 @@ def translate(text):
                 # 429 को Google failure मानें और इसी process में
                 # आगे की network delay रोक दें।
                 if response.status_code == 429:
+                    print(
+                        "[सूचना] Google ने rate-limit किया — 10 मिनट बाद "
+                        "फिर कोशिश करें (अभी transliteration दिखाया जा रहा है)।"
+                    )
                     google_temporarily_disabled = True
                     set_google_failure_cooldown()
                     google_failed = True
@@ -571,7 +575,48 @@ def translate(text):
                 KeyError,
                 TypeError
             ):
-                # Network failure के बाद persistent cooldown लगाएँ।
+                # v3.0.4 — एक बार retry: पहली request अक्सर slow/timeout होती है।
+                retry_text = None
+
+                try:
+                    retry_response = session.get(
+                        GOOGLE_API + urllib.parse.quote(core),
+                        timeout=ONLINE_TIMEOUT,
+                    )
+                    retry_response.raise_for_status()
+                    retry_data = retry_response.json()
+
+                    if (
+                        isinstance(retry_data, list)
+                        and len(retry_data) > 0
+                        and isinstance(retry_data[0], list)
+                    ):
+                        collected = [
+                            item[0]
+                            for item in retry_data[0]
+                            if (
+                                isinstance(item, list)
+                                and len(item) > 0
+                                and isinstance(item[0], str)
+                            )
+                        ]
+                        if collected:
+                            retry_text = "".join(collected).strip()
+
+                except (
+                    requests.RequestException,
+                    ValueError,
+                    IndexError,
+                    KeyError,
+                    TypeError,
+                ):
+                    retry_text = None
+
+                if retry_text:
+                    online_results[index] = retry_text
+                    continue
+
+                # दोनों कोशिशें fail — cooldown लगाएँ।
                 google_temporarily_disabled = True
                 set_google_failure_cooldown()
                 google_failed = True
@@ -579,6 +624,12 @@ def translate(text):
 
         if online_results and not google_failed:
             clear_google_failure_cooldown()
+
+        if skip_dictionary and not online_results:
+            print(
+                "[सूचना] Google से अनुवाद नहीं हो सका — offline "
+                "transliteration दिखाया गया है।"
+            )
 
     # 4. Final result — प्रत्येक segment अपनी जगह पर।
     #

@@ -3,6 +3,16 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.4] — 2026-11-05
+
+### Fixed
+- **Online mode का चुपचाप fallback:** एक failure पर 60 मिनट का cooldown लग जाता था और
+  tool बिना कोई संदेश transliteration दिखाता रहता था — इससे लगता था कि Online mode काम
+  नहीं कर रहा। अब एक बार retry होता है, फिर भी fail हो तो साफ़ संदेश दिखता है।
+- 429 (rate-limit) पर अलग संदेश — "10 मिनट बाद फिर कोशिश करें"।
+- Cooldown 60 मिनट से घटाकर 10 मिनट; केवल असली failure पर लगता है।
+- मैन्युअल reset: `rm -f ~/.dm_office_tools/google_failure_until`
+
 ## [3.0.3] — 2026-11-05
 
 ### Changed
