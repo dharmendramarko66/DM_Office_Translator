@@ -618,7 +618,7 @@
 डी=D
 डी.=D.
 दमन और दीव=D.D.
-दिल्ली=D.L.
+दिल्ली=Delhi
 दादरा और नगर हवेली=D.N.
 डी.टी.ओ.=D.T.O.
 पुत्री=D/o
@@ -699,7 +699,7 @@
 निरस्त=Dismissed
 औषधालय=Dispensary
 निराकृत=Disposed Of
-जिला=Dist
+जिला=Dist.
 जिला कलेक्टर=District Collector
 जिला अस्पताल=District Hospital
 जिला न्यायाधीश=District Judge
@@ -988,7 +988,7 @@
 जुरतरा=Jurtara
 के=Ke
 के.=K.
-कर्नाटक=K.A.
+कर्नाटक=Karnataka
 केरल=K.L.
 कब=Kab
 कच्चा घर=Kaccha Ghar
@@ -1148,7 +1148,7 @@
 एम=M
 एम.=M.
 मेघालय=M.G.
-महाराष्ट्र=M.H.
+महाराष्ट्र=Maharashtra
 मणिपुर=M.N.
 म.प्र.=M.P.
 एम.पी. नगर=M.P. Nagar
@@ -1295,7 +1295,7 @@
 नरेश=Naresh
 नर्मदा नदी=Narmada River
 नर्मदापुरम=Narmadapuram
-नरसिंहपुर=Narsimhapur
+नरसिंहपुर=Narsinghpur
 नरसिंहगढ़=Narsinghgarh
 नरवर=Narwar
 नसरुल्लागंज=Nasrullaganj
@@ -1688,7 +1688,7 @@
 मिठाई दुकान=Sweet Shop
 सैयद=Syed
 टी=T
-तिराहा=T-Junction
+तिराहा=Tiraha
 टी.=T.
 तेलंगाना=T.G.
 टी.आई.=T.I.
@@ -4528,7 +4528,7 @@
 आरपीएफ=RPF
 रेलवे सुरक्षा बल=Railway Protection Force
 कंट्रोल रूम=Control Room
-पुलिस चौकी=Outpost
+पुलिस चौकी=Police Chowki
 चौकी=Chowki
 बीट=Beat
 बीट अधिकारी=Beat Officer
@@ -5104,3 +5104,13 @@ Infront=इन्फ्रोन्ट
 दमोहनाका=Damohnaka
 स्थाई पता=Permanent Add.
 सारसवाही=Saraswahi
+राजस्व=Revenue
+भू अर्जन अधिकारी=Land Acquisition Officer
+अनुविभागीय अधिकारी=Sub-Divisional Officer
+एमपी नगर=MP Nagar
+जोन=Zone
+अखाड़े=Akhade
+पैथालॉजी=Pathology
+Jabalpur=जबलपुर
+आधारताल=Adhartal
+फेस=Phase
