@@ -125,6 +125,68 @@ echo
 echo "=========================================="
 echo "✅ Dictionary sync complete."
 echo "=========================================="
+
+# ------------------------------------------------------------
+# Auto commit + push (v3.0.6)
+#
+#   ./sync-dictionaries.sh             → sync + commit + push
+#   ./sync-dictionaries.sh --no-git    → केवल sync (commit/push नहीं)
+# ------------------------------------------------------------
+
+if [ "${1:-}" = "--no-git" ] || [ "${1:-}" = "--local" ]; then
+    echo
+    echo "ℹ️  --no-git: commit/push नहीं किया गया।"
+    echo "   बदलाव देखने के लिए: git diff -- dictionary/"
+    exit 0
+fi
+
+if [ ! -d "$PROJECT_DIR/.git" ]; then
+    echo
+    echo "ℹ️  यह git repository नहीं है — commit/push छोड़ दिया गया।"
+    exit 0
+fi
+
+cd "$PROJECT_DIR"
+
+CHANGED=0
+
+if ! git diff --quiet -- dictionary/ 2>/dev/null; then
+    CHANGED=1
+fi
+
+if [ -n "$(git ls-files --others --exclude-standard -- dictionary/ 2>/dev/null)" ]; then
+    CHANGED=1
+fi
+
+if [ "$CHANGED" -eq 0 ]; then
+    echo
+    echo "ℹ️  dictionary में कोई बदलाव नहीं — commit/push की ज़रूरत नहीं।"
+    exit 0
+fi
+
+STAMP="$(date '+%Y-%m-%d %H:%M')"
+
 echo
-echo "अब बदलाव देखने के लिए:"
-echo "git diff -- dictionary/"
+echo "📦 Commit कर रहे हैं: dictionary/"
+
+git add dictionary/
+
+if ! git commit -m "dictionary: sync user entries ($STAMP)" >/dev/null 2>&1; then
+    echo "⚠️  Commit नहीं हो सका — git की स्थिति जाँचिए (git status)।"
+    exit 1
+fi
+
+echo "   $(git log --oneline -1)"
+
+echo
+echo "🚀 Push कर रहे हैं (origin main)…"
+
+if git push origin main; then
+    echo
+    echo "✅ Push सफल — GitHub पर अपडेट हो गया।"
+else
+    echo
+    echo "⚠️  Push नहीं हो सका (शायद remote पर नए commits हैं)।"
+    echo "   आपका commit सुरक्षित है; अब यह चलाइए:"
+    echo "     git pull --rebase origin main && git push origin main"
+fi
