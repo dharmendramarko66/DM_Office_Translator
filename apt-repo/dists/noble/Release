@@ -1,14 +1,14 @@
 Architectures: amd64
 Codename: noble
 Components: main
-Date: Tue, 13 Oct 2026 08:04:06 +0000
+Date: Fri, 13 Nov 2026 11:58:59 +0000
 Suite: noble
 MD5Sum:
-  816132ab9d7d8d8f3085dc1c5d0d497e 733 main/binary-amd64/Packages
-  dc21ef1aaf760cc16439810011f693a0 504 main/binary-amd64/Packages.gz
+  7008f09975e15753dae9d16aecb67b84 733 main/binary-amd64/Packages
+  bec15aa0377f58a2e0df60d76b1f5131 505 main/binary-amd64/Packages.gz
 SHA1:
-  38ec7d2d6b9a7c7ff16be6570241b988609205c0 733 main/binary-amd64/Packages
-  3edf59db4d37584ecf9b1d397f256e3472191311 504 main/binary-amd64/Packages.gz
+  d95abf7ee2b0983f4238cd06a86662cfb77cc326 733 main/binary-amd64/Packages
+  3b76524c5e18a869e1d32e9b8438960b8849ab14 505 main/binary-amd64/Packages.gz
 SHA256:
-  7388434c52bb04f21caf69d1a0b91b28a1a85a44784a319fbfc1157ec8b4080e 733 main/binary-amd64/Packages
-  f72c710d81bcf6559178204f1e7f3e5c5d9f85a471c0a97c43fe032e22d183c1 504 main/binary-amd64/Packages.gz
+  ee7d531df5e04e244fa7003dd3d8092e70c320a932bf8c1fc6893b1f38d86e48 733 main/binary-amd64/Packages
+  2539e3f3415b87b1b725655fa135e9ddf06a423fe9b62e7efcb660678956b28b 505 main/binary-amd64/Packages.gz
