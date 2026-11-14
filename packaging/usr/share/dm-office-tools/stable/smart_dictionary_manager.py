@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.4"
+    APP_VERSION = "3.1.5"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -1169,24 +1169,103 @@ class DictionaryApp(Gtk.Window):
         self.push_undo()
         self.backup_before_change()
 
-        added = replaced = 0
+        # 1) जो शब्द dictionary में नहीं हैं — वे सीधे जुड़ जाते हैं।
+        added = 0
+        duplicates = []
+
         for key, value in pairs:
             existing = find_case_insensitive(self.dictionary, key)
             if existing is None:
                 self.dictionary[key] = value
                 added += 1
+            elif self.dictionary[existing] == value:
+                continue  # meaning पहले से वही है — कुछ बदलने की ज़रूरत नहीं
             else:
-                self.dictionary[existing] = value
-                replaced += 1
+                duplicates.append((existing, value))
+
+        # 2) मौजूदा शब्दों के लिए एक-एक करके पूछें:
+        #    स्किप / ओवरराइट / सभी स्किप / सभी ओवरराइट
+        overwritten = 0
+        skipped = 0
+        bulk_choice = None
+
+        for key, value in duplicates:
+            if bulk_choice == "overwrite":
+                self.dictionary[key] = value
+                overwritten += 1
+                continue
+            if bulk_choice == "skip":
+                skipped += 1
+                continue
+
+            choice = self.ask_duplicate_action(
+                key, self.dictionary.get(key, ""), value
+            )
+
+            if choice == "overwrite":
+                self.dictionary[key] = value
+                overwritten += 1
+            elif choice == "skip":
+                skipped += 1
+            elif choice == "overwrite_all":
+                self.dictionary[key] = value
+                overwritten += 1
+                bulk_choice = "overwrite"
+            else:  # skip_all (या dialog बंद) — बाकी सब छोड़ दें
+                skipped += 1
+                bulk_choice = "skip"
 
         if not self.save_dictionary():
             return
 
-        message = f"{added} नए शब्द जोड़े गए, {replaced} बदले गए।"
+        message = (
+            f"{added} नए शब्द जोड़े गए।\n"
+            f"{overwritten} मौजूदा शब्द ओवरराइट किए।\n"
+            f"{skipped} मौजूदा शब्द स्किप किए।"
+        )
         if errors:
-            message += f"\n\n{len(errors)} पंक्तियाँ छोड़ी गईं:\n" + "\n".join(errors[:12])
+            message += (
+                f"\n\n{len(errors)} पंक्तियाँ अमान्य थीं:\n"
+                + "\n".join(errors[:12])
+            )
         self.show_message(Gtk.MessageType.INFO, "Bulk Add", message)
         self.load_dictionary()
+
+    def ask_duplicate_action(self, key, old_value, new_value):
+        """मौजूदा शब्द के लिए विकल्प: स्किप / ओवरराइट / सभी स्किप / सभी ओवरराइट।"""
+        dialog = Gtk.Dialog(
+            title="शब्द पहले से मौजूद है", transient_for=self, modal=True
+        )
+        dialog.set_default_size(560, 260)
+
+        dialog.add_button("⏭ स्किप करें", Gtk.ResponseType.NO)
+        dialog.add_button("🔁 ओवरराइट करें", Gtk.ResponseType.YES)
+        dialog.add_button("सभी स्किप", 100)
+        dialog.add_button("सभी ओवरराइट", 101)
+
+        box = dialog.get_content_area()
+        label = Gtk.Label()
+        label.set_xalign(0)
+        label.set_line_wrap(True)
+        label.set_markup(
+            f"<b>{key}</b> पहले से dictionary में है।\n\n"
+            f"पुराना meaning:  <b>{old_value}</b>\n"
+            f"नया meaning:     <b>{new_value}</b>\n\n"
+            "ओवरराइट करें, या पुराना रहने दें (स्किप)?\n"
+            "बहुत सारे शब्द हों तो 'सभी स्किप' चुनकर बाद में सुधार कर सकते हैं।"
+        )
+        box.pack_start(label, False, False, 14)
+
+        dialog.show_all()
+        response = dialog.run()
+        dialog.destroy()
+
+        return {
+            Gtk.ResponseType.YES: "overwrite",
+            Gtk.ResponseType.NO: "skip",
+            100: "skip_all",
+            101: "overwrite_all",
+        }.get(response, "skip_all")
 
     def on_import(self, _widget):
         chooser = Gtk.FileChooserDialog(
