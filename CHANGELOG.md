@@ -3,6 +3,20 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.1.0] — 2026-11-14
+
+### Added — Dictionary Manager
+- **भाषा पहचान सुधार:** शब्द के script (देवनागरी/Latin) से सही dictionary अपने आप चुनी जाती है;
+  "Auto भाषा पहचान" checkbox से बंद भी की जा सकती है।
+- **Duplicate चेतावनी:** case-insensitive पहचान, बदलने से पहले पुष्टि।
+- **Bulk Add:** एक साथ कई entries (`word=meaning`, Tab या comma से अलग), गलत पंक्तियों की सूची के साथ।
+- **Import/Export:** txt/csv/zip import; दोनों dictionaries + categories का zip export।
+- **Validation:** खाली meaning, word=meaning, गलत script, बहुत लंबी entry — सब पर चेतावनी।
+- **Categories:** Court, Police, Revenue, Village, Names, Office, General (categories.txt में सुरक्षित)।
+- **Undo:** आख़िरी 25 बदलाव तक।
+- **Backups:** रोज़ अपने आप, हर बदलाव से पहले (5 मिनट throttle), Restore विकल्प, ZIP export;
+  backup में दोनों dictionaries और categories शामिल।
+
 ## [3.0.8] — 2026-11-14
 
 ### Changed

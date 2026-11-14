@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.0.8 Stable
+**Version / संस्करण:** 3.1.0 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,20 @@
 
 ---
 
-## What's New in v3.0.8 / v3.0.8 में नया क्या है
+## What's New in v3.1.0 / v3.1.0 में नया क्या है
+
+- **Dictionary Manager का बड़ा सुधार / Major Dictionary Manager upgrade**
+  - **भाषा पहचान ठीक:** शब्द टाइप करते ही script देखकर सही dictionary चुनी जाती है — हिन्दी शब्द Hindi → English में, अंग्रेज़ी शब्द English → Hindi में। ऊपर "Auto भाषा पहचान" checkbox से इसे बंद भी किया जा सकता है।
+  - **Duplicate की तुरंत चेतावनी:** बड़े/छोटे अक्षरों को एक मानकर पहले से मौजूद शब्द पकड़ा जाता है, और बदलने से पहले पूछा जाता है।
+  - **एक साथ कई शब्द (Bulk Add):** एक box में कई पंक्तियाँ (`word=meaning`, Tab या comma से अलग) डालकर सब एक बार में जोड़ें; गलत पंक्तियाँ छोड़कर सूची दिखती है।
+  - **Import / Export:** `.txt`, `.csv` या `.zip` से import, और दोनों dictionaries + categories का `.zip` export।
+  - **गलत/खाली अनुवाद की पहचान:** खाली meaning, word के बराबर meaning, गलत script (हिन्दी शब्द अंग्रेज़ी dictionary में आदि) — सब पर साफ़ चेतावनी।
+  - **श्रेणियाँ (Categories):** Court, Police, Revenue, Village, Names, Office, General — हर शब्द के साथ सुरक्षित रहती हैं (categories.txt में)।
+  - **Undo:** आख़िरी बदलाव वापस (25 तक)।
+  - **Backup:** रोज़ अपने आप एक backup, हर बदलाव से पहले backup, पुराने backup से Restore, और Backup को ZIP में Export।
+
+## What was new in v3.0.8 / v3.0.8 में नया क्या था
+
 
 - **Dictionary के values एक बार तय / One agreed set of dictionary values**
   - `Authorized` = **अधिकृत**, `Authorized Representative` = अधिकृत प्रतिनिधि, `Authorized Signatory` = अधिकृत हस्ताक्षरकर्ता
@@ -383,8 +396,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.0.8_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.0.8_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.1.0_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.1.0_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -413,7 +426,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.0.8_amd64.deb
+sudo apt install ./dm-office-tools_3.1.0_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -427,7 +440,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.0.8
+Version: 3.1.0
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -533,7 +546,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.0.8 Stable** | ✅ Current Release / वर्तमान रिलीज | Agreed dictionary values (अधिकृत, Delhi, Karnataka, Maharashtra, Police Chowki, Dist., Narsinghpur) and `sync --mirror` to align the user dictionary; README What's New chain restored for 3.0.0–3.0.8. / Dictionary values तय, `--mirror` option, README का What's New पूरा। |
+| **3.1.0 Stable** | ✅ Current Release / वर्तमान रिलीज | Dictionary Manager: language auto-detect fix, case-insensitive duplicate warning, bulk add, import/export, validation, categories, undo, and daily/pre-change backups with restore. / Dictionary Manager में भाषा पहचान सुधार, duplicate चेतावनी, bulk add, import/export, श्रेणियाँ, undo और backup/restore। |
+| **3.0.8 Stable** | Previous Release / पिछली रिलीज | Agreed dictionary values (अधिकृत, Delhi, Karnataka, Maharashtra, Police Chowki, Dist., Narsinghpur) and `sync --mirror` to align the user dictionary; README What's New chain restored for 3.0.0–3.0.8. / Dictionary values तय, `--mirror` option, README का What's New पूरा। |
 | **3.0.7 Stable** | Previous Release / पिछली रिलीज | sync-dictionaries.sh gains `--publish` (sync + commit + push + apt repo rebuild) and `--help`. / Sync में `--publish` और `--help` options। |
 | **3.0.6 Stable** | Previous Release / पिछली रिलीज | `sync-dictionaries.sh` now commits and pushes the synced dictionary automatically (`--no-git` to sync only). / Sync अब अपने आप commit + push करता है। |
 | **3.0.5 Stable** | Previous Release / पिछली रिलीज | Test isolation fix: pytest passes even when Alt+T (Online mode) is left on. No change in tool behaviour. / Tests अब मशीन की Alt+T सेटिंग से प्रभावित नहीं होते; tool के व्यवहार में कोई बदलाव नहीं। |
@@ -590,9 +604,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.0.8 Stable
-- **Release / रिलीज:** v3.0.8
-- **Package / पैकेज:** `dm-office-tools_3.0.8_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.1.0 Stable
+- **Release / रिलीज:** v3.1.0
+- **Package / पैकेज:** `dm-office-tools_3.1.0_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

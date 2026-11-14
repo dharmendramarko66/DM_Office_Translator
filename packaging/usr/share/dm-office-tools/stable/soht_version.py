@@ -5,4 +5,4 @@
 # =========================================================
 
 APP_NAME = "DM Office Translator"
-APP_VERSION = "3.0.8"
+APP_VERSION = "3.1.0"
