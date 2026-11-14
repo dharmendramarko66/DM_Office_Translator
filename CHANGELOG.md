@@ -3,11 +3,24 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.7] — 2026-11-14
+
+### Added
+- **`sync-dictionaries.sh --publish`:** sync + commit + push के बाद apt रेपो भी rebuild हो जाता
+  (pool में .deb copy + Packages/Release regeneration)। Release files की GPG signing मैन्युअल
+  रहती है — private key कभी script को नहीं दी जाती।
+- **`--no-git`** (पहले से था) और **`--help`** — दोनों options अब किसी भी क्रम में चलते हैं।
+- अज्ञात option पर साफ़ संदेश; apt rebuild fail होने पर dictionary का commit सुरक्षित रहता है।
+
+### Fixed
+- CHANGELOG में commit message का उदाहरण `(date)` के रूप में — पहले `(<date>)` लिखा था जिसे
+  GitHub markdown HTML tag समझकर हटा देता था (Release notes में खाली brackets दिख रहे थे)।
+
 ## [3.0.6] — 2026-11-13
 
 ### Added
 - **`sync-dictionaries.sh` अब sync + commit + push एक साथ करता है:** बदलाव होने पर
-  `dictionary: sync user entries (<date>)` message के साथ commit होकर `origin main` पर
+  `dictionary: sync user entries (date)` message के साथ commit होकर `origin main` पर
   push हो जाता है — दोबारा `git add/commit/push` करने की ज़रूरत नहीं।
 - कोई बदलाव न हो तो commit नहीं होता; push fail होने पर commit सुरक्षित रहता है और
   साफ़ संदेश मिलता है।

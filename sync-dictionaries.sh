@@ -3,6 +3,35 @@
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+# ------------------------------------------------------------
+# Options (v3.0.7)
+#   (कोई flag नहीं)  → sync + commit + push
+#   --no-git         → केवल sync (commit/push नहीं)
+#   --publish        → sync + commit + push + apt repo rebuild
+# ------------------------------------------------------------
+
+NO_GIT=0
+PUBLISH=0
+
+for arg in "$@"; do
+    case "$arg" in
+        --no-git|--local)
+            NO_GIT=1 ;;
+        --publish)
+            PUBLISH=1 ;;
+        --help|-h)
+            echo "Usage: ./sync-dictionaries.sh [--no-git] [--publish]"
+            echo "  (कोई flag नहीं) : sync + commit + push"
+            echo "  --no-git       : केवल sync (commit/push नहीं)"
+            echo "  --publish      : sync + commit + push + apt repo rebuild"
+            echo "                   (Release files की GPG signing मैन्युअल रहेगी)"
+            exit 0 ;;
+        *)
+            echo "⚠️  अज्ञात option: $arg  (--help देखिए)"
+            exit 1 ;;
+    esac
+done
 USER_DICT="$HOME/.dm_office_tools/dictionary"
 PROJECT_DICT="$PROJECT_DIR/dictionary"
 
@@ -133,7 +162,7 @@ echo "=========================================="
 #   ./sync-dictionaries.sh --no-git    → केवल sync (commit/push नहीं)
 # ------------------------------------------------------------
 
-if [ "${1:-}" = "--no-git" ] || [ "${1:-}" = "--local" ]; then
+if [ "$NO_GIT" -eq 1 ]; then
     echo
     echo "ℹ️  --no-git: commit/push नहीं किया गया।"
     echo "   बदलाव देखने के लिए: git diff -- dictionary/"
@@ -189,4 +218,29 @@ else
     echo "⚠️  Push नहीं हो सका (शायद remote पर नए commits हैं)।"
     echo "   आपका commit सुरक्षित है; अब यह चलाइए:"
     echo "     git pull --rebase origin main && git push origin main"
+fi
+
+# ------------------------------------------------------------
+# Optional: apt repository rebuild (--publish)
+# ------------------------------------------------------------
+
+if [ "$PUBLISH" -eq 1 ]; then
+    VERSION="$(sed -n 's/^APP_VERSION = "\(.*\)"/\1/p' "$PROJECT_DIR/stable/soht_version.py" | head -1)"
+
+    echo
+    echo "🏗  apt repository rebuild (version $VERSION)…"
+
+    if bash "$PROJECT_DIR/packaging/update-apt-repo.sh"; then
+        echo
+        echo "अब Release files को sign कीजिए, फिर push:"
+        echo "  cd $PROJECT_DIR/apt-repo/dists/noble"
+        echo "  gpg --default-key <KEY-ID> --clearsign -o InRelease Release"
+        echo "  gpg --default-key <KEY-ID> -abs -o Release.gpg Release"
+        echo "  cd $PROJECT_DIR"
+        echo "  git add -A && git commit -m \"apt repo: publish $VERSION\" && git push origin main"
+    else
+        echo
+        echo "⚠️  update-apt-repo.sh पूरा नहीं हुआ — dictionary का commit सुरक्षित है।"
+        echo "   उसे अलग से चलाइए: bash packaging/update-apt-repo.sh"
+    fi
 fi
