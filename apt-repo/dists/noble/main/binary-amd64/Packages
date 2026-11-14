@@ -5,10 +5,10 @@ Maintainer: Dharmendra Marko
 Depends: python3, python3-gi, python3-requests, wl-clipboard
 Suggests: xclip | xsel
 Filename: apt-repo/pool/main/d/dm-office-tools/dm-office-tools_3.0.6_amd64.deb
-Size: 2140106
-MD5sum: f5bf7a27b4273731719808920e6d9747
-SHA1: 9c50251b3285cde7d4729c3e87c9782e652e56aa
-SHA256: dc1aea67e8b71d576ad64ee03926209bb4a3bc5e658d85f802eef9c8b917abc4
+Size: 2140082
+MD5sum: 2d28dde9f26b6df7935c789ee4fcd505
+SHA1: 2ab188f7a13e2944267696d2012fd8ce69361894
+SHA256: 0ac97c7a102596224522f68875bbbe8b5f8ee782ede78e0c3d88e2e69f464611
 Section: office
 Priority: optional
 Homepage: https://github.com/dharmendramarko66/DM_Office_Translator
