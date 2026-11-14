@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.1.3 Stable
+**Version / संस्करण:** 3.1.4 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,14 @@
 
 ---
 
+## What's New in v3.1.4 / v3.1.4 में नया क्या है
+
+- **खोज box फिर से दिखने लगा / Search box works again**
+  - v3.1.3 में खोज वाले हिस्से पर `no_show_all` लगा दिया गया था, जिससे वह "शब्द सुधारें / खोजें" चुनने पर भी नहीं खुलता था। वह हटा दिया गया है।
+  - अब: manager खुलने पर (नया शब्द जोड़ें) खोज box नहीं दिखता; "शब्द सुधारें / खोजें और हटाएँ" चुनते ही वह तुरंत दिख जाता है, और वापस नया शब्द मोड पर छिप जाता है।
+
 ## What's New in v3.1.3 / v3.1.3 में नया क्या है
+
 
 - **खोज box सिर्फ़ ज़रूरत पर / Search box only where needed**
   - Manager खुलने पर "नया शब्द जोड़ें" चालू रहता है — अब उस समय नीचे "शब्द खोजें" वाला box नहीं दिखता। वह सिर्फ़ "शब्द सुधारें / खोजें और हटाएँ" चुनने पर ही दिखता है।
@@ -427,8 +434,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.1.3_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.1.3_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.1.4_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.1.4_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -457,7 +464,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.1.3_amd64.deb
+sudo apt install ./dm-office-tools_3.1.4_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -471,7 +478,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.1.3
+Version: 3.1.4
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -577,7 +584,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.1.3 Stable** | ✅ Current Release / वर्तमान रिलीज | Search box hidden in add-mode; Word/Meaning/Category fields now stretch to full width. / नया शब्द मोड में खोज box छिपा; fields पूरी चौड़ाई में। |
+| **3.1.4 Stable** | ✅ Current Release / वर्तमान रिलीज | Fixes the regression from 3.1.3: the search box now appears again when you choose "शब्द सुधारें / खोजें". / खोज box अब सही मोड में दिखता है। |
+| **3.1.3 Stable** | Previous Release / पिछली रिलीज | Search box hidden in add-mode; Word/Meaning/Category fields now stretch to full width. / नया शब्द मोड में खोज box छिपा; fields पूरी चौड़ाई में। |
 | **3.1.2 Stable** | Previous Release / पिछली रिलीज | Suggestions now filter correctly (only matching words), and the Dictionary Manager has the card-based UI from the approved design. / सुझाव अब सही से छँटते हैं और UI नए card-design में। |
 | **3.1.1 Stable** | Previous Release / पिछली रिलीज | Dictionary Manager search now shows suggestions automatically while typing, with Enter to open the first match and auto-load when only one word matches. / खोज में सुझाव अपने आप, Enter से पहला शब्द, और एक ही मेल पर स्वतः भरना। |
 | **3.1.0 Stable** | Previous Release / पिछली रिलीज | Dictionary Manager: language auto-detect fix, case-insensitive duplicate warning, bulk add, import/export, validation, categories, undo, and daily/pre-change backups with restore. / Dictionary Manager में भाषा पहचान सुधार, duplicate चेतावनी, bulk add, import/export, श्रेणियाँ, undo और backup/restore। |
@@ -638,9 +646,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.1.3 Stable
-- **Release / रिलीज:** v3.1.3
-- **Package / पैकेज:** `dm-office-tools_3.1.3_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.1.4 Stable
+- **Release / रिलीज:** v3.1.4
+- **Package / पैकेज:** `dm-office-tools_3.1.4_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

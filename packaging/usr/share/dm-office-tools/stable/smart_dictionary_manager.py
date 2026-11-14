@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.3"
+    APP_VERSION = "3.1.4"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -681,8 +681,6 @@ class DictionaryApp(Gtk.Window):
         action_card.pack_start(action_row, False, False, 0)
 
         self.search_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        # v3.1.3 — यह box सिर्फ़ "शब्द सुधारें" मोड में दिखे; show_all() इसे न खोले।
-        self.search_frame.set_no_show_all(True)
         self.search_entry = Gtk.Entry()
         self.search_entry.set_placeholder_text("🔍 शब्द खोजें…")
         self.search_entry.connect("changed", self.on_search_changed)
@@ -802,6 +800,8 @@ class DictionaryApp(Gtk.Window):
         self.btn_delete.set_sensitive(updating)
 
         # खोज वाला हिस्सा सिर्फ़ "शब्द सुधारें / खोजें" मोड में।
+        # v3.1.4 — no_show_all हटा दिया; अब show_all()/hide() सीधे काम करते हैं
+        # और window खुलने के बाद main() फिर से state लगाता है।
         if updating:
             self.search_frame.show_all()
         else:
