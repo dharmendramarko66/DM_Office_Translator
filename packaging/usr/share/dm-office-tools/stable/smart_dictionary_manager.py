@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.0"
+    APP_VERSION = "3.1.1"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -553,6 +553,7 @@ class DictionaryApp(Gtk.Window):
             )
             self.dictionary = {}
 
+        self.refresh_completion_model()
         self.update_total_label()
 
     def save_dictionary(self):
@@ -648,13 +649,27 @@ class DictionaryApp(Gtk.Window):
         self.search_frame.add(search_box)
         outer.pack_start(self.search_frame, False, False, 0)
 
+        # v3.1.1 — टाइप करते ही सुझाव अपने आप (EntryCompletion popup)।
         self.suggestion_store = Gtk.ListStore(str)
-        self.suggestion_combo = Gtk.ComboBox.new_with_model(self.suggestion_store)
-        renderer = Gtk.CellRendererText()
-        self.suggestion_combo.pack_start(renderer, True)
-        self.suggestion_combo.add_attribute(renderer, "text", 0)
-        self.suggestion_combo.connect("changed", self.on_suggestion_selected)
-        outer.pack_start(self.suggestion_combo, False, False, 0)
+        self.completion = Gtk.EntryCompletion()
+        self.completion.set_model(self.suggestion_store)
+        self.completion.set_text_column(0)
+        self.completion.set_minimum_key_length(1)
+        self.completion.set_popup_completion(True)
+        self.completion.set_inline_completion(False)
+        self.completion.set_popup_single_match(True)
+        self.completion.set_match_func(self.completion_match)
+        self.completion.connect("match-selected", self.on_completion_selected)
+        self.search_entry.set_completion(self.completion)
+        self.search_entry.connect("activate", self.on_search_activate)
+
+        self.match_label = Gtk.Label()
+        self.match_label.set_xalign(0)
+        self.match_label.set_markup(
+            "<span size='small' color='#7f8c8d'>"
+            "शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
+        )
+        outer.pack_start(self.match_label, False, False, 0)
 
         # ---- entry form ----
         form = Gtk.Grid(column_spacing=10, row_spacing=8)
@@ -725,7 +740,7 @@ class DictionaryApp(Gtk.Window):
         updating = self.rb_update.get_active()
         self.btn_delete.set_sensitive(updating)
         self.search_frame.set_visible(updating)
-        self.suggestion_combo.set_visible(updating)
+        self.match_label.set_visible(updating)
 
     # ------------------------------------------------------------
     # Mode handling
@@ -796,24 +811,37 @@ class DictionaryApp(Gtk.Window):
     def on_search_changed(self, _widget):
         self.update_suggestions()
 
-    def update_suggestions(self):
+    def refresh_completion_model(self):
+        """सुझावों का model भरें — पूरी dictionary एक बार में।"""
         self.suggestion_store.clear()
-        if not self.rb_update.get_active():
-            return
-
-        query = self.search_entry.get_text().strip().casefold()
-        matches = [
-            key for key in self.dictionary
-            if not query or query in key.casefold()
-        ]
-        for key in sorted(matches)[:60]:
+        for key in sorted(self.dictionary):
             self.suggestion_store.append([key])
 
-    def on_suggestion_selected(self, widget):
-        active = widget.get_active_iter()
-        if active is None:
+    def completion_match(self, _completion, key, _tree_iter, _data=None):
+        """case-insensitive substring match — कहीं भी मिलने पर सुझाव।"""
+        query = self.search_entry.get_text().strip().casefold()
+        if not query:
+            return False
+        return query in (key or "").casefold()
+
+    def on_completion_selected(self, _completion, model, tree_iter):
+        """सुझाव सूची से चुना गया शब्द सीधे form में भरें।"""
+        key = model[tree_iter][0]
+        self.load_record(key)
+        return True
+
+    def on_search_activate(self, _entry):
+        """Enter दबाने पर पहला मिलता शब्द खोलें।"""
+        query = self.search_entry.get_text().strip().casefold()
+        if not query:
             return
-        key = self.suggestion_store[active][0]
+        for key in sorted(self.dictionary):
+            if query in key.casefold():
+                self.load_record(key)
+                return
+
+    def load_record(self, key):
+        """चुने गए शब्द को form में भरें।"""
         self.original_key = key
         self.first_entry.set_text(key)
         self.second_entry.set_text(self.dictionary.get(key, ""))
@@ -823,6 +851,41 @@ class DictionaryApp(Gtk.Window):
             self.category_combo.set_active(CATEGORIES.index(stored))
         else:
             self.category_combo.set_active(0)
+
+        self.status_label.set_markup(
+            "<span weight='bold' foreground='#27ae60'>"
+            f"✔ चुना गया: {key}</span>"
+        )
+
+    def update_suggestions(self):
+        """टाइप करते ही गिनती दिखाएँ; एक ही मेल हो तो अपने आप खोल दें।"""
+        if not self.rb_update.get_active():
+            return
+
+        query = self.search_entry.get_text().strip().casefold()
+
+        if not query:
+            self.match_label.set_markup(
+                "<span size='small' color='#7f8c8d'>"
+                "शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
+            )
+            return
+
+        matches = [key for key in self.dictionary if query in key.casefold()]
+
+        if not matches:
+            self.match_label.set_markup(
+                "<span size='small' color='#c0392b'>कोई शब्द नहीं मिला</span>"
+            )
+            return
+
+        self.match_label.set_markup(
+            f"<span size='small' color='#2980b9'>{len(matches)} शब्द मिले — "
+            "सूची से चुनें, या Enter दबाएँ</span>"
+        )
+
+        if len(matches) == 1 and len(query) >= 2:
+            self.load_record(matches[0])
 
     # ------------------------------------------------------------
     # Helpers for entry handling

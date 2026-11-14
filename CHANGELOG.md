@@ -3,6 +3,15 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.1.1] — 2026-11-14
+
+### Changed
+- **Dictionary Manager की खोज में auto-suggestion:** combo box की जगह अब `EntryCompletion` popup —
+  शब्द लिखते ही सुझाव अपने आप दिखते हैं (case-insensitive, कहीं भी मिलने पर)।
+- **Enter** दबाने पर पहला मिलता शब्द खुलता है; सिर्फ़ एक शब्द मिलने पर (2+ अक्षर) वह अपने आप
+  form में भर जाता है।
+- साथ में "N शब्द मिले" / "कोई शब्द नहीं मिला" की गिनती।
+
 ## [3.1.0] — 2026-11-14
 
 ### Added — Dictionary Manager

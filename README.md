@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.1.0 Stable
+**Version / संस्करण:** 3.1.1 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,18 @@
 
 ---
 
+## What's New in v3.1.1 / v3.1.1 में नया क्या है
+
+- **खोज में सुझाव अब अपने आप / Auto-suggestions while typing**
+  - पहले शब्द खोजने पर सूची खाली रहती थी और combo box से चुनना पड़ता था। अब शब्द लिखते ही नीचे सुझावों की सूची (popup) अपने आप खुलती है — जैसे-जैसे अक्षर बढ़ते हैं, सूची छोटी होती जाती है।
+  - सूची से किसी शब्द पर क्लिक या arrow keys + Enter — शब्द तुरंत form में भर जाता है।
+  - **Enter** दबाने पर भी पहला मिलता शब्द खुल जाता है।
+  - अगर किसी खोज से **सिर्फ़ एक ही शब्द** मिलता है (2 या अधिक अक्षर लिखने पर), तो वह अपने आप form में भर जाता है — कोई चुनना नहीं पड़ता।
+  - साथ में गिनती दिखती है: "N शब्द मिले" या "कोई शब्द नहीं मिला"।
+  - खोज case-insensitive है — बड़े/छोटे अक्षरों से फ़र्क नहीं पड़ता।
+
 ## What's New in v3.1.0 / v3.1.0 में नया क्या है
+
 
 - **Dictionary Manager का बड़ा सुधार / Major Dictionary Manager upgrade**
   - **भाषा पहचान ठीक:** शब्द टाइप करते ही script देखकर सही dictionary चुनी जाती है — हिन्दी शब्द Hindi → English में, अंग्रेज़ी शब्द English → Hindi में। ऊपर "Auto भाषा पहचान" checkbox से इसे बंद भी किया जा सकता है।
@@ -396,8 +407,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.1.0_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.1.0_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.1.1_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.1.1_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -426,7 +437,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.1.0_amd64.deb
+sudo apt install ./dm-office-tools_3.1.1_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -440,7 +451,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.1.0
+Version: 3.1.1
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -546,7 +557,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.1.0 Stable** | ✅ Current Release / वर्तमान रिलीज | Dictionary Manager: language auto-detect fix, case-insensitive duplicate warning, bulk add, import/export, validation, categories, undo, and daily/pre-change backups with restore. / Dictionary Manager में भाषा पहचान सुधार, duplicate चेतावनी, bulk add, import/export, श्रेणियाँ, undo और backup/restore। |
+| **3.1.1 Stable** | ✅ Current Release / वर्तमान रिलीज | Dictionary Manager search now shows suggestions automatically while typing, with Enter to open the first match and auto-load when only one word matches. / खोज में सुझाव अपने आप, Enter से पहला शब्द, और एक ही मेल पर स्वतः भरना। |
+| **3.1.0 Stable** | Previous Release / पिछली रिलीज | Dictionary Manager: language auto-detect fix, case-insensitive duplicate warning, bulk add, import/export, validation, categories, undo, and daily/pre-change backups with restore. / Dictionary Manager में भाषा पहचान सुधार, duplicate चेतावनी, bulk add, import/export, श्रेणियाँ, undo और backup/restore। |
 | **3.0.8 Stable** | Previous Release / पिछली रिलीज | Agreed dictionary values (अधिकृत, Delhi, Karnataka, Maharashtra, Police Chowki, Dist., Narsinghpur) and `sync --mirror` to align the user dictionary; README What's New chain restored for 3.0.0–3.0.8. / Dictionary values तय, `--mirror` option, README का What's New पूरा। |
 | **3.0.7 Stable** | Previous Release / पिछली रिलीज | sync-dictionaries.sh gains `--publish` (sync + commit + push + apt repo rebuild) and `--help`. / Sync में `--publish` और `--help` options। |
 | **3.0.6 Stable** | Previous Release / पिछली रिलीज | `sync-dictionaries.sh` now commits and pushes the synced dictionary automatically (`--no-git` to sync only). / Sync अब अपने आप commit + push करता है। |
@@ -604,9 +616,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.1.0 Stable
-- **Release / रिलीज:** v3.1.0
-- **Package / पैकेज:** `dm-office-tools_3.1.0_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.1.1 Stable
+- **Release / रिलीज:** v3.1.1
+- **Package / पैकेज:** `dm-office-tools_3.1.1_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 
