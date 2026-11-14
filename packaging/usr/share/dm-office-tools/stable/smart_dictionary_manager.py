@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.2"
+    APP_VERSION = "3.1.3"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -681,6 +681,8 @@ class DictionaryApp(Gtk.Window):
         action_card.pack_start(action_row, False, False, 0)
 
         self.search_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        # v3.1.3 — यह box सिर्फ़ "शब्द सुधारें" मोड में दिखे; show_all() इसे न खोले।
+        self.search_frame.set_no_show_all(True)
         self.search_entry = Gtk.Entry()
         self.search_entry.set_placeholder_text("🔍 शब्द खोजें…")
         self.search_entry.connect("changed", self.on_search_changed)
@@ -712,18 +714,25 @@ class DictionaryApp(Gtk.Window):
         # ---------- शब्द विवरण ----------
         details_card = self.make_card("शब्द विवरण")
         form = Gtk.Grid(column_spacing=12, row_spacing=10)
+        form.set_hexpand(True)
         self.lbl_first = Gtk.Label(label="English Word")
         self.lbl_first.set_xalign(0)
+        self.lbl_first.set_width_chars(14)
         self.first_entry = Gtk.Entry()
+        self.first_entry.set_hexpand(True)
         self.first_entry.connect("changed", self.on_key_typed)
 
         self.lbl_second = Gtk.Label(label="Hindi Meaning")
         self.lbl_second.set_xalign(0)
+        self.lbl_second.set_width_chars(14)
         self.second_entry = Gtk.Entry()
+        self.second_entry.set_hexpand(True)
 
         self.lbl_category = Gtk.Label(label="श्रेणी / Category")
         self.lbl_category.set_xalign(0)
+        self.lbl_category.set_width_chars(14)
         self.category_combo = Gtk.ComboBoxText()
+        self.category_combo.set_hexpand(True)
         for category in CATEGORIES:
             self.category_combo.append_text(category)
         self.category_combo.set_active(0)
@@ -734,7 +743,7 @@ class DictionaryApp(Gtk.Window):
         form.attach(self.second_entry, 1, 1, 1, 1)
         form.attach(self.lbl_category, 0, 2, 1, 1)
         form.attach(self.category_combo, 1, 2, 1, 1)
-        details_card.pack_start(form, False, False, 0)
+        details_card.pack_start(form, True, True, 0)
         outer.pack_start(details_card, False, False, 0)
 
         # ---------- मुख्य बटन ----------
@@ -791,8 +800,12 @@ class DictionaryApp(Gtk.Window):
     def update_action_state(self):
         updating = self.rb_update.get_active()
         self.btn_delete.set_sensitive(updating)
-        self.search_frame.set_visible(updating)
-        self.match_label.set_visible(updating)
+
+        # खोज वाला हिस्सा सिर्फ़ "शब्द सुधारें / खोजें" मोड में।
+        if updating:
+            self.search_frame.show_all()
+        else:
+            self.search_frame.hide()
 
     # ------------------------------------------------------------
     # Mode handling
@@ -1366,6 +1379,7 @@ def main():
     app = DictionaryApp()
     app.connect("destroy", Gtk.main_quit)
     app.show_all()
+    app.update_action_state()
     Gtk.main()
 
 
