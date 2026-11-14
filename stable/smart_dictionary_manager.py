@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.1"
+    APP_VERSION = "3.1.2"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -575,12 +575,39 @@ class DictionaryApp(Gtk.Window):
         provider = Gtk.CssProvider()
         provider.load_from_data(
             b"""
-            window { background: #f5f6fa; }
-            .card { background: #ffffff; border-radius: 10px; padding: 12px; }
-            .title { font-size: 20px; font-weight: bold; color: #2c3e50; }
-            .hint { color: #7f8c8d; }
-            button { border-radius: 6px; padding: 6px 10px; }
-            entry { border-radius: 6px; padding: 6px; }
+            window { background: #e9eef5; }
+            .card {
+                background: #ffffff;
+                border: 1px solid #dbe3ec;
+                border-radius: 14px;
+                padding: 12px;
+            }
+            .app-title { font-size: 20px; font-weight: bold; color: #14324f; }
+            .app-sub { font-size: 11px; color: #6b7a8f; }
+            .section { font-size: 14px; font-weight: bold; color: #14324f; }
+            .hint { font-size: 11px; color: #7b8a9a; }
+            .footer {
+                background: #14324f;
+                border-radius: 12px;
+                padding: 8px 12px;
+            }
+            .footer-label { color: #ffffff; font-size: 12px; }
+            button { border-radius: 10px; padding: 10px 14px; font-weight: bold; }
+            button.primary { background-image: none; background-color: #1e8449; color: #ffffff; }
+            button.primary:hover { background-color: #27ae60; }
+            button.danger { background-image: none; background-color: #e74c3c; color: #ffffff; }
+            button.danger:hover { background-color: #ff6b5b; }
+            button.undo { background-image: none; background-color: #16a085; color: #ffffff; }
+            button.undo:hover { background-color: #1abc9c; }
+            button.clearbtn { background-image: none; background-color: #c0392b; color: #ffffff; }
+            button.clearbtn:hover { background-color: #e74c3c; }
+            button.tool { background-image: none; background-color: #2980b9; color: #ffffff; }
+            button.tool:hover { background-color: #3498db; }
+            button.tool-warm { background-image: none; background-color: #d68910; color: #ffffff; }
+            button.tool-warm:hover { background-color: #f39c12; }
+            button.tool-red { background-image: none; background-color: #cb4335; color: #ffffff; }
+            button.tool-red:hover { background-color: #e74c3c; }
+            entry { border-radius: 10px; padding: 8px; }
             """
         )
         Gtk.StyleContext.add_provider_for_screen(
@@ -588,68 +615,78 @@ class DictionaryApp(Gtk.Window):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-    def make_button(self, text, name, callback):
+    def make_card(self, title_text=None):
+        """सफ़ेद गोल card, ऊपर छोटा heading।"""
+        card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        card.get_style_context().add_class("card")
+        if title_text:
+            label = Gtk.Label(label=title_text)
+            label.set_xalign(0)
+            label.get_style_context().add_class("section")
+            card.pack_start(label, False, False, 0)
+        return card
+
+    def make_button(self, text, name, callback, css_class="primary"):
         button = Gtk.Button(label=text)
         button.set_name(name)
+        button.get_style_context().add_class(css_class)
         button.connect("clicked", callback)
         return button
 
     def create_ui(self):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
-        outer.set_border_width(14)
+        outer.set_border_width(12)
         self.add(outer)
 
-        title = Gtk.Label()
-        title.set_markup(
-            "<span size='large' weight='bold'>📖 Dictionary Manager</span>"
-        )
+        # ---------- header ----------
+        header = self.make_card()
+        title = Gtk.Label(label="📖 Dictionary Manager")
         title.set_xalign(0)
-        outer.pack_start(title, False, False, 0)
-
-        subtitle = Gtk.Label()
-        subtitle.set_markup(
-            f"<span size='small' color='#7f8c8d'>DM Office Translator {APP_VERSION}"
-            " — नए शब्द जोड़ें, सुधारें, backup लें</span>"
+        title.get_style_context().add_class("app-title")
+        subtitle = Gtk.Label(
+            label=f"DM Office Translator {APP_VERSION} — नए शब्द जोड़ें, सुधारें, backup लें"
         )
         subtitle.set_xalign(0)
-        outer.pack_start(subtitle, False, False, 0)
+        subtitle.get_style_context().add_class("app-sub")
+        header.pack_start(title, False, False, 0)
+        header.pack_start(subtitle, False, False, 0)
+        outer.pack_start(header, False, False, 0)
 
-        # ---- dictionary direction ----
-        mode_box = Gtk.Box(spacing=12)
+        # ---------- भाषा दिशा ----------
+        lang_card = self.make_card("भाषा दिशा")
+        lang_row = Gtk.Box(spacing=14)
         self.rb_e2h = Gtk.RadioButton.new_with_label_from_widget(None, "English → Hindi")
         self.rb_h2e = Gtk.RadioButton.new_with_label_from_widget(self.rb_e2h, "Hindi → English")
         self.rb_e2h.connect("toggled", self.on_dictionary_mode_changed)
         self.rb_h2e.connect("toggled", self.on_dictionary_mode_changed)
-        mode_box.pack_start(self.rb_e2h, False, False, 0)
-        mode_box.pack_start(self.rb_h2e, False, False, 0)
-
         self.chk_auto = Gtk.CheckButton(label="Auto भाषा पहचान")
         self.chk_auto.set_active(True)
-        mode_box.pack_start(self.chk_auto, False, False, 0)
-        outer.pack_start(mode_box, False, False, 0)
+        lang_row.pack_start(self.rb_e2h, False, False, 0)
+        lang_row.pack_start(self.rb_h2e, False, False, 0)
+        lang_row.pack_start(self.chk_auto, False, False, 0)
+        lang_card.pack_start(lang_row, False, False, 0)
+        outer.pack_start(lang_card, False, False, 0)
 
-        # ---- action mode ----
-        action_box = Gtk.Box(spacing=12)
-        self.rb_new = Gtk.RadioButton.new_with_label_from_widget(None, "नया शब्द जोड़ें")
-        self.rb_update = Gtk.RadioButton.new_with_label_from_widget(self.rb_new, "शब्द सुधारें / हटाएँ")
+        # ---------- काम का चुनाव + खोज ----------
+        action_card = self.make_card()
+        action_row = Gtk.Box(spacing=10, homogeneous=True)
+        self.rb_new = Gtk.RadioButton.new_with_label_from_widget(None, "➕ नया शब्द जोड़ें")
+        self.rb_update = Gtk.RadioButton.new_with_label_from_widget(
+            self.rb_new, "✏️ शब्द सुधारें / खोजें और हटाएँ"
+        )
         self.rb_new.connect("toggled", self.on_mode_changed)
         self.rb_update.connect("toggled", self.on_mode_changed)
-        action_box.pack_start(self.rb_new, False, False, 0)
-        action_box.pack_start(self.rb_update, False, False, 0)
-        outer.pack_start(action_box, False, False, 0)
+        action_row.pack_start(self.rb_new, True, True, 0)
+        action_row.pack_start(self.rb_update, True, True, 0)
+        action_card.pack_start(action_row, False, False, 0)
 
-        # ---- search (update mode) ----
-        self.search_frame = Gtk.Frame()
-        search_box = Gtk.Box(spacing=8)
-        search_box.set_border_width(8)
+        self.search_frame = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.search_entry = Gtk.Entry()
-        self.search_entry.set_placeholder_text("शब्द खोजें…")
+        self.search_entry.set_placeholder_text("🔍 शब्द खोजें…")
         self.search_entry.connect("changed", self.on_search_changed)
-        search_box.pack_start(self.search_entry, True, True, 0)
-        self.search_frame.add(search_box)
-        outer.pack_start(self.search_frame, False, False, 0)
+        self.search_entry.connect("activate", self.on_search_activate)
+        self.search_frame.pack_start(self.search_entry, False, False, 0)
 
-        # v3.1.1 — टाइप करते ही सुझाव अपने आप (EntryCompletion popup)।
         self.suggestion_store = Gtk.ListStore(str)
         self.completion = Gtk.EntryCompletion()
         self.completion.set_model(self.suggestion_store)
@@ -661,18 +698,20 @@ class DictionaryApp(Gtk.Window):
         self.completion.set_match_func(self.completion_match)
         self.completion.connect("match-selected", self.on_completion_selected)
         self.search_entry.set_completion(self.completion)
-        self.search_entry.connect("activate", self.on_search_activate)
 
         self.match_label = Gtk.Label()
         self.match_label.set_xalign(0)
+        self.match_label.get_style_context().add_class("hint")
         self.match_label.set_markup(
-            "<span size='small' color='#7f8c8d'>"
-            "शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
+            "<span size='small'>शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
         )
-        outer.pack_start(self.match_label, False, False, 0)
+        self.search_frame.pack_start(self.match_label, False, False, 0)
+        action_card.pack_start(self.search_frame, False, False, 0)
+        outer.pack_start(action_card, False, False, 0)
 
-        # ---- entry form ----
-        form = Gtk.Grid(column_spacing=10, row_spacing=8)
+        # ---------- शब्द विवरण ----------
+        details_card = self.make_card("शब्द विवरण")
+        form = Gtk.Grid(column_spacing=12, row_spacing=10)
         self.lbl_first = Gtk.Label(label="English Word")
         self.lbl_first.set_xalign(0)
         self.first_entry = Gtk.Entry()
@@ -695,44 +734,57 @@ class DictionaryApp(Gtk.Window):
         form.attach(self.second_entry, 1, 1, 1, 1)
         form.attach(self.lbl_category, 0, 2, 1, 1)
         form.attach(self.category_combo, 1, 2, 1, 1)
-        outer.pack_start(form, False, False, 0)
+        details_card.pack_start(form, False, False, 0)
+        outer.pack_start(details_card, False, False, 0)
 
-        # ---- main buttons ----
+        # ---------- मुख्य बटन ----------
         buttons = Gtk.Box(spacing=8)
-        self.btn_submit = self.make_button("➕ जोड़ें / सहेजें", "submit", self.on_submit)
-        self.btn_delete = self.make_button("🗑 हटाएँ", "delete", self.on_delete)
-        self.btn_undo = self.make_button("↩ Undo", "undo", self.on_undo)
-        self.btn_clear = self.make_button("✖ साफ़ करें", "clear", lambda *_: self.clear_fields())
+        self.btn_submit = self.make_button(
+            "💾 जोड़ें / सहेजें", "submit", self.on_submit, "primary"
+        )
+        self.btn_delete = self.make_button("🗑 हटाएँ", "delete", self.on_delete, "danger")
+        self.btn_undo = self.make_button("↩ Undo", "undo", self.on_undo, "undo")
+        self.btn_clear = self.make_button(
+            "✖ साफ़ करें", "clear", lambda *_: self.clear_fields(), "clearbtn"
+        )
         for button in (self.btn_submit, self.btn_delete, self.btn_undo, self.btn_clear):
             buttons.pack_start(button, True, True, 0)
         outer.pack_start(buttons, False, False, 0)
 
-        # ---- tools ----
+        # ---------- डेटा & प्रबंधन ----------
+        tools_card = self.make_card("डेटा & प्रबंधन")
         tools = Gtk.Box(spacing=8)
-        self.btn_bulk = self.make_button("📋 एक साथ कई शब्द", "bulk", self.on_bulk_add)
-        self.btn_import = self.make_button("📥 Import", "import", self.on_import)
-        self.btn_export = self.make_button("📤 Export", "export", self.on_export)
-        self.btn_backup = self.make_button("🗄 Backups", "backup", self.on_backups)
+        self.btn_bulk = self.make_button(
+            "📋 एक साथ कई शब्द", "bulk", self.on_bulk_add, "tool"
+        )
+        self.btn_import = self.make_button("📥 Import", "import", self.on_import, "tool-warm")
+        self.btn_export = self.make_button("📤 Export", "export", self.on_export, "tool-red")
+        self.btn_backup = self.make_button("🗄 Backups", "backup", self.on_backups, "tool-warm")
         for button in (self.btn_bulk, self.btn_import, self.btn_export, self.btn_backup):
             tools.pack_start(button, True, True, 0)
-        outer.pack_start(tools, False, False, 0)
+        tools_card.pack_start(tools, False, False, 0)
+        outer.pack_start(tools_card, False, False, 0)
 
-        # ---- status ----
+        # ---------- footer ----------
+        footer = Gtk.Box(spacing=10)
+        footer.get_style_context().add_class("footer")
         self.status_label = Gtk.Label()
-        self.status_label.set_markup("<span color='#7f8c8d'>तैयार</span>")
         self.status_label.set_xalign(0)
-        outer.pack_start(self.status_label, False, False, 0)
-
+        self.status_label.get_style_context().add_class("footer-label")
+        self.status_label.set_markup("<span>तैयार</span>")
         self.total_label = Gtk.Label()
-        self.total_label.set_xalign(0)
-        outer.pack_start(self.total_label, False, False, 0)
+        self.total_label.set_xalign(1)
+        self.total_label.get_style_context().add_class("footer-label")
+        footer.pack_start(self.status_label, True, True, 0)
+        footer.pack_end(self.total_label, False, False, 0)
+        outer.pack_start(footer, False, False, 0)
 
         self.update_action_state()
 
     def update_total_label(self):
         filename = os.path.basename(self.current_dict_file())
         self.total_label.set_markup(
-            f"<span size='small' color='#7f8c8d'>कुल entries: "
+            f"<span size='small'>कुल entries: "
             f"<b>{len(self.dictionary)}</b> — {filename}</span>"
         )
 
@@ -812,17 +864,17 @@ class DictionaryApp(Gtk.Window):
         self.update_suggestions()
 
     def refresh_completion_model(self):
-        """सुझावों का model भरें — पूरी dictionary एक बार में।"""
+        """सारे शब्द याद रखें; model खाली — भरना खोज के समय होगा।"""
+        self.all_keys = sorted(self.dictionary)
         self.suggestion_store.clear()
-        for key in sorted(self.dictionary):
-            self.suggestion_store.append([key])
 
-    def completion_match(self, _completion, key, _tree_iter, _data=None):
-        """case-insensitive substring match — कहीं भी मिलने पर सुझाव।"""
-        query = self.search_entry.get_text().strip().casefold()
-        if not query:
-            return False
-        return query in (key or "").casefold()
+    def completion_match(self, _completion, _key, _tree_iter, _data=None):
+        """Model पहले से filter है, इसलिए यहाँ हर पंक्ति मान्य है।
+
+        v3.1.2 — पहले match_func से छानने की कोशिश में पूरी dictionary
+        दिख रही थी; अब model में सिर्फ़ मिलते शब्द भरे जाते हैं।
+        """
+        return True
 
     def on_completion_selected(self, _completion, model, tree_iter):
         """सुझाव सूची से चुना गया शब्द सीधे form में भरें।"""
@@ -835,7 +887,7 @@ class DictionaryApp(Gtk.Window):
         query = self.search_entry.get_text().strip().casefold()
         if not query:
             return
-        for key in sorted(self.dictionary):
+        for key in getattr(self, "all_keys", []):
             if query in key.casefold():
                 self.load_record(key)
                 return
@@ -853,12 +905,17 @@ class DictionaryApp(Gtk.Window):
             self.category_combo.set_active(0)
 
         self.status_label.set_markup(
-            "<span weight='bold' foreground='#27ae60'>"
-            f"✔ चुना गया: {key}</span>"
+            "<span weight='bold' color='#b9f6ca'>✔ चुना गया: "
+            f"{key}</span>"
         )
 
     def update_suggestions(self):
-        """टाइप करते ही गिनती दिखाएँ; एक ही मेल हो तो अपने आप खोल दें।"""
+        """टाइप करते ही model में सिर्फ़ मिलते शब्द भरें (popup अपने आप)।"""
+        if not hasattr(self, "suggestion_store"):
+            return
+
+        self.suggestion_store.clear()
+
         if not self.rb_update.get_active():
             return
 
@@ -866,12 +923,14 @@ class DictionaryApp(Gtk.Window):
 
         if not query:
             self.match_label.set_markup(
-                "<span size='small' color='#7f8c8d'>"
-                "शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
+                "<span size='small'>शब्द लिखना शुरू करें — सुझाव अपने आप दिखेंगे</span>"
             )
             return
 
-        matches = [key for key in self.dictionary if query in key.casefold()]
+        matches = [
+            key for key in getattr(self, "all_keys", [])
+            if query in key.casefold()
+        ]
 
         if not matches:
             self.match_label.set_markup(
@@ -879,17 +938,19 @@ class DictionaryApp(Gtk.Window):
             )
             return
 
+        for key in matches[:50]:
+            self.suggestion_store.append([key])
+
+        shown = len(matches) if len(matches) <= 50 else 50
         self.match_label.set_markup(
-            f"<span size='small' color='#2980b9'>{len(matches)} शब्द मिले — "
-            "सूची से चुनें, या Enter दबाएँ</span>"
+            f"<span size='small' color='#2980b9'>{len(matches)} शब्द मिले"
+            f"{'' if len(matches) <= 50 else f' (पहले {shown} दिख रहे हैं)'}"
+            " — सूची से चुनें, या Enter दबाएँ</span>"
         )
 
         if len(matches) == 1 and len(query) >= 2:
             self.load_record(matches[0])
 
-    # ------------------------------------------------------------
-    # Helpers for entry handling
-    # ------------------------------------------------------------
     def get_entry_values(self):
         return (
             self.first_entry.get_text().strip(),

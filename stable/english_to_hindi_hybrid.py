@@ -29,7 +29,7 @@ import requests
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.1"
+    APP_VERSION = "3.1.2"
 
 # ---------------------------------------------------------
 # Paths / configuration
