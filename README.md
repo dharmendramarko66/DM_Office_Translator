@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.0.7 Stable
+**Version / संस्करण:** 3.0.8 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,53 @@
 
 ---
 
-## What's New in v2.0.12 / v2.0.12 में नया क्या है
+## What's New in v3.0.8 / v3.0.8 में नया क्या है
+
+- **Dictionary के values एक बार तय / One agreed set of dictionary values**
+  - `Authorized` = **अधिकृत**, `Authorized Representative` = अधिकृत प्रतिनिधि, `Authorized Signatory` = अधिकृत हस्ताक्षरकर्ता
+  - `दिल्ली` = **Delhi**, `कर्नाटक` = **Karnataka**, `महाराष्ट्र` = **Maharashtra**, `पुलिस चौकी` = **Police Chowki**, `जिला` = **Dist.**, `नरसिंहपुर` = **Narsinghpur**
+  - `तिराहा` = T-Junction और `Street` = गली जैसे हैं वैसे (अनुवाद, transliteration नहीं)
+- **`./sync-dictionaries.sh --mirror` (नया):** project dictionary के values आपकी user dictionary में भर देता है — आपकी अपनी अलग entries सुरक्षित रहती हैं। इससे "वही शब्द बार-बार sync होना" हमेशा के लिए रुक जाता है।
+- **README का "What's New" अब पूरा:** 3.0.0 से 3.0.8 तक के सभी बदलाव दर्ज हैं (पहले यह 2.0.12 पर रुक गया था)।
+
+## What was new in v3.0.7 / v3.0.7 में नया क्या था
+
+- `./sync-dictionaries.sh --publish` — sync + commit + push, फिर apt रेपो का rebuild (Release files की GPG signing मैन्युअल)।
+- `--help` और `--no-git` options; अज्ञात option पर साफ़ संदेश।
+- CHANGELOG में commit message का उदाहरण `(date)` — पहले `(<date>)` को GitHub markdown हटा देता था।
+
+## What was new in v3.0.6 / v3.0.6 में नया क्या था
+
+- `sync-dictionaries.sh` अब sync + commit + push एक साथ करता है (`--no-git` से केवल sync)।
+- कोई बदलाव न हो तो commit नहीं होता; push fail होने पर commit सुरक्षित रहता है।
+
+## What was new in v3.0.5 / v3.0.5 में नया क्या था
+
+- Tests अब मशीन की Alt+T सेटिंग से प्रभावित नहीं होते (conftest में isolation) — tool के व्यवहार में बदलाव नहीं।
+
+## What was new in v3.0.4 / v3.0.4 में नया क्या था
+
+- Online mode अब चुपचाप fail नहीं होता: एक retry, साफ़ संदेश, और cooldown 60 → 10 मिनट।
+
+## What was new in v3.0.3 / v3.0.3 में नया क्या था
+
+- Default मोड में dictionary के बाद बचे शब्दों का **लिप्यांतरण** (पहले भाषांतरण हो रहा था) — मोड पूरी तरह offline और तेज़।
+
+## What was new in v3.0.2 / v3.0.2 में नया क्या था
+
+- v3.0.1 की dictionary changes वापस — dictionary और default मोड पहले जैसा।
+
+## What was new in v3.0.1 / v3.0.1 में नया क्या था
+
+- (वापस लिया गया) पते के शब्दों की dictionary entries बदली गई थीं।
+
+## What was new in v3.0.0 / v3.0.0 में नया क्या था
+
+- **Alt+T = Online mode दोनों दिशाओं में:** dictionary skip और पूरा अनुवाद Google से (Hindi → English और English → Hindi)।
+- Alt+T बंद होने पर सब पहले जैसा।
+
+## What was new in v2.0.12 / v2.0.12 में नया क्या था
+
 
 - **Alt+T अब "Online mode" है — dictionary skip, पूरा अनुवाद Google से**
   - चालू होने पर tool dictionary को पूरी तरह छोड़ देता है और पूरा पता/वाक्य Google से translate करता है। Google नाम जैसे हैं वैसे (transliterate) रखता है और सामान्य शब्दों का अनुवाद करता है।
@@ -337,8 +383,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.0.7_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.0.7_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.0.8_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.0.8_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -367,7 +413,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.0.7_amd64.deb
+sudo apt install ./dm-office-tools_3.0.8_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -381,7 +427,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.0.7
+Version: 3.0.8
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -487,7 +533,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.0.7 Stable** | ✅ Current Release / वर्तमान रिलीज | sync-dictionaries.sh gains `--publish` (sync + commit + push + apt repo rebuild) and `--help`. / Sync में `--publish` और `--help` options। |
+| **3.0.8 Stable** | ✅ Current Release / वर्तमान रिलीज | Agreed dictionary values (अधिकृत, Delhi, Karnataka, Maharashtra, Police Chowki, Dist., Narsinghpur) and `sync --mirror` to align the user dictionary; README What's New chain restored for 3.0.0–3.0.8. / Dictionary values तय, `--mirror` option, README का What's New पूरा। |
+| **3.0.7 Stable** | Previous Release / पिछली रिलीज | sync-dictionaries.sh gains `--publish` (sync + commit + push + apt repo rebuild) and `--help`. / Sync में `--publish` और `--help` options। |
 | **3.0.6 Stable** | Previous Release / पिछली रिलीज | `sync-dictionaries.sh` now commits and pushes the synced dictionary automatically (`--no-git` to sync only). / Sync अब अपने आप commit + push करता है। |
 | **3.0.5 Stable** | Previous Release / पिछली रिलीज | Test isolation fix: pytest passes even when Alt+T (Online mode) is left on. No change in tool behaviour. / Tests अब मशीन की Alt+T सेटिंग से प्रभावित नहीं होते; tool के व्यवहार में कोई बदलाव नहीं। |
 | **3.0.4 Stable** | Previous Release / पिछली रिलीज | Online mode retries once, shows a clear message when Google fails, and the cooldown is 10 minutes instead of 60. / Online mode में एक retry, साफ़ संदेश, और cooldown 10 मिनट। |
@@ -543,9 +590,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.0.7 Stable
-- **Release / रिलीज:** v3.0.7
-- **Package / पैकेज:** `dm-office-tools_3.0.7_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.0.8 Stable
+- **Release / रिलीज:** v3.0.8
+- **Package / पैकेज:** `dm-office-tools_3.0.8_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

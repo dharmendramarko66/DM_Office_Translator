@@ -3,6 +3,23 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.0.8] — 2026-11-14
+
+### Changed
+- **Dictionary values एक बार तय किए गए** (user और project अब एक ही राय पर):
+  - `Authorized` = अधिकृत, `Authorized Representative` = अधिकृत प्रतिनिधि,
+    `Authorized Signatory` = अधिकृत हस्ताक्षरकर्ता
+  - `दिल्ली` = Delhi, `कर्नाटक` = Karnataka, `महाराष्ट्र` = Maharashtra,
+    `पुलिस चौकी` = Police Chowki, `जिला` = Dist., `नरसिंहपुर` = Narsinghpur
+  - `तिराहा` = T-Junction और `Street` = गली — अनुवाद ही रखे गए (transliteration नहीं)
+
+### Added
+- **`./sync-dictionaries.sh --mirror`:** project dictionary की values user dictionary में भर देता है
+  (user-only entries सुरक्षित रहती हैं) — इससे "वही शब्द बार-बार sync होना" खत्म हो जाता है।
+
+### Fixed
+- **README का "What's New" 2.0.12 पर रुक गया था** — अब 3.0.0 से 3.0.8 तक के सभी बदलाव दर्ज हैं।
+
 ## [3.0.7] — 2026-11-14
 
 ### Added

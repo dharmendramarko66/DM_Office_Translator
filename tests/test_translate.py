@@ -240,7 +240,7 @@ class TestH2EOnlinePath:
 
         # गोहचर dictionary में नहीं है → लिप्यांतरण (Gohchar), भाषांतरण नहीं।
         result = h2e.translate("ग्राम गोहचर जिला जबलपुर")
-        assert result == "Gram Gohachar Dist Jabalpur"
+        assert result == "Gram Gohachar Dist. Jabalpur"
 
     def test_unknown_word_transliterated(self, h2e, dict_dir, monkeypatch):
         self._patch_paths(monkeypatch, h2e, dict_dir)
@@ -255,5 +255,5 @@ class TestH2EOnlinePath:
         monkeypatch.setattr(h2e, "session", ExplodingSession())
 
         result = h2e.translate("सिद्ध बाबा के पास जिला जबलपुर म.प्र.")
-        assert result == "Siddh Baba Ke Pas Dist Jabalpur M.P."
+        assert result == "Siddh Baba Ke Pas Dist. Jabalpur M.P."
 
