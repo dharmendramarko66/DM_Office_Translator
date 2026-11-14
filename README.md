@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.1.6 Stable
+**Version / संस्करण:** 3.1.7 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,16 @@
 
 ---
 
+## What's New in v3.1.7 / v3.1.7 में नया क्या है
+
+- **अपडेट के साथ dictionary अपने आप मिल जाती है / Automatic dictionary mirror on upgrade**
+  - `sudo apt update && sudo apt upgrade` करते ही installer हर user की dictionary को नई system dictionary के values से अपने आप मिला देता है — अब किसी मशीन पर `./sync-dictionaries.sh --mirror` चलाने की ज़रूरत नहीं।
+  - यूज़र की अपनी अतिरिक्त entries सुरक्षित रहती हैं; सिर्फ़ वही values बदलती हैं जो नए version में सुधरी हैं।
+  - बदलाव से पहले पुरानी dictionary का timestamped backup बनता है (`*.bak-YYYY-MM-DD_HH-MM-SS`, आख़िरी 5 रखे जाते हैं)।
+  - `--mirror` वाला काम अब एक ही जगह लिखा है — `stable/dictionary_mirror.py` — जिसे installer और `./sync-dictionaries.sh --mirror` दोनों उपयोग करते हैं।
+
 ## What's New in v3.1.6 / v3.1.6 में नया क्या है
+
 
 - **Bulk Add का सारांश अब पूरा / Complete Bulk Add summary**
   - पहले सारांश में सिर्फ़ तीन गिनतियाँ थीं। अब चार हैं, और साथ में कुल valid पंक्तियाँ भी:
@@ -456,8 +465,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.1.6_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.1.6_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.1.7_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.1.7_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -486,7 +495,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.1.6_amd64.deb
+sudo apt install ./dm-office-tools_3.1.7_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -500,7 +509,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.1.6
+Version: 3.1.7
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -606,7 +615,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.1.6 Stable** | ✅ Current Release / वर्तमान रिलीज | Bulk Add summary now also reports how many words were already identical and skipped automatically, plus the total valid lines. / सारांश में अपने आप छोड़े गए शब्दों की संख्या भी। |
+| **3.1.7 Stable** | ✅ Current Release / वर्तमान रिलीज | On every apt upgrade the installer now mirrors the new system dictionary into each user's dictionary automatically (personal entries kept, backup taken). / अपडेट के साथ user dictionary अपने आप नई values से मिल जाती है। |
+| **3.1.6 Stable** | Previous Release / पिछली रिलीज | Bulk Add summary now also reports how many words were already identical and skipped automatically, plus the total valid lines. / सारांश में अपने आप छोड़े गए शब्दों की संख्या भी। |
 | **3.1.5 Stable** | Previous Release / पिछली रिलीज | Bulk Add asks about each duplicate (skip / overwrite / skip all / overwrite all) after adding the new words. / Bulk Add में नए शब्द जुड़ते हैं और duplicate पर स्किप/ओवरराइट पूछा जाता है। |
 | **3.1.4 Stable** | Previous Release / पिछली रिलीज | Fixes the regression from 3.1.3: the search box now appears again when you choose "शब्द सुधारें / खोजें". / खोज box अब सही मोड में दिखता है। |
 | **3.1.3 Stable** | Previous Release / पिछली रिलीज | Search box hidden in add-mode; Word/Meaning/Category fields now stretch to full width. / नया शब्द मोड में खोज box छिपा; fields पूरी चौड़ाई में। |
@@ -670,9 +680,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.1.6 Stable
-- **Release / रिलीज:** v3.1.6
-- **Package / पैकेज:** `dm-office-tools_3.1.6_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.1.7 Stable
+- **Release / रिलीज:** v3.1.7
+- **Package / पैकेज:** `dm-office-tools_3.1.7_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

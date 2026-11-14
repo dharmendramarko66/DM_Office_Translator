@@ -158,46 +158,14 @@ PY
 # ------------------------------------------------------------
 
 if [ "$MIRROR" -eq 1 ]; then
-    for FILE in english_to_hindi_dictionary.txt hindi_to_english_dictionary.txt; do
-        PROJECT_FILE="$PROJECT_DICT/$FILE"
-        USER_FILE="$USER_DICT/$FILE"
+    MIRROR_SCRIPT="$PROJECT_DIR/stable/dictionary_mirror.py"
 
-        [ -f "$PROJECT_FILE" ] || continue
-        mkdir -p "$USER_DICT"
+    if [ ! -f "$MIRROR_SCRIPT" ]; then
+        echo "⚠️  dictionary_mirror.py नहीं मिला — mirror नहीं हो सका।"
+        exit 1
+    fi
 
-        python3 - "$PROJECT_FILE" "$USER_FILE" <<'PY'
-import sys
-
-proj_path, user_path = sys.argv[1], sys.argv[2]
-
-def load(path):
-    data = {}
-    try:
-        with open(path, encoding="utf-8") as f:
-            for line in f:
-                line = line.rstrip("\n")
-                if "=" in line:
-                    key, value = line.split("=", 1)
-                    key = key.strip()
-                    if key:
-                        data[key] = value.strip()
-    except FileNotFoundError:
-        pass
-    return data
-
-project = load(proj_path)
-user = load(user_path)
-
-merged = dict(user)
-merged.update(project)          # project की values जीतती हैं
-
-with open(user_path, "w", encoding="utf-8") as f:
-    for key, value in merged.items():
-        f.write(f"{key}={value}\n")
-
-print(f"   {user_path}: {len(user)} → {len(merged)} entries")
-PY
-    done
+    python3 "$MIRROR_SCRIPT" --source "$PROJECT_DICT" --target "$USER_DICT"
 
     echo
     echo "✅ User dictionary अब project की values के साथ मिल गई (आपकी अपनी entries सुरक्षित)।"

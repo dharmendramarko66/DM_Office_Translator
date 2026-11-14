@@ -3,6 +3,16 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.1.7] — 2026-11-14
+
+### Added
+- **installer अपने आप user dictionary mirror करता है:** `apt upgrade` के समय postinst
+  `/usr/share/dm-office-tools/stable/dictionary_mirror.py` को उस user के रूप में चलाकर
+  नई system dictionary की values user dictionary में भर देता है (user-only entries सुरक्षित)।
+- **`stable/dictionary_mirror.py` (नया):** एक ही जगह mirror logic — installer और
+  `./sync-dictionaries.sh --mirror` दोनों इसी का उपयोग करते हैं। बदलाव से पहले
+  `*.bak-YYYY-MM-DD_HH-MM-SS` backup बनता है (आख़िरी 5 रखे जाते हैं)।
+
 ## [3.1.6] — 2026-11-14
 
 ### Changed

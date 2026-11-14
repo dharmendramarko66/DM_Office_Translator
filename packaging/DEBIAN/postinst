@@ -299,6 +299,30 @@ else
 fi
 
 # ------------------------------------------------------------
+# 6b. v3.1.7 — user dictionary को नए system dictionary से मिलाएँ
+#
+#     `sudo apt upgrade` करते ही हर user की dictionary अपने आप
+#     नई/सुधरी हुई values पा लेती है (उसकी अपनी entries सुरक्षित)।
+# ------------------------------------------------------------
+
+MIRROR_SCRIPT="/usr/share/dm-office-tools/stable/dictionary_mirror.py"
+SYSTEM_DICT_DIR="/usr/share/dm-office-tools/dictionary"
+
+if [ -f "$MIRROR_SCRIPT" ] && [ -d "$SYSTEM_DICT_DIR" ] && [ -n "$TARGET_USER" ]; then
+    echo "[INFO] Updating user dictionary with new entries/values..."
+
+    if runuser -u "$TARGET_USER" -- \
+        env HOME="$USER_HOME" USER="$TARGET_USER" LOGNAME="$TARGET_USER" \
+        python3 "$MIRROR_SCRIPT" --source "$SYSTEM_DICT_DIR" --target "$USER_DICT_DIR"; then
+        echo "[OK] User dictionary updated."
+    else
+        echo "[WARN] User dictionary mirror could not be completed."
+    fi
+
+    chown -R "$TARGET_USER:$TARGET_USER" "$USER_HOME/.dm_office_tools" 2>/dev/null || true
+fi
+
+# ------------------------------------------------------------
 # 7. Remove obsolete desktop launchers
 # ------------------------------------------------------------
 
