@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.5"
+    APP_VERSION = "3.1.6"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -1171,6 +1171,7 @@ class DictionaryApp(Gtk.Window):
 
         # 1) जो शब्द dictionary में नहीं हैं — वे सीधे जुड़ जाते हैं।
         added = 0
+        unchanged = 0
         duplicates = []
 
         for key, value in pairs:
@@ -1179,7 +1180,8 @@ class DictionaryApp(Gtk.Window):
                 self.dictionary[key] = value
                 added += 1
             elif self.dictionary[existing] == value:
-                continue  # meaning पहले से वही है — कुछ बदलने की ज़रूरत नहीं
+                unchanged += 1  # पहले से वही meaning — अपने आप छोड़ा गया
+                continue
             else:
                 duplicates.append((existing, value))
 
@@ -1218,10 +1220,13 @@ class DictionaryApp(Gtk.Window):
         if not self.save_dictionary():
             return
 
+        total_valid = added + unchanged + overwritten + skipped
         message = (
             f"{added} नए शब्द जोड़े गए।\n"
             f"{overwritten} मौजूदा शब्द ओवरराइट किए।\n"
-            f"{skipped} मौजूदा शब्द स्किप किए।"
+            f"{skipped} मौजूदा शब्द स्किप किए (आपने चुना)।\n"
+            f"{unchanged} शब्द पहले से वही थे (अपने आप छोड़े गए)।\n\n"
+            f"कुल valid पंक्तियाँ: {total_valid}"
         )
         if errors:
             message += (
