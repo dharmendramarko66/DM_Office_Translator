@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.3.0"
+    APP_VERSION = "3.4.0"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"

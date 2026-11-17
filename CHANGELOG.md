@@ -3,6 +3,17 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.4.0] — 2026-11-17
+
+### Changed
+- **Dashboard UI:** नीला banner (नाम, संस्करण, न्यायालय, सेटिंग्स/जानकारी/सहायता), मोड पट्टी
+  (दिशा + Online Mode + "Offline Dictionary Ready" chip), तीन panels — Input, Translation और
+  Dictionary side panel — तथा नीचे सुविधाओं की पट्टी, सुझाव, विकल्प और चलती status bar
+  (तारीख़/समय के साथ)।
+- Input में अक्षर-गिनती (0/5000), अतिरिक्त स्पेस हटाने और अनुवाद के बाद clipboard में
+  कॉपी करने के विकल्प; Print (Gtk.PrintOperation) और Save (फ़ाइल में सहेजें)।
+- Dictionary side panel से सीधे शब्द जोड़ें/सुधारें — वही dictionary फ़ाइलें जिन्हें इंजन पढ़ते हैं।
+
 ## [3.3.0] — 2026-11-17
 
 ### Added
