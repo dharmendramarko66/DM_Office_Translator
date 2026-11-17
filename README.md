@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.2.0 Stable
+**Version / संस्करण:** 3.3.0 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,19 @@
 
 ---
 
+## What's New in v3.3.0 / v3.3.0 में नया क्या है
+
+- **एक ही App — अनुवाद + Dictionary + शॉर्टकट / One app for everything**
+  - `dm-office-tools` चलाने पर अब एक ही window खुलती है जिसमें तीन tabs हैं:
+    - **अनुवाद** — दिशा चुनें (English → Hindi / Hindi → English), text लिखें या clipboard से लाएँ, "अनुवाद करें" दबाएँ, परिणाम कॉपी करें।
+    - **Dictionary** — वही पूरा Dictionary Manager (शब्द जोड़ें/सुधारें, bulk add, import/export, श्रेणियाँ, Undo, Backups) अब इसी App के अंदर।
+    - **शॉर्टकट** — Alt+Space, Alt+H, Alt+T की जानकारी और Online mode का चालू/बंद।
+  - **Online mode का बटन अब App में ही:** अनुवाद tab और शॉर्टकट tab — दोनों जगह switch है; बदलते ही तुरंत लागू (Alt+T से भी वही होता है)।
+  - नीचे की पट्टी में स्थिति और Online mode की स्थिति दिखती है।
+  - अलग Dictionary Manager भी मौजूद है, ज़रूरत हो तो: `dm-office-tools-dictionary`
+
 ## What's New in v3.2.0 / v3.2.0 में नया क्या है
+
 
 - **अंग्रेज़ी आउटपुट अब वाक्य जैसा / Sentence case English**
   - पहले पूरे वाक्य का हर शब्द बड़े अक्षर से शुरू होता था — "I Have A Lot Of Work To Do Today"।
@@ -497,8 +509,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.2.0_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.2.0_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.3.0_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.3.0_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -527,7 +539,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.2.0_amd64.deb
+sudo apt install ./dm-office-tools_3.3.0_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -541,7 +553,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.2.0
+Version: 3.3.0
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -647,7 +659,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.2.0 Stable** | ✅ Current Release / वर्तमान रिलीज | English output uses sentence case (no more Title Case) and Hindi output uses the formal register (तुम → आप). / अंग्रेज़ी में वाक्य जैसी capitalisation, हिन्दी में शिष्टाचार। |
+| **3.3.0 Stable** | ✅ Current Release / वर्तमान रिलीज | One window with three tabs — translate, the full Dictionary Manager and shortcuts, plus an Online-mode switch inside the app. / एक ही App में अनुवाद, Dictionary और Online switch। |
+| **3.2.0 Stable** | Previous Release / पिछली रिलीज | English output uses sentence case (no more Title Case) and Hindi output uses the formal register (तुम → आप). / अंग्रेज़ी में वाक्य जैसी capitalisation, हिन्दी में शिष्टाचार। |
 | **3.1.9 Stable** | Previous Release / पिछली रिलीज | Translation now tries three providers in order (Google gtx → clients5 → MyMemory), so a blocked network no longer silently falls back to transliteration. / तीन providers की क्रमिक कोशिश — ब्लॉक नेटवर्क पर भी अनुवाद। |
 | **3.1.8 Stable** | Previous Release / पिछली रिलीज | Online-mode fallbacks are no longer silent: a desktop notification explains a Google cooldown, rate limit or network failure. / Online mode में fallback अब notification से बताता है। |
 | **3.1.7 Stable** | Previous Release / पिछली रिलीज | On every apt upgrade the installer now mirrors the new system dictionary into each user's dictionary automatically (personal entries kept, backup taken). / अपडेट के साथ user dictionary अपने आप नई values से मिल जाती है। |
@@ -715,9 +728,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.2.0 Stable
-- **Release / रिलीज:** v3.2.0
-- **Package / पैकेज:** `dm-office-tools_3.2.0_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.3.0 Stable
+- **Release / रिलीज:** v3.3.0
+- **Package / पैकेज:** `dm-office-tools_3.3.0_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 

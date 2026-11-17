@@ -3,6 +3,21 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.3.0] — 2026-11-17
+
+### Added
+- **`stable/dm_office_app.py` (नया):** एक ही window में तीन tabs — **अनुवाद** (दिशा, input, output,
+  copy/paste), **Dictionary** (वही पूरा Manager) और **शॉर्टकट** (Alt+Space / Alt+H / Alt+T की
+  जानकारी)। नीचे status bar में Online mode की स्थिति।
+- **Online mode switch App के अंदर:** अनुवाद और शॉर्टकट दोनों tabs में; बदलते ही marker फ़ाइल
+  अपडेट होती है, इसलिए Alt+T और App का switch हमेशा एक जैसा रहता है।
+
+### Changed
+- **`smart_dictionary_manager.py`:** UI अब `DictionaryPanel(Gtk.Box)` में — किसी भी window में
+  लगाया जा सकता है; पुराना standalone `DictionaryApp(Gtk.Window)` wrapper बना रहा
+  (`dm-office-tools-dictionary`)।
+- **`dm-office-tools` launcher** अब `dm_office_app.py` चलाता है।
+
 ## [3.2.0] — 2026-11-17
 
 ### Changed

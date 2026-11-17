@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.2.0"
+    APP_VERSION = "3.3.0"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -427,13 +427,11 @@ gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk, Pango  # noqa: E402
 
 
-class DictionaryApp(Gtk.Window):
+class DictionaryPanel(Gtk.Box):
+    """Dictionary Manager का UI हिस्सा — किसी भी window में लगाया जा सकता है।"""
 
     def __init__(self):
-        super().__init__(title="📖 DM Office Translator — Dictionary Manager")
-        self.set_default_size(620, 820)
-        self.set_resizable(True)
-        self.set_position(Gtk.WindowPosition.CENTER)
+        super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=10)
 
         self.user_data_dir = os.path.expanduser("~/.dm_office_tools")
         self.dict_dir = os.path.join(self.user_data_dir, "dictionary")
@@ -634,9 +632,8 @@ class DictionaryApp(Gtk.Window):
         return button
 
     def create_ui(self):
-        outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        outer = self
         outer.set_border_width(12)
-        self.add(outer)
 
         # ---------- header ----------
         header = self.make_card()
@@ -1122,7 +1119,7 @@ class DictionaryApp(Gtk.Window):
     # ------------------------------------------------------------
     def on_bulk_add(self, _widget):
         dialog = Gtk.Dialog(
-            title="एक साथ कई शब्द जोड़ें", transient_for=self, modal=True
+            title="एक साथ कई शब्द जोड़ें", transient_for=self.get_toplevel(), modal=True
         )
         dialog.set_default_size(560, 420)
         dialog.add_button("रद्द करें", Gtk.ResponseType.CANCEL)
@@ -1239,7 +1236,7 @@ class DictionaryApp(Gtk.Window):
     def ask_duplicate_action(self, key, old_value, new_value):
         """मौजूदा शब्द के लिए विकल्प: स्किप / ओवरराइट / सभी स्किप / सभी ओवरराइट।"""
         dialog = Gtk.Dialog(
-            title="शब्द पहले से मौजूद है", transient_for=self, modal=True
+            title="शब्द पहले से मौजूद है", transient_for=self.get_toplevel(), modal=True
         )
         dialog.set_default_size(560, 260)
 
@@ -1274,7 +1271,7 @@ class DictionaryApp(Gtk.Window):
 
     def on_import(self, _widget):
         chooser = Gtk.FileChooserDialog(
-            title="Dictionary Import करें", transient_for=self,
+            title="Dictionary Import करें", transient_for=self.get_toplevel(),
             action=Gtk.FileChooserAction.OPEN,
         )
         chooser.add_buttons(
@@ -1315,7 +1312,7 @@ class DictionaryApp(Gtk.Window):
 
     def on_export(self, _widget):
         chooser = Gtk.FileChooserDialog(
-            title="Dictionary Export करें", transient_for=self,
+            title="Dictionary Export करें", transient_for=self.get_toplevel(),
             action=Gtk.FileChooserAction.SAVE,
         )
         chooser.add_buttons(
@@ -1347,7 +1344,7 @@ class DictionaryApp(Gtk.Window):
 
     def on_backups(self, _widget):
         dialog = Gtk.Dialog(
-            title="Backups — देखें / Restore करें", transient_for=self, modal=True
+            title="Backups — देखें / Restore करें", transient_for=self.get_toplevel(), modal=True
         )
         dialog.set_default_size(620, 420)
         dialog.add_button("बंद करें", Gtk.ResponseType.CLOSE)
@@ -1439,7 +1436,7 @@ class DictionaryApp(Gtk.Window):
     # ------------------------------------------------------------
     def confirm(self, title, text):
         dialog = Gtk.MessageDialog(
-            transient_for=self, modal=True,
+            transient_for=self.get_toplevel(), modal=True,
             message_type=Gtk.MessageType.QUESTION,
             buttons=Gtk.ButtonsType.OK_CANCEL, text=title,
         )
@@ -1450,7 +1447,7 @@ class DictionaryApp(Gtk.Window):
 
     def show_message(self, message_type, title, text):
         dialog = Gtk.MessageDialog(
-            transient_for=self, modal=True,
+            transient_for=self.get_toplevel(), modal=True,
             message_type=message_type,
             buttons=Gtk.ButtonsType.OK, text=title,
         )
@@ -1459,11 +1456,24 @@ class DictionaryApp(Gtk.Window):
         dialog.destroy()
 
 
+class DictionaryApp(Gtk.Window):
+    """स्वतंत्र Dictionary Manager window (dm-office-tools-dictionary)।"""
+
+    def __init__(self):
+        super().__init__(title="📖 DM Office Translator — Dictionary Manager")
+        self.set_default_size(620, 820)
+        self.set_resizable(True)
+        self.set_position(Gtk.WindowPosition.CENTER)
+
+        self.panel = DictionaryPanel()
+        self.add(self.panel)
+
+
 def main():
     app = DictionaryApp()
     app.connect("destroy", Gtk.main_quit)
     app.show_all()
-    app.update_action_state()
+    app.panel.update_action_state()
     Gtk.main()
 
 

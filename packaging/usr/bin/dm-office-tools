@@ -1,2 +1,3 @@
 #!/bin/bash
-exec python3 /usr/share/dm-office-tools/stable/soht_app.py "$@"
+# DM Office Translator — एक ही App (अनुवाद + Dictionary + शॉर्टकट)
+exec python3 /usr/share/dm-office-tools/stable/dm_office_app.py "$@"

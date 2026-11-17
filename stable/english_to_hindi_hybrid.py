@@ -35,7 +35,7 @@ except ImportError:  # सीधे चलाने पर
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.2.0"
+    APP_VERSION = "3.3.0"
 
 # ---------------------------------------------------------
 # Paths / configuration
