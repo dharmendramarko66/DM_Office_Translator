@@ -25,9 +25,15 @@ import urllib.parse
 import requests
 
 try:
+    import translation_providers
+except ImportError:  # सीधे चलाने पर (script के जिस फ़ोल्डर में है)
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import translation_providers
+
+try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.7"
+    APP_VERSION = "3.1.9"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -165,6 +171,43 @@ def google_cooldown_active():
         return failure_until > time.time()
     except (OSError, ValueError):
         return False
+
+
+def google_cooldown_remaining_minutes():
+    """Cooldown में कितने मिनट बाकी हैं (0 = कोई cooldown नहीं)।"""
+    try:
+        with open(GOOGLE_FAILURE_FILE, encoding="utf-8") as f:
+            failure_until = float(f.read().strip())
+        remaining = failure_until - time.time()
+        if remaining <= 0:
+            return 0
+        return int(remaining // 60) + (1 if remaining % 60 else 0)
+    except (OSError, ValueError):
+        return 0
+
+
+def notify_user(title, message):
+    """Desktop notification — Alt+H से चलने पर यह स्क्रीन पर दिखती है।
+
+    v3.1.8: पहले fallback चुपचाप हो जाता था (सिर्फ़ terminal में संदेश),
+    इसलिए उपयोगकर्ता को पता ही नहीं चलता था कि Google क्यों नहीं चला।
+    """
+    try:
+        result = subprocess.run(
+            ["notify-send", "-a", "DM Office Translator", "-i", "dialog-information",
+             title, message],
+            check=False, timeout=5,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        if result.returncode == 0:
+            return
+    except (OSError, subprocess.SubprocessError):
+        pass
+
+    try:
+        print(f"[{title}] {message}", file=sys.stderr)
+    except OSError:
+        pass
 
 
 def set_google_failure_cooldown():
@@ -437,10 +480,19 @@ def translate(text):
     skip_dictionary = transliteration_mode()
 
     if skip_dictionary:
-        print(
-            "[सूचना] Online mode सक्रिय है — dictionary skip, "
-            "Google translation (offline में phonetic fallback)।"
-        )
+        if google_cooldown_active():
+            minutes = google_cooldown_remaining_minutes()
+            notify_user(
+                "Online mode: Google अभी बंद है",
+                f"पिछली विफलता के कारण Google {minutes} मिनट तक रुका हुआ है — "
+                "इसलिए transliteration दिखाया गया है।\n"
+                "तुरंत अनुवाद चाहिए तो: rm -f ~/.dm_office_tools/google_failure_until",
+            )
+        else:
+            print(
+                "[सूचना] Online mode सक्रिय है — dictionary skip, "
+                "Google translation (offline में phonetic fallback)।"
+            )
 
     output = text
 
@@ -529,98 +581,37 @@ def translate(text):
             # आस-पास के spaces output में सुरक्षित रहेंगे।
             core = value.strip()
 
-            try:
-                response = session.get(
-                    GOOGLE_API + urllib.parse.quote(core),
-                    timeout=ONLINE_TIMEOUT,
+            # v3.1.9 — कई providers क्रम से (Google gtx → clients5 → MyMemory),
+            # क्योंकि कुछ नेटवर्क पर Google HTML "Sorry..." पेज लौटाता है।
+            translated = None
+            last_reason = ""
+
+            for attempt in (1, 2):  # पहली request अक्सर slow/timeout होती है
+                try:
+                    translated, _provider = translation_providers.translate(
+                        core, "hi", "en", session=session, timeout=ONLINE_TIMEOUT
+                    )
+                    break
+                except translation_providers.TranslationUnavailable as exc:
+                    last_reason = str(exc)
+
+            if translated:
+                online_results[index] = translated
+                continue
+
+            # सभी providers विफल — cooldown लगाएँ।
+            google_temporarily_disabled = True
+            set_google_failure_cooldown()
+            google_failed = True
+
+            if "blocked=" in last_reason and not last_reason.startswith("blocked=0"):
+                notify_user(
+                    "Online mode: Google ने नेटवर्क रोका",
+                    "इस नेटवर्क से Google अनुरोध अस्वीकार कर रहा है "
+                    "(automated queries) — अभी transliteration दिखाया गया है।",
                 )
 
-                # 429 को Google failure मानें और इसी process में
-                # आगे की network delay रोक दें।
-                if response.status_code == 429:
-                    print(
-                        "[सूचना] Google ने rate-limit किया — 10 मिनट बाद "
-                        "फिर कोशिश करें (अभी transliteration दिखाया जा रहा है)।"
-                    )
-                    google_temporarily_disabled = True
-                    set_google_failure_cooldown()
-                    google_failed = True
-                    break
-
-                response.raise_for_status()
-                data = response.json()
-
-                parts = []
-
-                if (
-                    isinstance(data, list)
-                    and len(data) > 0
-                    and isinstance(data[0], list)
-                ):
-                    for item in data[0]:
-                        if (
-                            isinstance(item, list)
-                            and len(item) > 0
-                            and isinstance(item[0], str)
-                        ):
-                            parts.append(item[0])
-
-                if parts:
-                    online_results[index] = "".join(parts).strip()
-
-            except (
-                requests.RequestException,
-                ValueError,
-                IndexError,
-                KeyError,
-                TypeError
-            ):
-                # v3.0.4 — एक बार retry: पहली request अक्सर slow/timeout होती है।
-                retry_text = None
-
-                try:
-                    retry_response = session.get(
-                        GOOGLE_API + urllib.parse.quote(core),
-                        timeout=ONLINE_TIMEOUT,
-                    )
-                    retry_response.raise_for_status()
-                    retry_data = retry_response.json()
-
-                    if (
-                        isinstance(retry_data, list)
-                        and len(retry_data) > 0
-                        and isinstance(retry_data[0], list)
-                    ):
-                        collected = [
-                            item[0]
-                            for item in retry_data[0]
-                            if (
-                                isinstance(item, list)
-                                and len(item) > 0
-                                and isinstance(item[0], str)
-                            )
-                        ]
-                        if collected:
-                            retry_text = "".join(collected).strip()
-
-                except (
-                    requests.RequestException,
-                    ValueError,
-                    IndexError,
-                    KeyError,
-                    TypeError,
-                ):
-                    retry_text = None
-
-                if retry_text:
-                    online_results[index] = retry_text
-                    continue
-
-                # दोनों कोशिशें fail — cooldown लगाएँ।
-                google_temporarily_disabled = True
-                set_google_failure_cooldown()
-                google_failed = True
-                break
+            break
 
         if online_results and not google_failed:
             clear_google_failure_cooldown()
@@ -629,6 +620,11 @@ def translate(text):
             print(
                 "[सूचना] Google से अनुवाद नहीं हो सका — offline "
                 "transliteration दिखाया गया है।"
+            )
+            notify_user(
+                "Online mode: Google से संपर्क नहीं हुआ",
+                "इंटरनेट/फ़ायरवॉल की जाँच करें — अभी transliteration दिखाया गया है। "
+                "10 मिनट बाद अपने आप फिर कोशिश होगी।",
             )
 
     # 4. Final result — प्रत्येक segment अपनी जगह पर।

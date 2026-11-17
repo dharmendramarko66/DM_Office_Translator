@@ -67,6 +67,9 @@ class TestE2HOnlineMode:
         monkeypatch.setenv("SOHT_TRANSLIT", "1")
 
         class FakeResponse:
+            status_code = 200
+            text = ""
+
             def raise_for_status(self):
                 pass
 
@@ -75,7 +78,12 @@ class TestE2HOnlineMode:
                 # Online mode में Google का पूरा वाक्य मान्य होगा।
                 return [[["जबलपुर शहर में अदालत", "jabalpur city court", None, None]]]
 
-        monkeypatch.setattr(e2h.requests, "get", lambda *a, **k: FakeResponse())
+        # v3.1.9 — अनुवाद अब translation_providers से होता है
+        # (Google gtx → clients5 → MyMemory)।
+        monkeypatch.setattr(
+            e2h.translation_providers.requests, "get",
+            lambda *a, **k: FakeResponse(),
+        )
         assert e2h.translate("jabalpur city court") == "जबलपुर शहर में अदालत"
 
     def test_offline_falls_back_to_transliteration(self, e2h, dict_dir, monkeypatch, tmp_path, offline):
@@ -194,6 +202,7 @@ class TestH2EOnlineMode:
 
         class FakeResponse:
             status_code = 200
+            text = ""
 
             def raise_for_status(self):
                 pass
@@ -204,7 +213,8 @@ class TestH2EOnlineMode:
                 return [[["District Jabalpur"]]]
 
         class SuccessSession:
-            def get(self, url, timeout=None):
+            # v3.1.9 — providers params/headers भी भेजते हैं।
+            def get(self, url, params=None, timeout=None, headers=None):
                 return FakeResponse()
 
         monkeypatch.setattr(h2e, "session", SuccessSession())

@@ -3,6 +3,31 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.1.9] — 2026-11-17
+
+### Added
+- **`stable/translation_providers.py` (नया):** तीन providers क्रम से —
+  Google gtx → Google clients5 (`clients5.google.com/translate_a/t`) → MyMemory
+  (`api.mymemory.translated.net`)। Google का HTML "Sorry..." पेज पहचाना जाता है और अगला
+  provider आज़माया जाता है।
+- दोनों इंजन (H2E, E2H) अब इसी provider chain का उपयोग करते हैं।
+
+### Fixed
+- **ब्लॉक नेटवर्क पर चुपचाप transliteration:** कार्यालय नेटवर्क पर Google द्वारा अनुरोध
+  अस्वीकार होने पर अब वैकल्पिक providers से अनुवाद मिलता है; सब विफल हों तो साफ़ notification।
+
+## [3.1.8] — 2026-11-14
+
+### Fixed
+- **Online mode में चुपचाप transliteration:** यदि `~/.dm_office_tools/google_failure_until`
+  (10 मिनट का cooldown) सक्रिय था तो Google वाला हिस्सा पूरी तरह छूट जाता था और कोई संदेश भी
+  नहीं दिखता था — उपयोगकर्ता को लगता था कि Online mode काम नहीं कर रहा।
+
+### Added
+- **Desktop notification हर fallback पर:** cooldown (बाकी मिनटों के साथ), 429 rate-limit और
+  network विफलता — तीनों पर `notify-send` से सूचना; `notify-send` न हो तो stderr पर संदेश।
+- `google_cooldown_remaining_minutes()` helper.
+
 ## [3.1.7] — 2026-11-14
 
 ### Added

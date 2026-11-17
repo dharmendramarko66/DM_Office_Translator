@@ -27,9 +27,15 @@ import sys
 import requests
 
 try:
+    import translation_providers
+except ImportError:  # सीधे चलाने पर
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import translation_providers
+
+try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.7"
+    APP_VERSION = "3.1.9"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -103,55 +109,19 @@ def transliteration_mode():
 
 
 def google_translate_text(text):
-    """पूरे text का Google Translate से English → Hindi अनुवाद।
+    """पूरे text का English → Hindi अनुवाद, कई providers से (v3.1.9)।
 
+    क्रम: Google gtx → Google clients5 → MyMemory।
     सफल होने पर अनुवादित text, वरना None (तब offline fallback चलेगा)।
     """
     try:
-        response = requests.get(
-            GOOGLE_TRANSLATE_URL,
-            params={
-                "client": "gtx",
-                "sl": "en",
-                "tl": "hi",
-                "dt": "t",
-                "q": text,
-            },
-            timeout=ONLINE_TIMEOUT,
-            headers={"User-Agent": f"SOHT-E2H/{APP_VERSION}"},
+        translated, _provider = translation_providers.translate(
+            text, "en", "hi", timeout=ONLINE_TIMEOUT
         )
-        response.raise_for_status()
-
-        data = response.json()
-
-        if not (
-            isinstance(data, list)
-            and len(data) > 0
-            and isinstance(data[0], list)
-        ):
-            return None
-
-        parts = []
-
-        for item in data[0]:
-            if (
-                isinstance(item, list)
-                and len(item) > 0
-                and isinstance(item[0], str)
-            ):
-                parts.append(item[0])
-
-        result = "".join(parts).strip()
-
-        return result or None
-
-    except (
-        requests.RequestException,
-        ValueError,
-        IndexError,
-        KeyError,
-        TypeError,
-    ):
+        return translated or None
+    except translation_providers.TranslationUnavailable:
+        return None
+    except Exception:  # noqa: BLE001 — कोई भी अनपेक्षित विफलता
         return None
 
 

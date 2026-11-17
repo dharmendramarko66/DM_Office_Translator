@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.1.7 Stable
+**Version / संस्करण:** 3.1.9 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,27 @@
 
 ---
 
+## What's New in v3.1.9 / v3.1.9 में नया क्या है
+
+- **तीन translation providers — एक fail हो तो दूसरा / Provider fallback**
+  - कुछ कार्यालय नेटवर्क पर Google HTML वाला "Sorry..." पेज लौटाता है (automated queries) — तब अनुवाद चुपचाप बंद हो जाता था।
+  - अब क्रम से तीन providers आज़माए जाते हैं: **Google gtx → Google clients5 → MyMemory**। पहला ब्लॉक हो तो दूसरा, वह भी न चले तो तीसरा।
+  - दोनों दिशाओं में (Hindi → English और English → Hindi)।
+  - सब विफल हों तो notification साफ़ बताता है कि नेटवर्क Google को रोक रहा है।
+
+## What's New in v3.1.8 / v3.1.8 में नया क्या है
+
+
+- **Online mode का fallback अब दिखता है / Visible fallback in Online mode**
+  - समस्या: Online mode (Alt+T) चालू होने पर भी कभी transliteration मिल रहा था, क्योंकि पिछली किसी विफलता के बाद Google 10 मिनट के लिए बंद (cooldown) रहता था — और यह बात चुपचाप होती थी।
+  - अब हर ऐसी स्थिति में **desktop notification** आती है:
+    - "Google अभी बंद है" — साथ में बताता है कितने मिनट बाकी हैं और कैसे तुरंत चालू करें
+    - "Google ने रोक दिया" — बहुत ज़्यादा अनुरोध (429)
+    - "Google से संपर्क नहीं हुआ" — इंटरनेट/फ़ायरवॉल की जाँच करें
+  - तुरंत अनुवाद चाहिए तो: `rm -f ~/.dm_office_tools/google_failure_until`
+
 ## What's New in v3.1.7 / v3.1.7 में नया क्या है
+
 
 - **अपडेट के साथ dictionary अपने आप मिल जाती है / Automatic dictionary mirror on upgrade**
   - `sudo apt update && sudo apt upgrade` करते ही installer हर user की dictionary को नई system dictionary के values से अपने आप मिला देता है — अब किसी मशीन पर `./sync-dictionaries.sh --mirror` चलाने की ज़रूरत नहीं।
@@ -465,8 +485,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.1.7_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.1.7_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.1.9_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.1.9_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -495,7 +515,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.1.7_amd64.deb
+sudo apt install ./dm-office-tools_3.1.9_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -509,7 +529,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.1.7
+Version: 3.1.9
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -615,7 +635,9 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.1.7 Stable** | ✅ Current Release / वर्तमान रिलीज | On every apt upgrade the installer now mirrors the new system dictionary into each user's dictionary automatically (personal entries kept, backup taken). / अपडेट के साथ user dictionary अपने आप नई values से मिल जाती है। |
+| **3.1.9 Stable** | ✅ Current Release / वर्तमान रिलीज | Translation now tries three providers in order (Google gtx → clients5 → MyMemory), so a blocked network no longer silently falls back to transliteration. / तीन providers की क्रमिक कोशिश — ब्लॉक नेटवर्क पर भी अनुवाद। |
+| **3.1.8 Stable** | Previous Release / पिछली रिलीज | Online-mode fallbacks are no longer silent: a desktop notification explains a Google cooldown, rate limit or network failure. / Online mode में fallback अब notification से बताता है। |
+| **3.1.7 Stable** | Previous Release / पिछली रिलीज | On every apt upgrade the installer now mirrors the new system dictionary into each user's dictionary automatically (personal entries kept, backup taken). / अपडेट के साथ user dictionary अपने आप नई values से मिल जाती है। |
 | **3.1.6 Stable** | Previous Release / पिछली रिलीज | Bulk Add summary now also reports how many words were already identical and skipped automatically, plus the total valid lines. / सारांश में अपने आप छोड़े गए शब्दों की संख्या भी। |
 | **3.1.5 Stable** | Previous Release / पिछली रिलीज | Bulk Add asks about each duplicate (skip / overwrite / skip all / overwrite all) after adding the new words. / Bulk Add में नए शब्द जुड़ते हैं और duplicate पर स्किप/ओवरराइट पूछा जाता है। |
 | **3.1.4 Stable** | Previous Release / पिछली रिलीज | Fixes the regression from 3.1.3: the search box now appears again when you choose "शब्द सुधारें / खोजें". / खोज box अब सही मोड में दिखता है। |
@@ -680,9 +702,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.1.7 Stable
-- **Release / रिलीज:** v3.1.7
-- **Package / पैकेज:** `dm-office-tools_3.1.7_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.1.9 Stable
+- **Release / रिलीज:** v3.1.9
+- **Package / पैकेज:** `dm-office-tools_3.1.9_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 
