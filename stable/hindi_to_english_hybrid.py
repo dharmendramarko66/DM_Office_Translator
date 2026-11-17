@@ -33,7 +33,7 @@ except ImportError:  # सीधे चलाने पर (script के जि
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.9"
+    APP_VERSION = "3.2.0"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -646,7 +646,15 @@ def translate(text):
                 leading + online_results[index] + trailing
             )
         elif re.search(r"[\u0900-\u097F]", value):
-            final_parts.append(h2e_offline_transliterate(value))
+            # v3.2.0 — transliterated नामों का पहला अक्षर बड़ा रहे
+            # (ram kumar → Ram Kumar), पर Google के अनुवाद जैसे हैं वैसे।
+            transliterated = h2e_offline_transliterate(value)
+            transliterated = re.sub(
+                r"(?<![A-Za-z])([a-z])",
+                lambda m: m.group(1).upper(),
+                transliterated,
+            )
+            final_parts.append(transliterated)
         else:
             final_parts.append(value)
 
@@ -656,12 +664,11 @@ def translate(text):
     result = re.sub(r" +", " ", result)
     result = result.strip()
 
-    # English output में प्रत्येक शब्द का पहला अक्षर Capital करें।
-    result = re.sub(
-        r"(?<![A-Za-z])([a-z])",
-        lambda m: m.group(1).upper(),
-        result,
-    )
+    # v3.2.0 — पूरे वाक्य को Title Case नहीं करते; Google जैसी
+    # capitalisation बनी रहती है ("I have a lot of work to do today"),
+    # सिर्फ़ वाक्य का पहला अक्षर बड़ा किया जाता है।
+    if result and result[0].isalpha():
+        result = result[0].upper() + result[1:]
 
     return result
 

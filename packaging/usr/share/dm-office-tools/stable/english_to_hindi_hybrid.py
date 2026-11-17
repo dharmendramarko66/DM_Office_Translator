@@ -35,7 +35,7 @@ except ImportError:  # सीधे चलाने पर
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.1.9"
+    APP_VERSION = "3.2.0"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -641,6 +641,32 @@ def _chunk_words(unique_words, char_limit=ONLINE_BATCH_CHAR_LIMIT):
 # 4. Main translation flow
 # ---------------------------------------------------------
 
+INFORMAL_TO_FORMAL = (
+    ("तुम्हें", "आपको"),
+    ("तुमको", "आपको"),
+    ("तुम्हारा", "आपका"),
+    ("तुम्हारी", "आपकी"),
+    ("तुम्हारे", "आपके"),
+    ("तुमसे", "आपसे"),
+    ("तुमने", "आपने"),
+    ("तुम", "आप"),
+)
+
+
+def formal_register(text):
+    """कार्यालयीन शिष्टाचार: तुम → आप (v3.2.0)।"""
+    if not text:
+        return text
+
+    for informal, formal in INFORMAL_TO_FORMAL:
+        text = re.sub(
+            rf"(?<![\u0900-\u097F]){informal}(?![\u0900-\u097F])",
+            formal,
+            text,
+        )
+    return text
+
+
 def translate(text):
     """मुख्य अनुवाद pipeline — clipboard I/O से मुक्त, ताकि
     tests इसे बिना clipboard के चला सकें।"""
@@ -663,7 +689,7 @@ def translate(text):
             translated = google_translate_text(text)
 
             if translated:
-                return translated
+                return formal_register(translated)
 
         print(
             "[सूचना] Google उपलब्ध नहीं — offline phonetic "
@@ -804,7 +830,7 @@ def translate(text):
     result = re.sub(r"(\b[\u0900-\u097F]+)\.\.", r"\1.", result)
     result = result.strip()
 
-    return result
+    return formal_register(result)
 
 
 def main():
