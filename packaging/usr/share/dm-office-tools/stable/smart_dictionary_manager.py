@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.4.0"
+    APP_VERSION = "3.6.1"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -1023,6 +1023,11 @@ class DictionaryPanel(Gtk.Box):
                 self.status_label.set_markup(
                     "<span weight='bold' foreground='#27ae60'>✔ मौजूदा entry बदल दी गई</span>"
                 )
+                self.show_message(
+                    Gtk.MessageType.INFO,
+                    "शब्द सुधार दिया गया",
+                    f"{duplicate} = {second}\nDictionary: {filename}",
+                )
                 return
 
             self.push_undo()
@@ -1036,6 +1041,11 @@ class DictionaryPanel(Gtk.Box):
             self.clear_fields()
             self.status_label.set_markup(
                 "<span weight='bold' foreground='#27ae60'>✔ नया शब्द जुड़ गया</span>"
+            )
+            self.show_message(
+                Gtk.MessageType.INFO,
+                "शब्द जोड़ दिया गया",
+                f"{first} = {second}\nDictionary: {filename}",
             )
             return
 
@@ -1078,6 +1088,11 @@ class DictionaryPanel(Gtk.Box):
         self.status_label.set_markup(
             "<span weight='bold' foreground='#27ae60'>✔ शब्द सुधार दिया गया</span>"
         )
+        self.show_message(
+            Gtk.MessageType.INFO,
+            "शब्द सुधार दिया गया",
+            f"{first} = {second}\nDictionary: {filename}",
+        )
 
     def on_delete(self, _widget):
         if self.original_key is None:
@@ -1112,6 +1127,11 @@ class DictionaryPanel(Gtk.Box):
         self.update_suggestions()
         self.status_label.set_markup(
             "<span weight='bold' foreground='#27ae60'>✔ शब्द हटा दिया गया</span>"
+        )
+        self.show_message(
+            Gtk.MessageType.INFO,
+            "शब्द हटा दिया गया",
+            f"{key}\nDictionary: {os.path.basename(self.current_dict_file())}",
         )
 
     # ------------------------------------------------------------

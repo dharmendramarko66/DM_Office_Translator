@@ -3,6 +3,65 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.6.1] — 2026-11-17
+
+### Added
+- **`scripts/cleanup.sh`:** प्रोजेक्ट की सफ़ाई — default dry-run, `--apply` से हटाना, `--keep N` से
+  कितनी नई `.deb` रखनी हैं। पुरानी `.deb`, `__pycache__`/`.pytest_cache`/`*.pyc`, रूट के बिल्ड
+  आउटपुट और dictionary के पुराने `.bak` साफ़ करता है। सिर्फ़ प्रोजेक्ट फ़ोल्डर के अंदर काम करता है
+  और `rm -rf` का उपयोग नहीं करता।
+
+### Changed
+- **रेपो हल्का:** 12 पुरानी `.deb` हटाई गईं (38 MB → 13 MB); apt pool में नवीनतम 2 संस्करण रखे गए।
+- **App icon हल्का:** 1254px/2.0 MB → 512px/423 KB (दिखने में कोई फ़र्क नहीं, `.deb` छोटा)।
+
+## [3.6.0] — 2026-11-17
+
+### Added
+- **भाषा बटन:** header में "सेटिंग्स" की जगह "🌐 भाषा" — हिन्दी/English के radio बटन; चुनते ही UI
+  उसी भाषा में बन जाती है (लिखा पाठ सुरक्षित), पसंद `~/.dm_office_tools/ui_language` में सुरक्षित।
+- **जानकारी / सहायता → GitHub:** क्लिक पर
+  https://github.com/dharmendramarko66/DM_Office_Translator ब्राउज़र में खुलता है।
+
+### Fixed
+- **Input / Translation पट्टी का पाठ अदृश्य:** रंगीन header पर पाठ गहरा था; अब सफ़ेद मोटा पाठ
+  (`foreground='#ffffff'`) — दोनों पैनल साफ़ पढ़े जाते हैं।
+
+## [3.5.0] — 2026-11-17
+
+### Fixed
+- **बटन सफ़ेद और पाठ अदृश्य:** GTK थीम बटन के `background-color` को ढक रही थी। अब हर button वर्ग में
+  `background-image: none` है, इसलिए रंग और सफ़ेद पाठ दोनों दिखते हैं।
+- **Header में लोगो नहीं था:** App का चिह्न (54px) जुड़ गया; चिह्न न मिले तो "DM" बैज दिखता है।
+
+### Changed
+- **Dictionary side panel:** "नया शब्द जोड़ें", "शब्द सुधारें / खोजें और हटाएँ", "शब्द खोजें…" — तीनों
+  पूरा Dictionary Manager window खोलते हैं (new/update/search मोड में)। "शब्द विवरण" का फ़ॉर्म
+  हटा दिया गया।
+- **Manager में पुष्टि संदेश:** शब्द जोड़ने/सुधारने/हटाने पर dialog आता है।
+- सुविधाओं की पट्टी के कार्ड अब रंगीन हैं (जैसे design में)।
+
+## [3.4.2] — 2026-11-17
+
+### Fixed
+- **Dashboard खुलते ही बंद हो जाता था:** "अतिरिक्त विकल्प" के CheckButton पर `set_xalign(0)` कहा गया
+  था, जो CheckButton में मौजूद नहीं होता — `AttributeError` से App रुक जाता था। अब
+  `set_halign(Gtk.Align.START)`।
+- **Header में markup त्रुटि:** "District & Sessions Court, Jabalpur" का `&` Pango markup तोड़ रहा
+  था; अब `GLib.markup_escape_text()` से लिखा जाता है।
+
+## [3.4.1] — 2026-11-17
+
+### Fixed
+- **App खुल नहीं रहा था:** v3.4.0 के CSS में `linear-gradient()` और
+  `border-radius: 10px 10px 0 0` जैसी चीज़ें थीं जिन्हें GTK3 अस्वीकार करता है; CSS fail होने पर
+  window बनने से पहले ही कार्यक्रम रुक जाता था। अब CSS सरल (ठोस रंग, एक-मान radius/padding) है और
+  `load_from_data` try/except में है — CSS में त्रुटि हो तो भी App खुलेगा।
+
+### Added
+- **त्रुटि अब दिखती है:** startup पर कोई भी exception हो तो स्क्रीन पर संदेश आता है और पूरा
+  traceback `~/.dm_office_tools/last_error.log` में लिखा जाता है।
+
 ## [3.4.0] — 2026-11-17
 
 ### Changed

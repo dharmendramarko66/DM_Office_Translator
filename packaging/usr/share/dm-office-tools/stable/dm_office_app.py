@@ -20,12 +20,12 @@ import gi
 
 gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
-from gi.repository import Gdk, GLib, Gtk, Pango  # noqa: E402
+from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.4.0"
+    APP_VERSION = "3.6.1"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
@@ -36,63 +36,115 @@ DICT_DIR = os.path.join(USER_DATA_DIR, "dictionary")
 ONLINE_MARKER = os.path.join(USER_DATA_DIR, "transliteration_mode")
 
 ICON_PATH = "/usr/share/dm-office-tools/dm-office-translator.png"
+GITHUB_URL = "https://github.com/dharmendramarko66/DM_Office_Translator"
+LANG_FILE = os.path.join(USER_DATA_DIR, "ui_language")
+
+STRINGS = {
+    "app_sub": {"hi": "स्मार्ट अनुवाद — स्मार्ट गवर्नेंस के लिए",
+                "en": "Smart Translation for Smart Governance"},
+    "mode": {"hi": "अनुवाद की दिशा :", "en": "Translation Mode :"},
+    "dir_e2h": {"hi": "English → Hindi", "en": "English → Hindi"},
+    "dir_h2e": {"hi": "Hindi → English", "en": "Hindi → English"},
+    "online": {"hi": "Online Mode (Google)", "en": "Online Mode (Google)"},
+    "chip_ready": {"hi": "✔ Offline Dictionary Ready", "en": "✔ Offline Dictionary Ready"},
+    "chip_online": {"hi": "🌐 Online mode", "en": "🌐 Online mode"},
+    "input_title": {"hi": "Input Text / लिखें", "en": "Input Text"},
+    "output_title": {"hi": "Translation / अनुवाद परिणाम", "en": "Translation / Result"},
+    "translate": {"hi": "🔄 अनुवाद करें", "en": "🔄 Translate"},
+    "paste": {"hi": "📋 Paste", "en": "📋 Paste"},
+    "clear": {"hi": "⌨ Clear", "en": "⌨ Clear"},
+    "swap": {"hi": "🔁 Swap", "en": "🔁 Swap"},
+    "copy": {"hi": "⧉ Copy (कॉपी करें)", "en": "⧉ Copy"},
+    "print": {"hi": "🖨 Print (प्रिंट)", "en": "🖨 Print"},
+    "save": {"hi": "⤓ Save (सहेजें)", "en": "⤓ Save"},
+    "dict_title": {"hi": "Dictionary Manager", "en": "Dictionary Manager"},
+    "btn_new": {"hi": "➕ नया शब्द जोड़ें", "en": "➕ Add new word"},
+    "btn_edit": {"hi": "✏️ शब्द सुधारें / खोजें और हटाएँ", "en": "✏️ Edit / search / delete"},
+    "btn_search": {"hi": "🔍 शब्द खोजें…", "en": "🔍 Search word…"},
+    "entries": {"hi": "कुल entries: ", "en": "Total entries: "},
+    "tips_title": {"hi": "💡 त्वरित सुझाव", "en": "💡 Quick Tips"},
+    "tip1": {"hi": "तेज़ अनुवाद के लिए शब्दकोश का उपयोग करें।",
+             "en": "Use the dictionary for fast translation."},
+    "tip2": {"hi": "स्थानीय एवं सरकारी शब्दों के लिए हाइब्रिड डिक्शनरी देखें।",
+             "en": "Check the hybrid dictionary for local and official words."},
+    "tip3": {"hi": "गलती होने पर शब्द सुधारें और पुनः अनुवाद करें।",
+             "en": "If something is wrong, correct the word and translate again."},
+    "options_title": {"hi": "🚀 अतिरिक्त विकल्प", "en": "🚀 Extra options"},
+    "opt_copy": {"hi": "अनुवाद के बाद क्लिपबोर्ड में कॉपी करें",
+                 "en": "Copy to clipboard after translating"},
+    "opt_cap": {"hi": "स्वतः कैपिटलाइजेशन", "en": "Auto capitalisation"},
+    "opt_space": {"hi": "अतिरिक्त स्पेस हटाएँ", "en": "Remove extra spaces"},
+    "usage_title": {"hi": "ℹ उचित उपयोग", "en": "ℹ Proper use"},
+    "usage_text": {"hi": "यह उपकरण सरकारी कार्यालयों में हिन्दी एवं अंग्रेज़ी के बीच अनुवाद हेतु उपयोगी है।",
+                   "en": "This tool is meant for Hindi ↔ English translation in government offices."},
+    "exit": {"hi": "⏻ बंद करें", "en": "⏻ Exit"},
+    "ready": {"hi": "● तैयार…", "en": "● Ready…"},
+    "language": {"hi": "🌐 भाषा", "en": "🌐 Language"},
+    "about": {"hi": "ℹ जानकारी", "en": "ℹ About"},
+    "help": {"hi": "❓ सहायता", "en": "❓ Help"},
+    "feat1": {"hi": "हाइब्रिड डिक्शनरी", "en": "Hybrid dictionary"},
+    "feat1s": {"hi": "(≈ 5000 शब्द)", "en": "(≈ 5000 words)"},
+    "feat2": {"hi": "जिला / तहसील / थाना", "en": "District / Tehsil / Thana"},
+    "feat2s": {"hi": "विशेष शब्दावली", "en": "special vocabulary"},
+    "feat3": {"hi": "कार्यालयीन शब्दावली", "en": "Office vocabulary"},
+    "feat3s": {"hi": "(Court, Revenue etc.)", "en": "(Court, Revenue etc.)"},
+    "feat4": {"hi": "नाम, पद एवं पदनाम", "en": "Names and designations"},
+    "feat4s": {"hi": "(Officer / Rank)", "en": "(Officer / Rank)"},
+    "feat5": {"hi": "स्थानीय शब्द", "en": "Local words"},
+    "feat5s": {"hi": "(जबलपुर आदि)", "en": "(Jabalpur etc.)"},
+}
+
+
+def current_language():
+    try:
+        with io.open(LANG_FILE, encoding="utf-8") as fh:
+            value = fh.read().strip().lower()
+        if value in ("hi", "en"):
+            return value
+    except OSError:
+        pass
+    return "hi"
+
+
+def save_language(lang):
+    try:
+        os.makedirs(USER_DATA_DIR, exist_ok=True)
+        with io.open(LANG_FILE, "w", encoding="utf-8") as fh:
+            fh.write(lang)
+        return True
+    except OSError:
+        return False
 COURT_NAME = "District & Sessions Court, Jabalpur"
 MAX_CHARS = 5000
 
 CSS = b"""
-window { background: #eef2f7; }
+window { background-color: #eef2f7; }
 
-.banner {
-    background-image: linear-gradient(90deg, #0b3d91 0%, #12479f 55%, #1b5fbf 100%);
-    border-radius: 12px;
-    padding: 14px 18px;
-}
-.banner-title { color: #ffffff; font-size: 26px; font-weight: bold; }
-.banner-sub { color: #cfe0ff; font-size: 12px; font-style: italic; }
+.banner { background-color: #0b3d91; border-radius: 12px; padding: 14px; }
+.banner-title { color: #ffffff; font-size: 24px; font-weight: bold; }
+.banner-sub { color: #cfe0ff; font-size: 12px; }
 .banner-info { color: #ffffff; font-size: 11px; }
 
-.card {
-    background: #ffffff;
-    border: 1px solid #dbe3ec;
-    border-radius: 12px;
-}
-.panel-head-blue {
-    background-image: linear-gradient(90deg, #0b3d91, #1b5fbf);
-    border-radius: 10px 10px 0 0;
-    padding: 8px 12px;
-}
-.panel-head-green {
-    background-image: linear-gradient(90deg, #146c43, #1e8449);
-    border-radius: 10px 10px 0 0;
-    padding: 8px 12px;
-}
+.card { background-color: #ffffff; border: 1px solid #dbe3ec; border-radius: 12px; }
+.panel-head-blue { background-color: #0b3d91; border-radius: 10px; padding: 8px; }
+.panel-head-green { background-color: #146c43; border-radius: 10px; padding: 8px; }
 .panel-head { color: #ffffff; font-size: 15px; font-weight: bold; }
-.panel-body { padding: 10px; }
+.panel-body { padding: 8px; }
 
 .chip-ok {
-    background: #e8f7ec;
-    color: #146c43;
-    border: 1px solid #b7e4c7;
-    border-radius: 10px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: bold;
+    background-color: #e8f7ec; color: #146c43;
+    border: 1px solid #b7e4c7; border-radius: 10px;
+    padding: 4px; font-size: 12px; font-weight: bold;
 }
 .chip-warn {
-    background: #fff4e5;
-    color: #a35b00;
-    border: 1px solid #ffd8a8;
-    border-radius: 10px;
-    padding: 4px 10px;
-    font-size: 12px;
-    font-weight: bold;
+    background-color: #fff4e5; color: #a35b00;
+    border: 1px solid #ffd8a8; border-radius: 10px;
+    padding: 4px; font-size: 12px; font-weight: bold;
 }
 
 .feature {
-    border-radius: 10px;
-    padding: 8px 10px;
-    border: 1px solid #dbe3ec;
-    background: #f8fafd;
+    background-color: #f8fafd; border: 1px solid #dbe3ec;
+    border-radius: 10px; padding: 8px;
 }
 .feature-label { font-size: 12px; font-weight: bold; color: #14324f; }
 .feature-sub { font-size: 10px; color: #6b7a8f; }
@@ -100,25 +152,42 @@ window { background: #eef2f7; }
 .section { font-size: 13px; font-weight: bold; color: #14324f; }
 .hint { font-size: 11px; color: #6b7a8f; }
 
-.footer {
-    background-image: linear-gradient(90deg, #0b3d91, #12479f);
-    border-radius: 10px;
-    padding: 6px 12px;
-}
+.footer { background-color: #0b3d91; border-radius: 10px; padding: 6px; }
 .footer-label { color: #ffffff; font-size: 12px; }
 
-button { border-radius: 8px; padding: 7px 12px; }
-button.primary { background-image: none; background-color: #1e8449; color: #ffffff; font-weight: bold; }
-button.primary:hover { background-color: #27ae60; }
-button.blue { background-image: none; background-color: #12479f; color: #ffffff; font-weight: bold; }
-button.blue:hover { background-color: #1b5fbf; }
-button.purple { background-image: none; background-color: #6c3483; color: #ffffff; font-weight: bold; }
-button.purple:hover { background-color: #8e44ad; }
-button.soft { background-image: none; background-color: #eef3fb; color: #14324f; }
-button.soft:hover { background-color: #dfe9f7; }
-button.exit { background-image: none; background-color: #1e8449; color: #ffffff; font-weight: bold; }
+button { border-radius: 8px; padding: 7px; }
+button.primary {
+    background-image: none; background-color: #1e8449;
+    color: #ffffff; font-weight: bold; border: 1px solid #146c43;
+}
+button.primary:hover { background-image: none; background-color: #27ae60; }
+button.blue {
+    background-image: none; background-color: #12479f;
+    color: #ffffff; font-weight: bold; border: 1px solid #0b3d91;
+}
+button.blue:hover { background-image: none; background-color: #1b5fbf; }
+button.purple {
+    background-image: none; background-color: #6c3483;
+    color: #ffffff; font-weight: bold; border: 1px solid #4a235a;
+}
+button.purple:hover { background-image: none; background-color: #8e44ad; }
+button.soft {
+    background-image: none; background-color: #eef3fb;
+    color: #14324f; border: 1px solid #cdd9ea;
+}
+button.soft:hover { background-image: none; background-color: #dfe9f7; }
+button.exit {
+    background-image: none; background-color: #1e8449;
+    color: #ffffff; font-weight: bold; border: 1px solid #146c43;
+}
+button.exit:hover { background-image: none; background-color: #27ae60; }
 
-textview, textview text { background: #ffffff; }
+.feature-1 { background-color: #f1e9fb; border: 1px solid #dcccf6; border-radius: 10px; padding: 8px; }
+.feature-2 { background-color: #e4f7f4; border: 1px solid #bfe9e2; border-radius: 10px; padding: 8px; }
+.feature-3 { background-color: #fdf0e3; border: 1px solid #f6d9bb; border-radius: 10px; padding: 8px; }
+.feature-4 { background-color: #fde8ef; border: 1px solid #f7c6d6; border-radius: 10px; padding: 8px; }
+.feature-5 { background-color: #f3ecfb; border: 1px solid #dccdf6; border-radius: 10px; padding: 8px; }
+
 entry { border-radius: 8px; padding: 6px; }
 """
 
@@ -137,8 +206,9 @@ class Dashboard(Gtk.Window):
                 pass
 
         self.direction = "H2E"
+        self.lang = current_language()
         self.dict_entries = {}
-        self.editing_key = None
+        self.managers = []
 
         os.makedirs(DICT_DIR, exist_ok=True)
 
@@ -153,13 +223,27 @@ class Dashboard(Gtk.Window):
     # ------------------------------------------------------------
     # helpers
     # ------------------------------------------------------------
+    def t(self, key):
+        """अनुवादित UI पाठ (hi/en)।"""
+        entry = STRINGS.get(key, {})
+        return entry.get(self.lang, entry.get("hi", key))
+
     def apply_css(self):
-        provider = Gtk.CssProvider()
-        provider.load_from_data(CSS)
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(), provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
+        """CSS त्रुटि हो तो भी App खुलना चाहिए (v3.4.1)।"""
+        for css in (CSS, b"window { background-color: #eef2f7; }"):
+            provider = Gtk.CssProvider()
+            try:
+                provider.load_from_data(css)
+            except Exception:
+                continue
+            try:
+                Gtk.StyleContext.add_provider_for_screen(
+                    Gdk.Screen.get_default(), provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+                )
+                return
+            except Exception:
+                continue
 
     def card(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
@@ -176,7 +260,10 @@ class Dashboard(Gtk.Window):
         bar = Gtk.Box(spacing=8)
         bar.get_style_context().add_class(css_class)
         label = Gtk.Label()
-        label.set_markup(f"<span size='large' weight='bold'>{text}</span>")
+        # v3.6.0 — रंगीन पट्टी पर सफ़ेद मोटा पाठ, तभी साफ़ दिखता है।
+        label.set_markup(
+            f"<span size='large' weight='bold' foreground='#ffffff'>{text}</span>"
+        )
         label.set_xalign(0)
         bar.pack_start(label, True, True, 0)
         if extra is not None:
@@ -190,6 +277,7 @@ class Dashboard(Gtk.Window):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
         outer.set_border_width(10)
         self.add(outer)
+        self.outer = outer
 
         outer.pack_start(self.build_banner(), False, False, 0)
         outer.pack_start(self.build_mode_bar(), False, False, 0)
@@ -202,6 +290,23 @@ class Dashboard(Gtk.Window):
     def build_banner(self):
         banner = Gtk.Box(spacing=14)
         banner.get_style_context().add_class("banner")
+
+        # लोगो — App का चिह्न (Ashoka राजचिह्न कानून से प्रतिबंधित है,
+        # इसलिए App का अपना चिह्न लगाया गया है)।
+        logo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        if os.path.exists(ICON_PATH):
+            try:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    ICON_PATH, 54, 54, True
+                )
+                logo_box.pack_start(Gtk.Image.new_from_pixbuf(pixbuf), False, False, 0)
+            except Exception:
+                pass
+        if not logo_box.get_children():
+            badge = Gtk.Label()
+            badge.set_markup("<span size='xx-large' weight='bold' color='#ffd166'>DM</span>")
+            logo_box.pack_start(badge, False, False, 0)
+        banner.pack_start(logo_box, False, False, 0)
 
         left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         title = Gtk.Label()
@@ -219,16 +324,17 @@ class Dashboard(Gtk.Window):
 
         info = Gtk.Label()
         info.set_xalign(1)
+        safe_court = GLib.markup_escape_text(COURT_NAME)
         info.set_markup(
-            f"<span size='small'>संस्करण {APP_VERSION}\n{COURT_NAME}</span>"
+            f"<span size='small'>संस्करण {APP_VERSION}\n{safe_court}</span>"
         )
         info.get_style_context().add_class("banner-info")
         banner.pack_end(info, False, False, 0)
 
         for text, callback in (
-            ("⚙ सेटिंग्स", self.on_settings),
-            ("ℹ जानकारी", self.on_about),
-            ("❓ सहायता", self.on_help),
+            (self.t("language"), self.on_language),
+            (self.t("about"), self.on_about),
+            (self.t("help"), self.on_help),
         ):
             banner.pack_end(self.button(text, callback, "soft"), False, False, 0)
 
@@ -241,20 +347,20 @@ class Dashboard(Gtk.Window):
         bar.set_border_width(8)
 
         label = Gtk.Label()
-        label.set_markup("<b>Translation Mode :</b>")
+        label.set_markup(f"<b>{self.t('mode')}</b>")
         bar.pack_start(label, False, False, 0)
 
         self.rb_e2h = Gtk.RadioButton.new_with_label_from_widget(
-            None, "English → Hindi"
+            None, self.t("dir_e2h")
         )
         self.rb_h2e = Gtk.RadioButton.new_with_label_from_widget(
-            self.rb_e2h, "Hindi → English"
+            self.rb_e2h, self.t("dir_h2e")
         )
         self.rb_h2e.set_active(True)
         self.rb_e2h.connect("toggled", self.on_direction_changed)
         self.rb_h2e.connect("toggled", self.on_direction_changed)
 
-        self.rb_online = Gtk.CheckButton(label="Online Mode (Google)")
+        self.rb_online = Gtk.CheckButton(label=self.t("online"))
         self.rb_online.connect("toggled", self.on_online_toggled)
 
         for widget in (self.rb_e2h, self.rb_h2e, self.rb_online):
@@ -279,7 +385,7 @@ class Dashboard(Gtk.Window):
 
         clear_button = self.button("✖", lambda *_: self.on_clear(None), "soft")
         card.pack_start(
-            self.header_bar("⌨ Input Text / लिखें", "panel-head-blue", clear_button),
+            self.header_bar(f"⌨ {self.t('input_title')}", "panel-head-blue", clear_button),
             False, False, 0,
         )
 
@@ -305,11 +411,11 @@ class Dashboard(Gtk.Window):
 
         row = Gtk.Box(spacing=8)
         row.pack_start(
-            self.button("🔄 अनुवाद करें", self.on_translate, "primary"), True, True, 0
+            self.button(self.t("translate"), self.on_translate, "primary"), True, True, 0
         )
-        row.pack_start(self.button("📋 Paste", self.on_paste, "soft"), True, True, 0)
-        row.pack_start(self.button("⌨ Clear", self.on_clear, "soft"), True, True, 0)
-        row.pack_start(self.button("🔁 Swap", self.on_swap, "soft"), True, True, 0)
+        row.pack_start(self.button(self.t("paste"), self.on_paste, "soft"), True, True, 0)
+        row.pack_start(self.button(self.t("clear"), self.on_clear, "soft"), True, True, 0)
+        row.pack_start(self.button(self.t("swap"), self.on_swap, "soft"), True, True, 0)
         body.pack_start(row, False, False, 0)
 
         card.pack_start(body, True, True, 0)
@@ -321,7 +427,7 @@ class Dashboard(Gtk.Window):
 
         copy_icon = self.button("⧉", lambda *_: self.on_copy(None), "soft")
         card.pack_start(
-            self.header_bar("📋 Translation / अनुवाद परिणाम", "panel-head-green", copy_icon),
+            self.header_bar(f"📋 {self.t('output_title')}", "panel-head-green", copy_icon),
             False, False, 0,
         )
 
@@ -346,9 +452,9 @@ class Dashboard(Gtk.Window):
         body.pack_start(self.output_counter, False, False, 0)
 
         row = Gtk.Box(spacing=8)
-        row.pack_start(self.button("⧉ Copy (कॉपी करें)", self.on_copy, "blue"), True, True, 0)
-        row.pack_start(self.button("🖨 Print (प्रिंट)", self.on_print, "purple"), True, True, 0)
-        row.pack_start(self.button("⤓ Save (सहेजें)", self.on_save, "primary"), True, True, 0)
+        row.pack_start(self.button(self.t("copy"), self.on_copy, "blue"), True, True, 0)
+        row.pack_start(self.button(self.t("print"), self.on_print, "purple"), True, True, 0)
+        row.pack_start(self.button(self.t("save"), self.on_save, "primary"), True, True, 0)
         body.pack_start(row, False, False, 0)
 
         card.pack_start(body, True, True, 0)
@@ -357,61 +463,25 @@ class Dashboard(Gtk.Window):
 
     def build_dictionary_panel(self):
         card = self.card()
-        card.set_size_request(320, -1)
+        card.set_size_request(300, -1)
 
         card.pack_start(
-            self.header_bar("📖 Dictionary Manager"), False, False, 0
+            self.header_bar(f"📖 {self.t('dict_title')}"), False, False, 0
         )
 
-        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        body.set_border_width(8)
+        body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        body.set_border_width(10)
 
         body.pack_start(
-            self.button("➕ नया शब्द जोड़ें", self.on_new_word, "soft"), False, False, 0
-        )
-        body.pack_start(
-            self.button("✏️ शब्द सुधारें / खोजें", self.on_focus_search, "soft"),
-            False, False, 0,
-        )
-
-        self.side_search = Gtk.Entry()
-        self.side_search.set_placeholder_text("🔍 शब्द खोजें…")
-        self.side_search.connect("changed", self.on_side_search)
-        body.pack_start(self.side_search, False, False, 0)
-
-        section = Gtk.Label()
-        section.set_xalign(0)
-        section.set_markup("<b>शब्द विवरण</b>")
-        section.get_style_context().add_class("section")
-        body.pack_start(section, False, False, 0)
-
-        grid = Gtk.Grid(column_spacing=8, row_spacing=6)
-
-        grid.attach(self._label("Hindi Word"), 0, 0, 1, 1)
-        self.side_hindi = Gtk.Entry()
-        self.side_hindi.set_hexpand(True)
-        grid.attach(self.side_hindi, 1, 0, 1, 1)
-
-        grid.attach(self._label("English Meaning"), 0, 1, 1, 1)
-        self.side_english = Gtk.Entry()
-        self.side_english.set_hexpand(True)
-        grid.attach(self.side_english, 1, 1, 1, 1)
-
-        grid.attach(self._label("श्रेणी"), 0, 2, 1, 1)
-        self.side_category = Gtk.ComboBoxText()
-        for category in sdm.CATEGORIES:
-            self.side_category.append_text(category)
-        self.side_category.set_active(0)
-        grid.attach(self.side_category, 1, 2, 1, 1)
-
-        body.pack_start(grid, False, False, 0)
-
-        body.pack_start(
-            self.button("💾 शब्द सहेजें", self.on_side_save, "primary"),
+            self.button(self.t("btn_new"), self.on_open_manager_new, "soft"),
             False, False, 0,
         )
         body.pack_start(
-            self.button("📚 पूरा Dictionary Manager", self.on_open_manager, "blue"),
+            self.button(self.t("btn_edit"), self.on_open_manager_update, "soft"),
+            False, False, 0,
+        )
+        body.pack_start(
+            self.button(self.t("btn_search"), self.on_open_manager_search, "soft"),
             False, False, 0,
         )
 
@@ -421,8 +491,45 @@ class Dashboard(Gtk.Window):
         self.side_status.get_style_context().add_class("hint")
         body.pack_start(self.side_status, False, False, 0)
 
-        card.pack_start(body, True, True, 0)
+        card.pack_start(body, False, False, 0)
         return card
+
+    def open_manager(self, mode="new"):
+        """Dictionary Manager को अलग window में खोलें (mode: new/update/search)।"""
+        try:
+            manager = sdm.DictionaryApp()
+            self.managers.append(manager)
+
+            if mode in ("update", "search"):
+                manager.panel.rb_update.set_active(True)
+                manager.panel.update_action_state()
+            else:
+                manager.panel.rb_new.set_active(True)
+                manager.panel.update_action_state()
+
+            manager.connect("destroy", self.on_manager_closed)
+            manager.show_all()
+
+            if mode == "search":
+                manager.panel.search_entry.grab_focus()
+
+            self.set_status("Dictionary Manager खुल गया")
+        except Exception as exc:  # noqa: BLE001
+            self.set_status(f"Manager नहीं खुल सका: {exc}")
+
+    def on_manager_closed(self, manager):
+        if manager in self.managers:
+            self.managers.remove(manager)
+        self.reload_dictionary()
+
+    def on_open_manager_new(self, *_args):
+        self.open_manager("new")
+
+    def on_open_manager_update(self, *_args):
+        self.open_manager("update")
+
+    def on_open_manager_search(self, *_args):
+        self.open_manager("search")
 
     def _label(self, text):
         label = Gtk.Label(label=text)
@@ -435,16 +542,16 @@ class Dashboard(Gtk.Window):
         strip = Gtk.Box(spacing=8, homogeneous=True)
 
         features = (
-            ("📖", "हाइब्रिड डिक्शनरी", "(≈ 5000 शब्द)"),
-            ("🏛", "जिला / तहसील / थाना", "विशेष शब्दावली"),
-            ("💼", "कार्यालयीन शब्दावली", "(Court, Revenue etc.)"),
-            ("👥", "नाम, पद एवं पदनाम", "(Officer / Rank)"),
-            ("📍", "स्थानीय शब्द", "(जबलपुर आदि)"),
+            ("📖", self.t("feat1"), self.t("feat1s")),
+            ("🏛", self.t("feat2"), self.t("feat2s")),
+            ("💼", self.t("feat3"), self.t("feat3s")),
+            ("👥", self.t("feat4"), self.t("feat4s")),
+            ("📍", self.t("feat5"), self.t("feat5s")),
         )
 
-        for icon, title, sub in features:
+        for index, (icon, title, sub) in enumerate(features, start=1):
             box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-            box.get_style_context().add_class("feature")
+            box.get_style_context().add_class(f"feature-{index}")
             head = Gtk.Label()
             head.set_markup(f"<span size='large'>{icon}</span>  <b>{title}</b>")
             head.set_xalign(0)
@@ -467,13 +574,9 @@ class Dashboard(Gtk.Window):
         tips_body.set_border_width(8)
         tips_head = Gtk.Label()
         tips_head.set_xalign(0)
-        tips_head.set_markup("<b>💡 त्वरित सुझाव</b>")
+        tips_head.set_markup(f"<b>{self.t('tips_title')}</b>")
         tips_body.pack_start(tips_head, False, False, 0)
-        for tip in (
-            "तेज़ अनुवाद के लिए शब्दकोश का उपयोग करें।",
-            "स्थानीय एवं सरकारी शब्दों के लिए हाइब्रिड डिक्शनरी देखें।",
-            "गलती होने पर शब्द सुधारें और पुनः अनुवाद करें।",
-        ):
+        for tip in (self.t("tip1"), self.t("tip2"), self.t("tip3")):
             line = Gtk.Label(label=f"✔  {tip}")
             line.set_xalign(0)
             line.get_style_context().add_class("hint")
@@ -486,17 +589,18 @@ class Dashboard(Gtk.Window):
         options_body.set_border_width(8)
         options_head = Gtk.Label()
         options_head.set_xalign(0)
-        options_head.set_markup("<b>🚀 अतिरिक्त विकल्प</b>")
+        options_head.set_markup(f"<b>{self.t('options_title')}</b>")
         options_body.pack_start(options_head, False, False, 0)
 
-        self.opt_copy = Gtk.CheckButton(label="अनुवाद के बाद क्लिपबोर्ड में कॉपी करें")
-        self.opt_cap = Gtk.CheckButton(label="स्वतः कैपिटलाइजेशन")
+        self.opt_copy = Gtk.CheckButton(label=self.t("opt_copy"))
+        self.opt_cap = Gtk.CheckButton(label=self.t("opt_cap"))
         self.opt_cap.set_active(True)
-        self.opt_space = Gtk.CheckButton(label="अतिरिक्त स्पेस हटाएँ")
+        self.opt_space = Gtk.CheckButton(label=self.t("opt_space"))
         self.opt_space.set_active(True)
 
         for widget in (self.opt_copy, self.opt_cap, self.opt_space):
-            widget.set_xalign(0)
+            # CheckButton में set_xalign नहीं होता (v3.4.2)
+            widget.set_halign(Gtk.Align.START)
             options_body.pack_start(widget, False, False, 0)
 
         options.pack_start(options_body, False, False, 0)
@@ -507,21 +611,18 @@ class Dashboard(Gtk.Window):
         usage_body.set_border_width(8)
         usage_head = Gtk.Label()
         usage_head.set_xalign(0)
-        usage_head.set_markup("<b>ℹ उचित उपयोग</b>")
+        usage_head.set_markup(f"<b>{self.t('usage_title')}</b>")
         usage_body.pack_start(usage_head, False, False, 0)
         usage_text = Gtk.Label()
         usage_text.set_xalign(0)
         usage_text.set_line_wrap(True)
         usage_text.get_style_context().add_class("hint")
-        usage_text.set_markup(
-            "यह उपकरण सरकारी कार्यालयों में हिन्दी एवं अंग्रेज़ी के बीच "
-            "अनुवाद हेतु विशेष रूप से उपयोगी है।"
-        )
+        usage_text.set_markup(self.t("usage_text"))
         usage_body.pack_start(usage_text, False, False, 0)
         usage.pack_start(usage_body, False, False, 0)
         row.pack_start(usage, True, True, 0)
 
-        row.pack_start(self.button("⏻ बंद करें", lambda *_: self.destroy(), "exit"), False, False, 0)
+        row.pack_start(self.button(self.t("exit"), lambda *_: self.destroy(), "exit"), False, False, 0)
         return row
 
     # ---------------- footer ----------------
@@ -532,7 +633,7 @@ class Dashboard(Gtk.Window):
         self.status_label = Gtk.Label()
         self.status_label.set_xalign(0)
         self.status_label.get_style_context().add_class("footer-label")
-        self.status_label.set_markup("<span>● तैयार…</span>")
+        self.status_label.set_markup(f"<span>{self.t('ready')}</span>")
         footer.pack_start(self.status_label, True, True, 0)
 
         court = Gtk.Label(label=COURT_NAME)
@@ -574,11 +675,11 @@ class Dashboard(Gtk.Window):
         )
 
         if active:
-            self.dict_status.set_markup("🌐 Online mode")
+            self.dict_status.set_markup(self.t("chip_online"))
             self.dict_status.get_style_context().remove_class("chip-ok")
             self.dict_status.get_style_context().add_class("chip-warn")
         else:
-            self.dict_status.set_markup("✔ Offline Dictionary Ready")
+            self.dict_status.set_markup(self.t("chip_ready"))
             self.dict_status.get_style_context().remove_class("chip-warn")
             self.dict_status.get_style_context().add_class("chip-ok")
 
@@ -595,7 +696,7 @@ class Dashboard(Gtk.Window):
             self.dict_entries = {"E2H": {}, "H2E": {}}
 
         total = len(self.dict_entries["E2H"]) + len(self.dict_entries["H2E"])
-        self.side_status.set_markup(f"कुल entries: <b>{total}</b>")
+        self.side_status.set_markup(f"{self.t('entries')}<b>{total}</b>")
 
     # ------------------------------------------------------------
     # actions
@@ -788,83 +889,7 @@ class Dashboard(Gtk.Window):
         chooser.destroy()
 
     # ---------------- dictionary side panel ----------------
-    def on_new_word(self, *_args):
-        self.editing_key = None
-        self.side_hindi.set_text("")
-        self.side_english.set_text("")
-        self.side_category.set_active(0)
-        self.side_search.set_text("")
-        self.side_status.set_markup("नया शब्द लिखें और <b>शब्द सहेजें</b> दबाएँ")
-
-    def on_focus_search(self, *_args):
-        self.side_search.grab_focus()
-        self.side_status.set_markup("शब्द लिखकर खोजें — सुझाव अपने आप दिखेंगे")
-
-    def on_side_search(self, entry):
-        query = entry.get_text().strip().casefold()
-        if not query:
-            return
-
-        for direction in ("H2E", "E2H"):
-            for key, value in self.dict_entries[direction].items():
-                if query in key.casefold():
-                    self.editing_key = (direction, key)
-                    if direction == "H2E":
-                        self.side_hindi.set_text(key)
-                        self.side_english.set_text(value)
-                    else:
-                        self.side_english.set_text(key)
-                        self.side_hindi.set_text(value)
-                    self.side_status.set_markup(
-                        f"मिला: <b>{key}</b> = {value}"
-                    )
-                    return
-
-        self.side_status.set_markup("कोई शब्द नहीं मिला")
-
-    def on_side_save(self, *_args):
-        hindi = self.side_hindi.get_text().strip()
-        english = self.side_english.get_text().strip()
-
-        if not hindi or not english:
-            self.side_status.set_markup("दोनों खाने भरें — Hindi Word और English Meaning")
-            return
-
-        direction = "H2E" if sdm.is_devanagari(hindi) else "E2H"
-        key, value = (hindi, english) if direction == "H2E" else (english, hindi)
-
-        problems = sdm.validate_entry(key, value, direction)
-        if problems:
-            self.side_status.set_markup("; ".join(problems))
-            return
-
-        path = os.path.join(
-            DICT_DIR, sdm.H2E_FILENAME if direction == "H2E" else sdm.E2H_FILENAME
-        )
-        try:
-            entries = sdm.load_pairs(path)
-            existing = sdm.find_case_insensitive(entries, key)
-            if existing is not None:
-                entries[existing] = value
-            else:
-                entries[key] = value
-            sdm.write_pairs(path, entries)
-        except Exception as exc:  # noqa: BLE001
-            self.side_status.set_markup(f"सहेजा नहीं जा सका: {exc}")
-            return
-
-        self.reload_dictionary()
-        self.set_status(f"✔ शब्द सहेजा गया: {key}")
-        self.side_status.set_markup(f"✔ सहेजा गया: <b>{key}</b> = {value}")
-
-    def on_open_manager(self, *_args):
-        try:
-            manager = sdm.DictionaryApp()
-            manager.connect("destroy", lambda *_: manager.destroy())
-            manager.show_all()
-            manager.panel.update_action_state()
-        except Exception as exc:  # noqa: BLE001
-            self.set_status(f"Manager नहीं खुल सका: {exc}")
+    # (v3.5.0 — शब्द विवरण का फ़ॉर्म हटा दिया; सारा काम Manager window में)
 
     # ---------------- dialogs ----------------
     def simple_dialog(self, title, body):
@@ -877,29 +902,146 @@ class Dashboard(Gtk.Window):
         dialog.run()
         dialog.destroy()
 
-    def on_settings(self, *_args):
-        self.simple_dialog(
-            "सेटिंग्स",
-            "Online mode ऊपर की पट्टी से चालू/बंद करें (Alt+T से भी)।\n"
-            f"Dictionary: {DICT_DIR}\nBackups: {os.path.join(USER_DATA_DIR, 'backups')}",
+    def open_github(self):
+        """GitHub पेज ब्राउज़र में खोलें।"""
+        opened = False
+        try:
+            opened = Gtk.show_uri_on_window(
+                self, GITHUB_URL, Gdk.CURRENT_TIME
+            )
+        except Exception:
+            opened = False
+
+        if not opened:
+            try:
+                import webbrowser
+                opened = webbrowser.open(GITHUB_URL)
+            except Exception:
+                opened = False
+
+        if not opened:
+            self.set_status(f"ब्राउज़र नहीं खुला — यह पता खुद खोलें: {GITHUB_URL}")
+        return opened
+
+    def rebuild_ui(self):
+        """भाषा बदलने पर पूरी UI दोबारा बनाएँ (लिखा हुआ पाठ सुरक्षित)।"""
+        input_text = self.get_input_text()
+        buffer = self.output_view.get_buffer()
+        output_text = buffer.get_text(
+            buffer.get_start_iter(), buffer.get_end_iter(), True
         )
 
+        self.remove(self.outer)
+        self.build_ui()
+        self.show_all()
+
+        self.input_view.get_buffer().set_text(input_text)
+        self.set_output_text(output_text)
+        self.refresh_online_state()
+
+    def on_language(self, *_args):
+        dialog = Gtk.Dialog(
+            title="भाषा / Language", transient_for=self, modal=True
+        )
+        dialog.add_button("रद्द करें / Cancel", Gtk.ResponseType.CANCEL)
+        dialog.add_button("लागू करें / Apply", Gtk.ResponseType.OK)
+
+        box = dialog.get_content_area()
+        box.set_border_width(14)
+
+        heading = Gtk.Label()
+        heading.set_xalign(0)
+        heading.set_markup("<b>इंटरफ़ेस की भाषा चुनें / Choose interface language</b>")
+        box.pack_start(heading, False, False, 8)
+
+        rb_hindi = Gtk.RadioButton.new_with_label_from_widget(None, "हिन्दी (Hindi)")
+        rb_english = Gtk.RadioButton.new_with_label_from_widget(
+            rb_hindi, "English (अंग्रेज़ी)"
+        )
+        if self.lang == "en":
+            rb_english.set_active(True)
+        else:
+            rb_hindi.set_active(True)
+
+        box.pack_start(rb_hindi, False, False, 4)
+        box.pack_start(rb_english, False, False, 4)
+
+        note = Gtk.Label()
+        note.set_xalign(0)
+        note.set_line_wrap(True)
+        note.set_markup(
+            "<span size='small'>बदलाव तुरंत लागू हो जाएगा।</span>"
+        )
+        box.pack_start(note, False, False, 8)
+
+        dialog.show_all()
+        response = dialog.run()
+        chosen = "hi" if rb_hindi.get_active() else "en"
+        dialog.destroy()
+
+        if response != Gtk.ResponseType.OK:
+            return
+
+        if chosen != self.lang and save_language(chosen):
+            self.lang = chosen
+            self.rebuild_ui()
+            self.set_status(
+                "✔ भाषा बदल दी गई" if chosen == "hi" else "✔ Language changed"
+            )
+
     def on_about(self, *_args):
+        self.open_github()
         self.simple_dialog(
             "DM Office Translator",
             f"संस्करण {APP_VERSION}\n{COURT_NAME}\n\n"
-            "हिन्दी ↔ अंग्रेज़ी अनुवाद, हाइब्रिड डिक्शनरी और शॉर्टकट — एक ही जगह।",
+            "हिन्दी ↔ अंग्रेज़ी अनुवाद, हाइब्रिड डिक्शनरी और शॉर्टकट — एक ही जगह।\n\n"
+            f"GitHub: {GITHUB_URL}",
         )
 
     def on_help(self, *_args):
+        self.open_github()
         self.simple_dialog(
-            "सहायता",
+            "सहायता / Help",
             "Alt + Space — English → Hindi\n"
             "Alt + H — Hindi → English\n"
             "Alt + T — Online mode चालू/बंद\n\n"
             "शॉर्टकट clipboard पर काम करते हैं: पाठ कॉपी करें, शॉर्टकट दबाएँ, "
-            "फिर Ctrl+V से चिपकाएँ।",
+            "फिर Ctrl+V से चिपकाएँ।\n\n"
+            f"GitHub: {GITHUB_URL}",
         )
+
+
+ERROR_LOG = os.path.join(USER_DATA_DIR, "last_error.log")
+
+
+def log_and_show_error(exc):
+    """त्रुटि को log में लिखें और स्क्रीन पर भी दिखाएँ।"""
+    import traceback
+
+    details = traceback.format_exc()
+
+    try:
+        os.makedirs(USER_DATA_DIR, exist_ok=True)
+        with io.open(ERROR_LOG, "a", encoding="utf-8") as fh:
+            fh.write(f"\n--- {datetime.datetime.now()} ---\n{details}")
+    except OSError:
+        pass
+
+    print(details, file=sys.stderr)
+
+    try:
+        dialog = Gtk.MessageDialog(
+            message_type=Gtk.MessageType.ERROR,
+            buttons=Gtk.ButtonsType.OK,
+            text="DM Office Translator खुल नहीं सका",
+        )
+        dialog.format_secondary_text(
+            f"{exc}\n\nपूरी जानकारी यहाँ सुरक्षित है:\n{ERROR_LOG}"
+        )
+        dialog.run()
+        dialog.destroy()
+    except Exception:
+        pass
 
 
 def main():
@@ -907,11 +1049,15 @@ def main():
         print(f"DM Office Translator {APP_VERSION}")
         return
 
-    app = Dashboard()
-    app.connect("destroy", Gtk.main_quit)
-    app.show_all()
-    app.refresh_online_state()
-    Gtk.main()
+    try:
+        app = Dashboard()
+        app.connect("destroy", Gtk.main_quit)
+        app.show_all()
+        app.refresh_online_state()
+        Gtk.main()
+    except Exception as exc:  # noqa: BLE001 — कारण दिखाना ज़रूरी है
+        log_and_show_error(exc)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.4.0 Stable
+**Version / संस्करण:** 3.6.1 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,7 +13,53 @@
 
 ---
 
+## What's New in v3.6.1 / v3.6.1 में नया क्या है
+
+- **प्रोजेक्ट साफ़-सुथरा / Project cleanup**
+  - `./scripts/cleanup.sh` (नया) — पहले सिर्फ़ दिखाता है क्या हटेगा (dry-run), `--apply` देने पर ही हटाता है। पुरानी `.deb` फ़ाइलें (नवीनतम 2 रखकर), Python caches और रूट में पड़े बिल्ड आउटपुट साफ़ करता है। यह सिर्फ़ प्रोजेक्ट फ़ोल्डर के अंदर काम करता है।
+  - इस सफ़ाई से रेपो **38 MB → 13 MB** हो गया (12 पुरानी `.deb`, लगभग 24 MB हटीं)।
+  - App का चिह्न (icon) 2.0 MB से **423 KB** कर दिया गया (1254px → 512px) — इससे `.deb` का आकार भी घट गया।
+
+## What's New in v3.6.0 / v3.6.0 में नया क्या है
+
+
+- **"भाषा" बटन / Language button**
+  - ऊपर "सेटिंग्स" की जगह अब **🌐 भाषा** है — खोलने पर **हिन्दी** और **English** के रेडियो बटन मिलते हैं। चुनते ही पूरा इंटरफ़ेस उसी भाषा में हो जाता है (लिखा हुआ पाठ सुरक्षित रहता है), और चुनी भाषा याद रखी जाती है।
+- **जानकारी / सहायता → GitHub**
+  - इन दोनों बटनों पर क्लिक करते ही GitHub पेज खुल जाता है — https://github.com/dharmendramarko66/DM_Office_Translator (dialog में भी लिंक दिखता है)।
+- **Input / Translation की पट्टी अब साफ़ दिखती है / Panel headings fixed**
+  - पहले नीली और हरी पट्टी पर पाठ गहरा था, इसलिए पढ़ा नहीं जाता था। अब वहाँ सफ़ेद मोटा पाठ है।
+
+## What's New in v3.5.0 / v3.5.0 में नया क्या है
+
+
+- **बटन अब रंगीन और पढ़ने योग्य / Buttons fixed**
+  - पहले बटन सफ़ेद दिख रहे थे और उनका पाठ पढ़ा नहीं जाता था (GTK की थीम बटन के रंग को ढक देती थी)। अब हर बटन का ठोस रंग और साफ़ पाठ है — हरा, नीला, बैंगनी और हल्का नीला।
+- **Header में लोगो / Logo in the header**
+  - ऊपर बाईं ओर App का चिह्न दिखता है। (भारत का राजचिह्न निजी सॉफ़्टवेयर में लगाना कानूनन प्रतिबंधित है, इसलिए App का अपना चिह्न लगाया गया है।)
+- **Dictionary के बटन अब Manager खोलते हैं / Dictionary buttons open the Manager**
+  - "नया शब्द जोड़ें", "शब्द सुधारें / खोजें और हटाएँ" और "शब्द खोजें…" — तीनों पूरा Dictionary Manager अलग window में खोलते हैं (सही मोड में, खोज वाले में cursor तैयार)।
+  - Side panel से "शब्द विवरण" का फ़ॉर्म हटा दिया गया है, जैसा आपने कहा।
+- **शब्द जोड़ने पर पुष्टि / Confirmation after saving**
+  - Manager में शब्द जोड़ने, सुधारने या हटाने पर अब साफ़ संदेश आता है — "शब्द जोड़ दिया गया: कार्यालय = Office" जैसा।
+
+## What's New in v3.4.2 / v3.4.2 में नया क्या है
+
+
+- **App खुलने की असली वजह मिल गई / Real startup bug fixed**
+  - नीचे के "अतिरिक्त विकल्प" वाले checkbox पर `set_xalign` लगाया गया था, जो CheckButton में होता ही नहीं — इससे App बनते-बनते रुक जाता था। अब `set_halign` का उपयोग होता है।
+  - Header में न्यायालय का नाम "District & Sessions Court" में `&` के कारण markup टूट रहा था; अब नाम सुरक्षित (escaped) तरीके से लिखा जाता है।
+
+## What's New in v3.4.1 / v3.4.1 में नया क्या है
+
+
+- **App खुलने की समस्या ठीक / Startup fixed**
+  - v3.4.0 में CSS में gradient और चार-कोने वाली border-radius थी; GTK3 इन्हें अस्वीकार करते ही पूरी styling fail हो जाती थी और window खुलती ही नहीं थी।
+  - अब CSS सरल और सुरक्षित है (ठोस रंग, एक-मान वाली padding/radius), और CSS में कोई भी त्रुटि हो तो App बिना रंग के ही सही खुल जाएगा।
+  - अगर फिर भी कुछ गड़बड़ हो, तो अब चुपचाप बंद नहीं होगा — स्क्रीन पर कारण दिखेगा और पूरी जानकारी `~/.dm_office_tools/last_error.log` में सुरक्षित रहेगी।
+
 ## What's New in v3.4.0 / v3.4.0 में नया क्या है
+
 
 - **नया Dashboard UI / New dashboard look**
   - ऊपर गहरा नीला banner — नाम, "Smart Translation for Smart Governance", संस्करण, न्यायालय और सेटिंग्स/जानकारी/सहायता के बटन।
@@ -519,8 +565,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.4.0_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.4.0_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.6.1_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.6.1_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -549,7 +595,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.4.0_amd64.deb
+sudo apt install ./dm-office-tools_3.6.1_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -563,7 +609,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.4.0
+Version: 3.6.1
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -669,7 +715,12 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.4.0 Stable** | ✅ Current Release / वर्तमान रिलीज | New dashboard UI: blue banner, mode bar with online chip, three panels (input, translation, dictionary side panel), feature strip and live footer. / नया सुंदर dashboard — तीन panels, सुविधाओं की पट्टी और चलती status bar। |
+| **3.6.1 Stable** | ✅ Current Release / वर्तमान रिलीज | Project cleanup script (dry-run by default), old .deb files pruned (38 MB → 13 MB) and the icon optimised from 2.0 MB to 423 KB. / प्रोजेक्ट सफ़ाई, पुरानी .deb हटीं, icon हल्का। |
+| **3.6.0 Stable** | Previous Release / पिछली रिलीज | Language button with Hindi/English interface, About/Help open the GitHub page, and readable panel headings. / भाषा बटन (हिन्दी/English), GitHub लिंक और साफ़ पैनल शीर्षक। |
+| **3.5.0 Stable** | Previous Release / पिछली रिलीज | Readable coloured buttons, a logo in the header, dictionary buttons that open the Manager, no inline word form, and a confirmation after saving. / बटन ठीक, लोगो, Manager खुलने वाले बटन और सहेजने पर पुष्टि। |
+| **3.4.2 Stable** | Previous Release / पिछली रिलीज | Fixes the crash that stopped the dashboard from opening: CheckButton alignment call and the ampersand in the court name. / Dashboard खुलने की असली गड़बड़ी ठीक। |
+| **3.4.1 Stable** | Previous Release / पिछली रिलीज | Fixes the startup failure in 3.4.0: CSS is now simple and safe, and any error is shown on screen and logged to last_error.log. / App खुलने की समस्या ठीक, त्रुटि अब दिखती है। |
+| **3.4.0 Stable** | Previous Release / पिछली रिलीज | New dashboard UI: blue banner, mode bar with online chip, three panels (input, translation, dictionary side panel), feature strip and live footer. / नया सुंदर dashboard — तीन panels, सुविधाओं की पट्टी और चलती status bar। |
 | **3.3.0 Stable** | Previous Release / पिछली रिलीज | One window with three tabs — translate, the full Dictionary Manager and shortcuts, plus an Online-mode switch inside the app. / एक ही App में अनुवाद, Dictionary और Online switch। |
 | **3.2.0 Stable** | Previous Release / पिछली रिलीज | English output uses sentence case (no more Title Case) and Hindi output uses the formal register (तुम → आप). / अंग्रेज़ी में वाक्य जैसी capitalisation, हिन्दी में शिष्टाचार। |
 | **3.1.9 Stable** | Previous Release / पिछली रिलीज | Translation now tries three providers in order (Google gtx → clients5 → MyMemory), so a blocked network no longer silently falls back to transliteration. / तीन providers की क्रमिक कोशिश — ब्लॉक नेटवर्क पर भी अनुवाद। |
@@ -739,9 +790,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.4.0 Stable
-- **Release / रिलीज:** v3.4.0
-- **Package / पैकेज:** `dm-office-tools_3.4.0_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.6.1 Stable
+- **Release / रिलीज:** v3.6.1
+- **Package / पैकेज:** `dm-office-tools_3.6.1_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 
