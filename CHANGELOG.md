@@ -3,6 +3,16 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.32] — 2026-11-19
+
+### Changed
+- **README नए व्यवस्थित रूप में:** विषय-सूची, त्वरित शुरुआत, बैज और साफ़ तालिकाओं के साथ।
+
+### Added
+- **समस्या-निवारण / Troubleshooting:** संस्करण, शॉर्टकट, Google cooldown और error log की जाँच।
+- **टेस्ट चलाना / Running the tests** और **फ़ीडबैक / Feedback** अनुभाग।
+- "इंस्टॉल के बाद उपलब्ध घटक" में Alt+T और `dm-office-tools-shortcuts` जोड़े गए।
+
 ## [3.8.31] — 2026-11-19
 
 ### Added
