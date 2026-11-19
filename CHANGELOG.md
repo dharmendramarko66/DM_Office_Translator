@@ -3,6 +3,17 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.30] — 2026-11-19
+
+### Changed
+- **README अपने पुराने, पूरे ढाँचे में वापस:** Privacy & Offline Mode, Introduction, Features, System
+  Requirements, Project Structure, Dictionary Synchronization, Smart Dictionary Manager, Runtime
+  Architecture, Keyboard Shortcuts, Installation, Uninstallation, Version History, Roadmap, License,
+  Publishing और Download जानकारी — सब एक ही फ़ाइल में।
+- **अद्यतन:** शॉर्टकट तालिका में Alt+T और `dm-office-tools-shortcuts`; Project Structure में
+  वर्तमान फ़ाइलें (dm_office_app.py, translation_providers.py, dictionary_mirror.py, tests/, scripts/)।
+- **Version History:** 2.0.8 से 3.8.30 तक हर संस्करण एक पंक्ति में।
+
 ## [3.8.29] — 2026-11-19
 
 ### Changed
