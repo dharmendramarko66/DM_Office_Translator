@@ -3,7 +3,7 @@
 ## Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager
 ### स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर (SOHT) एवं स्मार्ट डिक्शनरी मैनेजर
 
-**Version / संस्करण:** 3.8.30 Stable
+**Version / संस्करण:** 3.8.31 Stable
 
 **Project Status / प्रोजेक्ट स्थिति:** ✅ Stable Release
 
@@ -13,14 +13,11 @@
 
 ---
 
-## What's New in v3.8.30 / v3.8.30 में नया क्या है
+## What's New in v3.8.31 / v3.8.31 में नया क्या है
 
-- **README अपने पुराने, पूरे ढाँचे में / Full README structure restored**
-  - यही विस्तृत README वापस लाया गया — Privacy & Offline Mode, Introduction, Features, System Requirements, Project Structure, Dictionary Synchronization, Smart Dictionary Manager, Runtime Architecture, Keyboard Shortcuts, Installation, Uninstallation, Version History, Roadmap, License और Publishing।
-- **संस्करण इतिहास पूरा / Complete version history**
-  - Version History तालिका में अब 2.0.8 से 3.8.30 तक हर संस्करण एक पंक्ति में दर्ज है।
-- **शॉर्टकट तालिका अद्यतन / Shortcuts table updated**
-  - तीनों शॉर्टकट (Alt+Space, Alt+H, Alt+T) और नया `dm-office-tools-shortcuts` कमांड जोड़ा गया।
+- **"अपग्रेड कैसे करें" अनुभाग जोड़ा / Upgrading section added**
+  - Uninstallation से ठीक पहले नया अनुभाग: apt से अपग्रेड, `.deb` से, और प्रोजेक्ट zip से — तीनों तरीके।
+  - साथ में बताया गया है कि अपग्रेड के बाद dictionary अपने आप मिल जाती है, शॉर्टकट कैसे जाँचें, पुराना संस्करण कैसे लौटाएँ, और गड़बड़ होने पर कहाँ देखें।
 
 ---
 
@@ -278,8 +275,8 @@ DM Office Translator त्वरित उपयोग के लिए ऑट�
 
 ### Recommended: Double-click Installation / अनुशंसित: डबल-क्लिक इंस्टॉलेशन
 
-1. Download `dm-office-tools_3.8.30_amd64.deb` from the GitHub Release.
-   - GitHub Release से `dm-office-tools_3.8.30_amd64.deb` डाउनलोड करें।
+1. Download `dm-office-tools_3.8.31_amd64.deb` from the GitHub Release.
+   - GitHub Release से `dm-office-tools_3.8.31_amd64.deb` डाउनलोड करें।
 
 2. Open your **Downloads** folder.
    - अपना **Downloads** folder खोलें।
@@ -308,7 +305,7 @@ In that case, install it directly from Terminal:
 
 ```bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.8.30_amd64.deb
+sudo apt install ./dm-office-tools_3.8.31_amd64.deb
 ```
 
 Installation के बाद verify करें:
@@ -322,7 +319,7 @@ Expected:
 ```text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.8.30
+Version: 3.8.31
 ```
 
 Installed version को wrapper commands से भी जाँच सकते हैं:
@@ -346,6 +343,74 @@ dm-office-tools-h2e --version
 - ✔ Keyboard Shortcut: `Alt + H` — Hindi → English
 
 
+
+## Upgrading / अपग्रेड कैसे करें
+
+पुराना संस्करण हटाने की ज़रूरत नहीं — सीधे ऊपर से इंस्टॉल कर दें। आपकी dictionary, backups और
+shortcuts सुरक्षित रहते हैं।
+
+**तरीका 1 — apt से (सबसे आसान, सिफ़ारिश की गई):**
+
+```bash
+sudo apt update
+sudo apt upgrade
+```
+
+नया संस्करण अपने आप आ जाएगा। जाँचें:
+
+```bash
+dm-office-tools --version
+```
+
+**तरीका 2 — `.deb` फ़ाइल से:**
+
+GitHub Releases से नई `dm-office-tools_x.y.z_amd64.deb` डाउनलोड करके:
+
+```bash
+sudo apt install ~/Downloads/dm-office-tools_x.y.z_amd64.deb
+dm-office-tools --version
+```
+
+**तरीका 3 — प्रोजेक्ट zip से (विकास/अनुरक्षक के लिए):**
+
+```bash
+cd ~/DM_Office_Translator
+git pull origin main
+
+rm -rf ~/dmot-new && mkdir ~/dmot-new
+unzip -q ~/Downloads/DM_Office_Translator_vX.Y.Z.zip -d ~/dmot-new
+rsync -a ~/dmot-new/ ~/DM_Office_Translator/
+
+chmod +x sync-dictionaries.sh scripts/cleanup.sh packaging/build-deb.sh packaging/update-apt-repo.sh \
+  stable/run_english_to_hindi.sh stable/run_hindi_to_english.sh stable/hindi_to_english_hybrid.py \
+  stable/smart_dictionary_manager.py packaging/DEBIAN/postinst packaging/DEBIAN/postrm \
+  packaging/DEBIAN/prerm packaging/usr/bin/dm-office-tools* \
+  packaging/usr/share/dm-office-tools/stable/run_english_to_hindi.sh \
+  packaging/usr/share/dm-office-tools/stable/run_hindi_to_english.sh \
+  packaging/usr/share/dm-office-tools/stable/hindi_to_english_hybrid.py \
+  packaging/usr/share/dm-office-tools/stable/smart_dictionary_manager.py \
+  packaging/usr/share/dm-office-tools/stable/dm_office_app.py
+
+python3 -m pytest tests -q
+sudo apt install ~/Downloads/dm-office-tools_X.Y.Z_amd64.deb
+```
+
+### अपग्रेड के बाद / After upgrading
+
+- **Dictionary अपने आप मिल जाती है** — install के समय user dictionary में नए अर्थ जुड़ जाते हैं; आपकी
+  अपनी entries बनी रहती हैं (बदलाव से पहले `~/.dm_office_tools/dictionary/*.bak-*` backup बनता है)।
+- **शॉर्टकट जाँचें** — ज़रूरत पड़े तो:
+
+  ```bash
+  dm-office-tools-shortcuts status
+  dm-office-tools-shortcuts          # फिर से सेट करें
+  ```
+
+- **पुराना संस्करण वापस चाहिए तो** — Releases पेज से पुरानी `.deb` डाउनलोड करके वही कमांड चलाएँ;
+  dictionary और backups वैसे ही रहेंगे।
+- **कुछ गड़बड़ लगे तो** — `~/.dm_office_tools/last_error.log` देखें और GitHub Issues पर लिखें।
+
+---
 
 ## Uninstallation / अनइंस्टॉलेशन
 
@@ -384,7 +449,8 @@ Important: User dictionaries stored in `~/.dm_office_tools/dictionary/` are PRES
 
 | Version / संस्करण | Status / स्थिति | Description / विवरण |
 |---|---|---|
-| **3.8.30 Stable** | ✅ Current Release / वर्तमान रिलीज | विस्तृत README ढाँचा वापस, पूरा Version History, अद्यतन शॉर्टकट तालिका और Project Structure। / Full README structure restored. |
+| **3.8.31 Stable** | ✅ Current Release / वर्तमान रिलीज | "अपग्रेड कैसे करें" अनुभाग जोड़ा गया (apt, .deb और zip — तीनों तरीके)। / Upgrading section added. |
+| **3.8.30 Stable** | Previous Release / पिछली रिलीज | विस्तृत README ढाँचा वापस, पूरा Version History, अद्यतन शॉर्टकट तालिका और Project Structure। / Full README structure restored. |
 | **3.8.28 Stable** | Previous Release / पिछली रिलीज | "मुख्य विशेषताएँ" अनुभाग जोड़ा / Key features added |
 | **3.8.27 Stable** | Previous Release / पिछली रिलीज | README और CHANGELOG अब छोटे / Docs kept short |
 | **3.8.26 Stable** | Previous Release / पिछली रिलीज | तेज़ शुरुआत / Faster startup |
@@ -478,9 +544,9 @@ Users उसके बाद `sudo apt update && sudo apt upgrade` से नय
 
 ## Download & Release Information / डाउनलोड एवं रिलीज जानकारी
 
-- **Latest Version / नवीनतम संस्करण:** 3.8.30 Stable
-- **Release / रिलीज:** v3.8.30
-- **Package / पैकेज:** `dm-office-tools_3.8.30_amd64.deb`
+- **Latest Version / नवीनतम संस्करण:** 3.8.31 Stable
+- **Release / रिलीज:** v3.8.31
+- **Package / पैकेज:** `dm-office-tools_3.8.31_amd64.deb`
 - **Architecture / आर्किटेक्चर:** amd64
 - **Repository / रिपॉजिटरी:** DM_Office_Translator
 
