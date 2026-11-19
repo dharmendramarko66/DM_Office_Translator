@@ -27,7 +27,7 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.8.28"
+    APP_VERSION = "3.8.29"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
