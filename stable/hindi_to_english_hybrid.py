@@ -33,7 +33,7 @@ except ImportError:  # सीधे चलाने पर (script के जि
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.6.1"
+    APP_VERSION = "3.8.28"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -415,6 +415,28 @@ def _read_dictionary_file(path):
     return entries
 
 
+# v3.8.2 — dictionary + compiled regex अब cache होते हैं; हर बार
+# फ़ाइलें पढ़ने और regex बनाने में समय नहीं जाता।
+_LOAD_CACHE = {"signature": None, "value": None}
+
+# v3.8.11 — dictionary में न मिले शब्दों के लिप्यांतरण यहाँ जमा होते हैं।
+LAST_UNKNOWN_WORDS = []
+
+
+def _dictionary_signature(dict_dirs):
+    """फ़ाइलों के mtime/size से हस्ताक्षर — बदलाव हो तभी दोबारा load।"""
+    parts = []
+    for directory in dict_dirs:
+        for name in (H2E_DICT_FILENAME, E2H_DICT_FILENAME):
+            path = os.path.join(directory, name)
+            try:
+                stat = os.stat(path)
+                parts.append((path, stat.st_mtime_ns, stat.st_size))
+            except OSError:
+                parts.append((path, None, None))
+    return tuple(parts)
+
+
 def load_dictionary(dict_dirs=None):
     """Hindi→English dictionary + (reverse of) English→Hindi dictionary
     load करके (combined_regex, key→english map) लौटाता है।"""
@@ -422,6 +444,10 @@ def load_dictionary(dict_dirs=None):
         dict_dirs = [USER_DICT_DIR]
         if os.path.isdir(SYSTEM_DICT_DIR):
             dict_dirs.append(SYSTEM_DICT_DIR)
+
+    signature = _dictionary_signature(dict_dirs)
+    if _LOAD_CACHE["signature"] == signature and _LOAD_CACHE["value"] is not None:
+        return _LOAD_CACHE["value"]
 
     dictionary = {}
 
@@ -441,7 +467,9 @@ def load_dictionary(dict_dirs=None):
                     dictionary[hin] = eng
 
     if not dictionary:
-        return None, {}
+        _LOAD_CACHE["signature"] = signature
+        _LOAD_CACHE["value"] = (None, {})
+        return _LOAD_CACHE["value"]
 
     # Longest Hindi phrases first.
     keys = sorted(dictionary, key=len, reverse=True)
@@ -452,7 +480,34 @@ def load_dictionary(dict_dirs=None):
         + r")(?![\u0900-\u097F])"
     )
 
-    return combined, dictionary
+    _LOAD_CACHE["signature"] = signature
+    _LOAD_CACHE["value"] = (combined, dictionary)
+    return _LOAD_CACHE["value"]
+
+
+def unresolved_tokens(text):
+    """dictionary में न मिलने वाले हिन्दी शब्दों की सूची (v3.8.7)।
+
+    Dashboard इन्हें output में लाल दिखाता है, ताकि शब्द तुरंत
+    dictionary में जोड़ा जा सके।
+    """
+    if not text:
+        return []
+
+    combined, _dictionary = load_dictionary()
+    if combined is None:
+        return re.findall(r"[\u0900-\u097F]+", text)
+
+    covered = [match.span() for match in combined.finditer(text)]
+
+    unknown = []
+    for match in re.finditer(r"[\u0900-\u097F]+", text):
+        start, end = match.span()
+        inside = any(s0 <= start and end <= e0 for s0, e0 in covered)
+        if not inside:
+            unknown.append(match.group(0))
+
+    return unknown
 
 
 # ---------------------------------------------------------
@@ -466,6 +521,8 @@ def translate(text):
     # `global` घोषणा ज़रूरी है, वरना Python इसे local समझ लेता
     # है और पहली पढ़ाई पर UnboundLocalError आता है।
     global google_temporarily_disabled
+
+    LAST_UNKNOWN_WORDS.clear()
 
     if not text or not text.strip():
         print("Clipboard is empty or contains only whitespace.")
@@ -654,6 +711,11 @@ def translate(text):
                 lambda m: m.group(1).upper(),
                 transliterated,
             )
+            # v3.8.11 — लाल दिखाने के लिए शब्द याद रखें
+            for word in transliterated.split():
+                clean = word.strip(".,;:!?()[]\"'")
+                if clean and re.search(r"[A-Za-z]", clean):
+                    LAST_UNKNOWN_WORDS.append(clean)
             final_parts.append(transliterated)
         else:
             final_parts.append(value)

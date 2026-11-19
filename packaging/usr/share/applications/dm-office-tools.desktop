@@ -8,3 +8,4 @@ Icon=/usr/share/dm-office-tools/dm-office-translator.png
 Terminal=false
 Categories=Office;
 StartupNotify=true
+StartupWMClass=dm-office-tools

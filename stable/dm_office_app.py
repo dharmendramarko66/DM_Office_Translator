@@ -14,7 +14,9 @@ import contextlib
 import datetime
 import io
 import os
+import re
 import sys
+import threading
 
 import gi
 
@@ -25,7 +27,7 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.6.1"
+    APP_VERSION = "3.8.28"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
@@ -37,6 +39,7 @@ ONLINE_MARKER = os.path.join(USER_DATA_DIR, "transliteration_mode")
 
 ICON_PATH = "/usr/share/dm-office-tools/dm-office-translator.png"
 GITHUB_URL = "https://github.com/dharmendramarko66/DM_Office_Translator"
+GITHUB_ISSUES_URL = GITHUB_URL + "/issues"
 LANG_FILE = os.path.join(USER_DATA_DIR, "ui_language")
 
 STRINGS = {
@@ -54,9 +57,9 @@ STRINGS = {
     "paste": {"hi": "📋 Paste", "en": "📋 Paste"},
     "clear": {"hi": "⌨ Clear", "en": "⌨ Clear"},
     "swap": {"hi": "🔁 Swap", "en": "🔁 Swap"},
-    "copy": {"hi": "⧉ Copy (कॉपी करें)", "en": "⧉ Copy"},
-    "print": {"hi": "🖨 Print (प्रिंट)", "en": "🖨 Print"},
-    "save": {"hi": "⤓ Save (सहेजें)", "en": "⤓ Save"},
+    "copy": {"hi": "⧉ कॉपी करें", "en": "⧉ Copy"},
+    "print": {"hi": "🖨 प्रिंट करें", "en": "🖨 Print"},
+    "save": {"hi": "⤓ सहेजें", "en": "⤓ Save"},
     "dict_title": {"hi": "Dictionary Manager", "en": "Dictionary Manager"},
     "btn_new": {"hi": "➕ नया शब्द जोड़ें", "en": "➕ Add new word"},
     "btn_edit": {"hi": "✏️ शब्द सुधारें / खोजें और हटाएँ", "en": "✏️ Edit / search / delete"},
@@ -80,6 +83,17 @@ STRINGS = {
     "exit": {"hi": "⏻ बंद करें", "en": "⏻ Exit"},
     "ready": {"hi": "● तैयार…", "en": "● Ready…"},
     "language": {"hi": "🌐 भाषा", "en": "🌐 Language"},
+    "btn_help": {"hi": "सहायता", "en": "Help"},
+    "btn_about": {"hi": "जानकारी", "en": "About"},
+    "btn_language": {"hi": "भाषा", "en": "Language"},
+    "office_default": {
+        "hi": "निजी / सरकारी कार्यालय",
+        "en": "Private / Government Office",
+    },
+    "placeholder": {
+        "hi": "यहाँ अंग्रेज़ी या हिन्दी में कोई भी पाठ लिखें…",
+        "en": "Type any text here in English or Hindi…",
+    },
     "about": {"hi": "ℹ जानकारी", "en": "ℹ About"},
     "help": {"hi": "❓ सहायता", "en": "❓ Help"},
     "feat1": {"hi": "हाइब्रिड डिक्शनरी", "en": "Hybrid dictionary"},
@@ -91,7 +105,7 @@ STRINGS = {
     "feat4": {"hi": "नाम, पद एवं पदनाम", "en": "Names and designations"},
     "feat4s": {"hi": "(Officer / Rank)", "en": "(Officer / Rank)"},
     "feat5": {"hi": "स्थानीय शब्द", "en": "Local words"},
-    "feat5s": {"hi": "(जबलपुर आदि)", "en": "(Jabalpur etc.)"},
+    "feat5s": {"hi": "(स्थानीय शब्द)", "en": "(local words)"},
 }
 
 
@@ -114,90 +128,287 @@ def save_language(lang):
         return True
     except OSError:
         return False
-COURT_NAME = "District & Sessions Court, Jabalpur"
+# v3.8.21 — कार्यालय और उपयोगकर्ता का नाम अब कोड में नहीं;
+# चाहें तो इन दो फ़ाइलों में लिखें:
+#   ~/.dm_office_tools/office_name
+#   ~/.dm_office_tools/user_name
+def _read_setting(filename, default=""):
+    try:
+        with io.open(os.path.join(USER_DATA_DIR, filename), encoding="utf-8") as fh:
+            value = fh.read().strip()
+        return value or default
+    except OSError:
+        return default
+
+
+OFFICE_NAME = _read_setting("office_name")
+# नाम पहले जैसा — यह नहीं बदलना था (v3.8.23)
+USER_DISPLAY_NAME = _read_setting("user_name", "Dharmendra Marko")
 MAX_CHARS = 5000
 
 CSS = b"""
-window { background-color: #eef2f7; }
+/* DM Office Translator - Modern Professional Theme */
+window {
+    background-color: #f3f6fb;
+    color: #172b4d;
+    font-family: "Noto Sans", "Noto Sans Devanagari", sans-serif;
+    font-size: 14px;
+}
 
-.banner { background-color: #0b3d91; border-radius: 12px; padding: 14px; }
-.banner-title { color: #ffffff; font-size: 24px; font-weight: bold; }
-.banner-sub { color: #cfe0ff; font-size: 12px; }
-.banner-info { color: #ffffff; font-size: 11px; }
+.banner {
+    background-image: linear-gradient(110deg, #082f75, #0b469b 58%, #123f83);
+    border: 1px solid #1b58a5;
+    border-radius: 15px;
+    padding: 15px;
+}
+.banner-title { color: #ffffff; font-size: 25px; font-weight: bold; }
+.banner-sub { color: #d8e7ff; font-size: 15px; font-style: italic; }
+.banner-info { color: #d8e7ff; font-size: 12px; }
+.banner-name { color: #ffffff; font-size: 17px; font-weight: bold; }
+.logo-dm { color: #ffd166; font-size: 42px; font-weight: bold; }
+.logo-rest { color: #ffffff; font-size: 42px; font-weight: bold; }
+.glossy-label { color: #ffffff; font-size: 13px; font-weight: bold; }
+.vline { background-color: #75a9ed; }
+.swap-icon { color: #12479f; font-size: 26px; font-weight: bold; }
 
-.card { background-color: #ffffff; border: 1px solid #dbe3ec; border-radius: 12px; }
-.panel-head-blue { background-color: #0b3d91; border-radius: 10px; padding: 8px; }
-.panel-head-green { background-color: #146c43; border-radius: 10px; padding: 8px; }
-.panel-head { color: #ffffff; font-size: 15px; font-weight: bold; }
-.panel-body { padding: 8px; }
+.tri-saffron { background-color: #ff9933; }
+.tri-white { background-color: #ffffff; }
+.tri-green { background-color: #138808; }
+
+button {
+    border-radius: 9px;
+    padding: 10px;
+    font-size: 15px;
+    transition: none;
+}
+button:focus { outline-color: #76a9ed; }
+button.soft {
+    background-image: linear-gradient(180deg, #ffffff, #edf3fc);
+    color: #18365f;
+    border: 1px solid #c8d7eb;
+    border-radius: 9px;
+}
+button.soft:hover {
+    background-image: linear-gradient(180deg, #f3f8ff, #dfeafa);
+    border-color: #8fb4e5;
+}
+button.primary {
+    background-image: linear-gradient(180deg, #27a968, #117447);
+    color: #ffffff;
+    font-weight: bold;
+    border: 1px solid #0d6b40;
+    border-radius: 10px;
+}
+button.primary:hover { background-image: linear-gradient(180deg, #31bd79, #168653); }
+button.blue {
+    background-image: linear-gradient(180deg, #2785d3, #104b9e);
+    color: #ffffff; font-weight: bold; border: 1px solid #0b3d91;
+}
+button.blue:hover { background-image: linear-gradient(180deg, #3999e5, #165bb4); }
+button.purple {
+    background-image: linear-gradient(180deg, #9272ca, #624494);
+    color: #ffffff; font-weight: bold; border: 1px solid #4a235a;
+}
+button.purple:hover { background-image: linear-gradient(180deg, #a184d8, #7352a7); }
+button.exit {
+    background-image: linear-gradient(180deg, #27a968, #117447);
+    color: #ffffff; font-weight: bold; border: 1px solid #0d6b40;
+}
+button.exit:hover { background-image: linear-gradient(180deg, #31bd79, #168653); }
+
+button.circle {
+    background-image: linear-gradient(180deg, #1d67b7, #10438f);
+    color: #ffffff; border: 1px solid #70a9e8;
+    border-radius: 22px; padding: 0; min-width: 43px; min-height: 43px;
+    font-size: 15px; font-weight: bold;
+}
+button.circle:hover { background-image: linear-gradient(180deg, #287bd0, #1556a6); }
+button.grad-glossy {
+    background-image: linear-gradient(180deg, #2788dc, #0c4a9a);
+    color: #ffffff; border: 1px solid #78b7f1;
+    border-radius: 23px; padding: 0; min-width: 47px; min-height: 47px;
+    font-size: 18px; font-weight: bold;
+}
+button.grad-glossy:hover { background-image: linear-gradient(180deg, #3999e8, #1559ad); }
+
+button.grad-glossy-green {
+    background-image: linear-gradient(180deg, #2fa96a, #10673f);
+    color: #ffffff; border: 1px solid #6fd39b;
+    border-radius: 23px; padding: 0; min-width: 47px; min-height: 47px;
+    font-size: 18px; font-weight: bold;
+}
+button.grad-glossy-green:hover { background-image: linear-gradient(180deg, #3bbc7b, #12794a); }
+button.grad-glossy-purple {
+    background-image: linear-gradient(180deg, #7a5cc4, #432f7a);
+    color: #ffffff; border: 1px solid #a98fe0;
+    border-radius: 23px; padding: 0; min-width: 47px; min-height: 47px;
+    font-size: 15px; font-weight: bold;
+}
+button.grad-glossy-purple:hover { background-image: linear-gradient(180deg, #8c6dd6, #4f388c); }
+button.winbtn {
+    background-image: none; background-color: #164b91;
+    color: #ffffff; border: 1px solid #6b9bd2;
+    border-radius: 7px; padding: 1px; min-width: 26px; min-height: 22px;
+    font-size: 12px; font-weight: bold;
+}
+button.winbtn:hover { background-image: none; background-color: #bd3c45; }
+button.grad-blue {
+    background-image: linear-gradient(180deg, #318bd4, #104b9e);
+    color: #ffffff; border: 1px solid #0b3d91; border-radius: 10px; padding: 7px;
+}
+button.grad-purple {
+    background-image: linear-gradient(180deg, #9674ce, #60418f);
+    color: #ffffff; border: 1px solid #4a235a; border-radius: 10px; padding: 7px;
+}
+button.grad-green {
+    background-image: linear-gradient(180deg, #2eb875, #116d43);
+    color: #ffffff; border: 1px solid #0f5b36; border-radius: 10px; padding: 7px;
+}
+
+.card {
+    background-color: #ffffff;
+    border: 1px solid #d5e0ef;
+    border-radius: 13px;
+}
+.panel-head-blue {
+    background-image: linear-gradient(90deg, #0b3d91, #1556a8);
+    border-radius: 11px;
+    padding: 9px;
+}
+.panel-head-green {
+    background-image: linear-gradient(90deg, #08734b, #15915d);
+    border-radius: 11px;
+    padding: 9px;
+}
+.panel-head { color: #ffffff; font-size: 19px; font-weight: bold; }
+.panel-body { padding: 9px; }
+
+textview {
+    background-color: #ffffff;
+    border: 1px solid #d6dfeb;
+    border-radius: 10px;
+    padding: 8px;
+    font-size: 19px;
+}
+/* v3.8.10 - colour kept out of CSS so text tags win */
+textview text { background-color: #ffffff; }
+textview:focus { border: 1px solid #6b9fe0; }
+entry {
+    background-color: #ffffff;
+    color: #1c2d45;
+    border: 1px solid #ccd8e8;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 15px;
+}
+entry:focus { border: 1px solid #4f8fd7; }
 
 .chip-ok {
-    background-color: #e8f7ec; color: #146c43;
-    border: 1px solid #b7e4c7; border-radius: 10px;
-    padding: 4px; font-size: 12px; font-weight: bold;
+    background-color: #e6f7ed; color: #116b43;
+    border: 1px solid #a9dfbf; border-radius: 12px;
+    padding: 8px; font-size: 13px; font-weight: bold;
 }
 .chip-warn {
     background-color: #fff4e5; color: #a35b00;
-    border: 1px solid #ffd8a8; border-radius: 10px;
-    padding: 4px; font-size: 12px; font-weight: bold;
+    border: 1px solid #ffd8a8; border-radius: 12px;
+    padding: 8px; font-size: 13px; font-weight: bold;
 }
 
 .feature {
     background-color: #f8fafd; border: 1px solid #dbe3ec;
-    border-radius: 10px; padding: 8px;
+    border-radius: 11px; padding: 9px;
 }
-.feature-label { font-size: 12px; font-weight: bold; color: #14324f; }
-.feature-sub { font-size: 10px; color: #6b7a8f; }
+.feature-label { font-size: 14px; font-weight: bold; color: #14324f; }
+.feature-sub { font-size: 12px; color: #65758b; }
+.feature-1 { background-color: #f2edff; border: 1px solid #d8c9fa; border-radius: 11px; padding: 9px; }
+.feature-2 { background-color: #e7f8f2; border: 1px solid #b8e6d5; border-radius: 11px; padding: 9px; }
+.feature-3 { background-color: #fff3e7; border: 1px solid #f4d5b4; border-radius: 11px; padding: 9px; }
+.feature-4 { background-color: #edf4ff; border: 1px solid #c5daf8; border-radius: 11px; padding: 9px; }
+.feature-5 { background-color: #fff0f1; border: 1px solid #f3c8ce; border-radius: 11px; padding: 9px; }
 
-.section { font-size: 13px; font-weight: bold; color: #14324f; }
-.hint { font-size: 11px; color: #6b7a8f; }
-
-.footer { background-color: #0b3d91; border-radius: 10px; padding: 6px; }
-.footer-label { color: #ffffff; font-size: 12px; }
-
-button { border-radius: 8px; padding: 7px; }
-button.primary {
-    background-image: none; background-color: #1e8449;
-    color: #ffffff; font-weight: bold; border: 1px solid #146c43;
+.bottom-head {
+    background-image: linear-gradient(90deg, #0b3d91, #1556a8);
+    border-radius: 10px;
+    padding: 9px;
 }
-button.primary:hover { background-image: none; background-color: #27ae60; }
-button.blue {
-    background-image: none; background-color: #12479f;
-    color: #ffffff; font-weight: bold; border: 1px solid #0b3d91;
+.bottom-head-label { color: #ffffff; font-size: 16px; font-weight: bold; }
+.placeholder-text { color: #9aa7b8; font-size: 15px; }
+.section { font-size: 16px; font-weight: bold; color: #14324f; }
+.hint { font-size: 14px; color: #4a5b70; }
+.footer {
+    background-image: linear-gradient(90deg, #082f75, #104b9e);
+    border: 1px solid #1a559e;
+    border-radius: 11px;
+    padding: 10px;
 }
-button.blue:hover { background-image: none; background-color: #1b5fbf; }
-button.purple {
-    background-image: none; background-color: #6c3483;
-    color: #ffffff; font-weight: bold; border: 1px solid #4a235a;
-}
-button.purple:hover { background-image: none; background-color: #8e44ad; }
-button.soft {
-    background-image: none; background-color: #eef3fb;
-    color: #14324f; border: 1px solid #cdd9ea;
-}
-button.soft:hover { background-image: none; background-color: #dfe9f7; }
-button.exit {
-    background-image: none; background-color: #1e8449;
-    color: #ffffff; font-weight: bold; border: 1px solid #146c43;
-}
-button.exit:hover { background-image: none; background-color: #27ae60; }
-
-.feature-1 { background-color: #f1e9fb; border: 1px solid #dcccf6; border-radius: 10px; padding: 8px; }
-.feature-2 { background-color: #e4f7f4; border: 1px solid #bfe9e2; border-radius: 10px; padding: 8px; }
-.feature-3 { background-color: #fdf0e3; border: 1px solid #f6d9bb; border-radius: 10px; padding: 8px; }
-.feature-4 { background-color: #fde8ef; border: 1px solid #f7c6d6; border-radius: 10px; padding: 8px; }
-.feature-5 { background-color: #f3ecfb; border: 1px solid #dccdf6; border-radius: 10px; padding: 8px; }
-
-entry { border-radius: 8px; padding: 6px; }
+.footer-label { color: #ffffff; font-size: 14px; }
 """
+
+
+class TricolourCurve(Gtk.DrawingArea):
+    """दाईं ओर नीचे से मुड़ता हुआ तिरंगा — Cairo से खींचा गया (v3.8.0)।"""
+
+    def __init__(self):
+        super().__init__()
+        self.set_size_request(230, 54)
+        self.connect("draw", self.on_draw)
+
+    def on_draw(self, widget, cr):
+        width = widget.get_allocated_width()
+        height = widget.get_allocated_height()
+
+        bands = (
+            ((1.00, 0.60, 0.20), 0.00),   # केसरिया
+            ((1.00, 1.00, 1.00), 0.19),   # सफ़ेद
+            ((0.07, 0.53, 0.03), 0.38),   # हरा
+        )
+
+        for (red, green, blue), offset in bands:
+            cr.set_source_rgb(red, green, blue)
+            cr.set_line_width(max(6.0, height * 0.17))
+            radius = width * (0.95 - offset)
+            cr.arc(0, height * 1.25, radius, -0.60, -0.02)
+            cr.stroke()
+
+        return False
 
 
 class Dashboard(Gtk.Window):
 
     def __init__(self):
         super().__init__(title="DM Office Translator")
-        self.set_default_size(1240, 900)
+
+        # v3.8.25 — Dock में अलग आइकन न दिखे; यही नाम .desktop की
+        # StartupWMClass से मिलता है।
+        try:
+            GLib.set_prgname("dm-office-tools")
+            GLib.set_application_name("DM Office Translator")
+        except Exception:
+            pass
+        try:
+            self.set_wmclass("dm-office-tools", "dm-office-tools")
+        except Exception:
+            pass
+        # v3.8.24 — स्क्रीन से बड़ी window न खुले, वरना किनारे कट जाते हैं
+        try:
+            screen = Gdk.Screen.get_default()
+            screen_width = screen.get_width() if screen else 1360
+            screen_height = screen.get_height() if screen else 920
+        except Exception:
+            screen_width, screen_height = 1360, 920
+
+        self.set_default_size(
+            min(1360, int(screen_width * 0.94)),
+            min(920, int(screen_height * 0.90)),
+        )
         self.set_position(Gtk.WindowPosition.CENTER)
+
+        # v3.8.0 — सिस्टम का title bar हटाकर अपने बटन बैनर में
+        self.set_decorated(False)
+
+        # v3.8.10 — Ctrl+C / Ctrl+V पूरी App में (key-press handler से)
+        self.add_events(Gdk.EventMask.KEY_PRESS_MASK)
+        self.connect("key-press-event", self.on_window_key_press)
 
         if os.path.exists(ICON_PATH):
             try:
@@ -205,7 +416,7 @@ class Dashboard(Gtk.Window):
             except Exception:
                 pass
 
-        self.direction = "H2E"
+        self.direction = "E2H"
         self.lang = current_language()
         self.dict_entries = {}
         self.managers = []
@@ -215,8 +426,10 @@ class Dashboard(Gtk.Window):
         self.apply_css()
         self.build_ui()
         self.refresh_online_state()
-        self.reload_dictionary()
         self.tick_clock()
+
+        # v3.8.26 — dictionary गिनती बाद में; window पहले खुले
+        GLib.idle_add(self._deferred_startup)
 
         GLib.timeout_add_seconds(30, self.tick_clock)
 
@@ -288,57 +501,260 @@ class Dashboard(Gtk.Window):
 
     # ---------------- banner ----------------
     def build_banner(self):
-        banner = Gtk.Box(spacing=14)
+        """बैनर — चित्र जैसा: लोगो + रेखा + बड़ा शीर्षक, नाम/संस्करण, और
+        दाईं ओर ऊपर विंडो बटन, उनके नीचे गोल बटन।"""
+        wrapper = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+
+        banner = Gtk.Box(spacing=16)
         banner.get_style_context().add_class("banner")
 
-        # लोगो — App का चिह्न (Ashoka राजचिह्न कानून से प्रतिबंधित है,
-        # इसलिए App का अपना चिह्न लगाया गया है)।
-        logo_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        # v3.8.18 — पूरे बैनर (और उसके लेबल) पर पकड़कर window खींची जा सके
+        drag_area = Gtk.EventBox()
+        drag_area.set_visible_window(False)
+        drag_area.add(banner)
+        drag_area.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        drag_area.connect("button-press-event", self.on_banner_press)
+
+        # ---------- 1) लोगो ----------
+        logo = None
         if os.path.exists(ICON_PATH):
             try:
                 pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
-                    ICON_PATH, 54, 54, True
+                    ICON_PATH, 74, 74, True
                 )
-                logo_box.pack_start(Gtk.Image.new_from_pixbuf(pixbuf), False, False, 0)
+                logo = Gtk.Image.new_from_pixbuf(pixbuf)
             except Exception:
-                pass
-        if not logo_box.get_children():
-            badge = Gtk.Label()
-            badge.set_markup("<span size='xx-large' weight='bold' color='#ffd166'>DM</span>")
-            logo_box.pack_start(badge, False, False, 0)
-        banner.pack_start(logo_box, False, False, 0)
+                logo = None
 
-        left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        title = Gtk.Label()
-        title.set_markup("<span size='xx-large' weight='bold'>DM Office Translator</span>")
-        title.set_xalign(0)
-        title.get_style_context().add_class("banner-title")
+        if logo is None:
+            logo = Gtk.Label(label="DM")
+            logo.get_style_context().add_class("logo-dm")
+
+        logo.set_valign(Gtk.Align.CENTER)
+        banner.pack_start(logo, False, False, 0)
+
+        # ---------- 2) खड़ी रेखा ----------
+        line = Gtk.Box()
+        line.get_style_context().add_class("vline")
+        line.set_size_request(2, 70)
+        line.set_valign(Gtk.Align.CENTER)
+        banner.pack_start(line, False, False, 0)
+
+        # ---------- 3) बड़ा शीर्षक ----------
+        title_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        title_box.set_valign(Gtk.Align.CENTER)
+
+        logo_row = Gtk.Box(spacing=10)
+        dm_label = Gtk.Label(label="DM")
+        dm_label.get_style_context().add_class("logo-dm")
+        rest_label = Gtk.Label(label="Office Translator")
+        rest_label.get_style_context().add_class("logo-rest")
+        logo_row.pack_start(dm_label, False, False, 0)
+        logo_row.pack_start(rest_label, False, False, 0)
 
         subtitle = Gtk.Label(label="Smart Translation for Smart Governance")
         subtitle.set_xalign(0)
         subtitle.get_style_context().add_class("banner-sub")
 
-        left.pack_start(title, False, False, 0)
-        left.pack_start(subtitle, False, False, 0)
-        banner.pack_start(left, True, True, 0)
+        title_box.pack_start(logo_row, False, False, 0)
+        title_box.pack_start(subtitle, False, False, 0)
+        banner.pack_start(title_box, True, True, 0)
 
-        info = Gtk.Label()
-        info.set_xalign(1)
-        safe_court = GLib.markup_escape_text(COURT_NAME)
-        info.set_markup(
-            f"<span size='small'>संस्करण {APP_VERSION}\n{safe_court}</span>"
+        # ---------- 4) नाम + संस्करण ----------
+        who = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        who.set_valign(Gtk.Align.END)   # v3.8.25 — नाम नीचे की ओर
+        name = Gtk.Label(label=USER_DISPLAY_NAME or " ")
+        name.set_xalign(0)
+        name.get_style_context().add_class("banner-name")
+
+        version = Gtk.Label()
+        version.set_xalign(0)
+        version.set_markup(
+            f"<span size='small' color='#cfe0ff'>Version : {APP_VERSION}"
+            f" | {datetime.date.today().strftime('%d-%m-%Y')}</span>"
         )
-        info.get_style_context().add_class("banner-info")
-        banner.pack_end(info, False, False, 0)
+        who.pack_start(name, False, False, 0)
+        who.pack_start(version, False, False, 0)
 
-        for text, callback in (
-            (self.t("language"), self.on_language),
-            (self.t("about"), self.on_about),
-            (self.t("help"), self.on_help),
-        ):
-            banner.pack_end(self.button(text, callback, "soft"), False, False, 0)
+        # ---------- 5) दाईं ओर: ऊपर विंडो बटन, नीचे गोल बटन ----------
+        right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        right_col.set_valign(Gtk.Align.CENTER)
 
-        return banner
+        win_row = Gtk.Box(spacing=4)
+        win_row.pack_end(self.win_button("✕", self.on_close), False, False, 0)
+        win_row.pack_end(self.win_button("❐", self.on_maximise), False, False, 0)
+        win_row.pack_end(self.win_button("—", self.on_minimise), False, False, 0)
+        right_col.pack_start(win_row, False, False, 0)
+
+        circles = Gtk.Box(spacing=14)
+        circles.set_halign(Gtk.Align.END)
+        circles.pack_start(
+            self.glossy_button("?", self.t("btn_help"), self.on_help,
+                               "grad-glossy"), False, False, 0
+        )
+        circles.pack_start(
+            self.glossy_button("ℹ", self.t("btn_about"), self.on_about,
+                               "grad-glossy-green"), False, False, 0
+        )
+        circles.pack_start(
+            self.glossy_button("Aअ", self.t("btn_language"), self.on_language_popover,
+                               "grad-glossy-purple"), False, False, 0
+        )
+        right_col.pack_start(circles, False, False, 0)
+
+        banner.pack_end(right_col, False, False, 0)
+        # v3.8.24 — नाम बटनों के ठीक बाईं ओर (केंद्र में नहीं)
+        banner.pack_end(who, False, False, 0)
+
+        # ---------- 6) तिरंगा कर्व ----------
+        curve = TricolourCurve()
+        curve.set_valign(Gtk.Align.END)
+        banner.pack_end(curve, False, False, 0)
+
+        wrapper.pack_start(drag_area, False, False, 0)
+        return wrapper
+
+    # ---------------- settings popover (भाषा + Online mode) ----------------
+    def on_language_popover(self, widget):
+        popover = Gtk.Popover.new(widget)
+        self._settings_popover = popover
+
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box.set_border_width(12)
+
+        heading = Gtk.Label(label="भाषा / Language")
+        heading.set_xalign(0)
+        box.pack_start(heading, False, False, 0)
+
+        first = None
+        for code, text in (("hi", "हिन्दी"), ("en", "English")):
+            radio = Gtk.RadioButton.new_with_label_from_widget(first, text)
+            if first is None:
+                first = radio
+            if self.lang == code:
+                radio.set_active(True)
+            radio.connect("toggled", self.on_language_selected, code)
+            box.pack_start(radio, False, False, 0)
+
+        box.pack_start(Gtk.Separator(), False, False, 0)
+
+        online = Gtk.CheckButton(label="Online Mode (Google)")
+        online.set_active(os.path.exists(ONLINE_MARKER))
+        online.connect("toggled", self.on_online_toggled)
+        box.pack_start(online, False, False, 0)
+
+        box.show_all()
+        popover.add(box)
+        popover.popup()
+
+    # ---------------- banner helpers ----------------
+    def glossy_button(self, glyph, label_text, callback, css_class="grad-glossy"):
+        """गोल चमकदार बटन, नीचे सफ़ेद नाम — जैसे चित्र में।"""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+
+        button = Gtk.Button(label=glyph)
+        button.get_style_context().add_class(css_class)
+        button.set_tooltip_text(label_text)
+        button.connect("clicked", callback)
+
+        caption = Gtk.Label(label=label_text)
+        caption.get_style_context().add_class("glossy-label")
+
+        box.pack_start(button, False, False, 0)
+        box.pack_start(caption, False, False, 0)
+        return box
+
+    def circle_button(self, icon, tooltip, callback):
+        button = Gtk.Button(label=icon)
+        button.get_style_context().add_class("circle")
+        button.set_tooltip_text(tooltip)
+        button.connect("clicked", callback)
+        return button
+
+    def win_button(self, glyph, callback):
+        button = Gtk.Button(label=glyph)
+        button.get_style_context().add_class("winbtn")
+        button.set_relief(Gtk.ReliefStyle.NONE)
+        button.connect("clicked", callback)
+        return button
+
+    def on_banner_press(self, _widget, event):
+        """बिना title bar वाली window को खींचकर हिलाने दें।"""
+        if event.button == 1:
+            try:
+                self.begin_move_drag(
+                    event.button, int(event.x_root), int(event.y_root), event.time
+                )
+            except Exception:
+                pass
+        return False
+
+    def on_window_key_press(self, _widget, event):
+        """Ctrl+C / Ctrl+V — पहले TextBox का अपना व्यवहार (v3.8.17)।
+
+        पहले यह handler हर Ctrl+C को पकड़कर परिणाम कॉपी कर देता था,
+        इसलिए इनपुट में चुना हुआ पाठ कॉपी नहीं होता था।
+        """
+        control = bool(event.state & Gdk.ModifierType.CONTROL_MASK)
+        if not control:
+            return False
+
+        focus = self.get_focus()
+        in_text_view = isinstance(focus, Gtk.TextView)
+
+        if event.keyval in (Gdk.KEY_c, Gdk.KEY_C):
+            # TextBox में चयन है तो वही कॉपी हो, वरना परिणाम
+            if in_text_view and focus.get_buffer().get_has_selection():
+                return False
+            self.on_copy()
+            return True
+
+        if event.keyval in (Gdk.KEY_v, Gdk.KEY_V):
+            # TextBox में cursor है तो वहीं पेस्ट हो, वरना पूरा इनपुट बदले
+            if in_text_view:
+                return False
+            self.on_paste()
+            return True
+
+        return False
+
+    def on_swap_icon_press(self, _widget, event):
+        """⇄ आइकन पर क्लिक → दिशा बदलें (v3.8.19)।"""
+        if event.button == 1:
+            self.on_swap()
+            return True
+        return False
+
+    def on_resize_grip_press(self, _widget, event):
+        """नीचे-दाएँ कोने से window का आकार बदलें (v3.8.18)।"""
+        if event.button != 1:
+            return False
+        window = self.get_window()
+        if window is None:
+            return False
+        try:
+            window.begin_resize_drag(
+                Gdk.WindowEdge.SOUTH_EAST,
+                event.button,
+                int(event.x_root),
+                int(event.y_root),
+                event.time,
+            )
+            return True
+        except Exception:
+            return False
+
+    def on_minimise(self, *_args):
+        self.iconify()
+
+    def on_maximise(self, *_args):
+        if self.is_maximized():
+            self.unmaximize()
+        else:
+            self.maximize()
+
+    def on_close(self, *_args):
+        self.close()
 
     # ---------------- mode bar ----------------
     def build_mode_bar(self):
@@ -356,7 +772,7 @@ class Dashboard(Gtk.Window):
         self.rb_h2e = Gtk.RadioButton.new_with_label_from_widget(
             self.rb_e2h, self.t("dir_h2e")
         )
-        self.rb_h2e.set_active(True)
+        self.rb_e2h.set_active(True)
         self.rb_e2h.connect("toggled", self.on_direction_changed)
         self.rb_h2e.connect("toggled", self.on_direction_changed)
 
@@ -374,8 +790,24 @@ class Dashboard(Gtk.Window):
 
     # ---------------- main area ----------------
     def build_main_area(self):
-        area = Gtk.Box(spacing=8)
+        area = Gtk.Box(spacing=2)
         area.pack_start(self.build_input_panel(), True, True, 0)
+
+        # v3.8.19 — बीच में सिर्फ़ ⇄ आइकन (बटन का ढाँचा नहीं, जगह भी कम)
+        swap_area = Gtk.EventBox()
+        swap_area.set_visible_window(False)
+        swap_area.set_valign(Gtk.Align.CENTER)
+        swap_area.set_size_request(26, 26)
+
+        swap_icon = Gtk.Label(label="⇄")
+        swap_icon.get_style_context().add_class("swap-icon")
+        swap_area.add(swap_icon)
+
+        swap_area.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        swap_area.connect("button-press-event", self.on_swap_icon_press)
+        swap_area.set_tooltip_text("Swap / दिशा बदलें")
+        area.pack_start(swap_area, False, False, 0)
+
         area.pack_start(self.build_output_panel(), True, True, 0)
         area.pack_start(self.build_dictionary_panel(), False, False, 0)
         return area
@@ -395,14 +827,46 @@ class Dashboard(Gtk.Window):
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scroller.set_min_content_height(260)
+        scroller.set_min_content_height(285)
         self.input_view = Gtk.TextView()
         self.input_view.set_wrap_mode(Gtk.WrapMode.WORD)
         self.input_view.set_left_margin(8)
         self.input_view.set_top_margin(8)
+        self.input_view.set_vexpand(True)
+        self.input_view.set_hexpand(True)
         self.input_view.get_buffer().connect("changed", self.on_input_changed)
+        self.input_view.connect("focus-in-event", self.refresh_placeholder)
+        self.input_view.connect("focus-out-event", self.refresh_placeholder)
         scroller.add(self.input_view)
-        body.pack_start(scroller, True, True, 0)
+
+        # v3.8.12 — खाली सफ़ेद जगह पर कहीं भी क्लिक करने पर लिखना शुरू हो
+        scroller.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        scroller.connect("button-press-event", self.on_input_area_press)
+
+        # v3.8.0 — खाली बॉक्स में हल्का placeholder दिखे
+        overlay = Gtk.Overlay()
+        overlay.add(scroller)
+        self.input_placeholder = Gtk.Label()
+        self.input_placeholder.set_xalign(0)
+        self.input_placeholder.set_yalign(0)
+        self.input_placeholder.set_margin_start(14)
+        self.input_placeholder.set_margin_top(10)
+        self.input_placeholder.set_line_wrap(True)
+        self.input_placeholder.set_markup(
+            f"<span color='#9aa7b8'>{self.t('placeholder')}</span>"
+        )
+        self.input_placeholder.set_can_focus(False)
+        overlay.add_overlay(self.input_placeholder)
+        # v3.8.13 — placeholder क्लिक न रोके, क्लिक नीचे text view तक जाए
+        try:
+            overlay.set_overlay_pass_through(self.input_placeholder, True)
+        except Exception:
+            pass
+
+        # पूरे सफ़ेद हिस्से पर क्लिक पकड़ें (placeholder के ऊपर भी)
+        overlay.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        overlay.connect("button-press-event", self.on_input_area_press)
+        body.pack_start(overlay, True, True, 0)
 
         self.input_counter = Gtk.Label()
         self.input_counter.set_xalign(1)
@@ -410,12 +874,9 @@ class Dashboard(Gtk.Window):
         body.pack_start(self.input_counter, False, False, 0)
 
         row = Gtk.Box(spacing=8)
-        row.pack_start(
-            self.button(self.t("translate"), self.on_translate, "primary"), True, True, 0
-        )
+        # v3.8.7 — "अनुवाद करें" बटन हटा दिया; टाइप करते ही अनुवाद अपने आप होता है।
         row.pack_start(self.button(self.t("paste"), self.on_paste, "soft"), True, True, 0)
         row.pack_start(self.button(self.t("clear"), self.on_clear, "soft"), True, True, 0)
-        row.pack_start(self.button(self.t("swap"), self.on_swap, "soft"), True, True, 0)
         body.pack_start(row, False, False, 0)
 
         card.pack_start(body, True, True, 0)
@@ -437,12 +898,17 @@ class Dashboard(Gtk.Window):
 
         scroller = Gtk.ScrolledWindow()
         scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scroller.set_min_content_height(260)
+        scroller.set_min_content_height(285)
         self.output_view = Gtk.TextView()
         self.output_view.set_wrap_mode(Gtk.WrapMode.WORD)
         self.output_view.set_left_margin(8)
         self.output_view.set_top_margin(8)
         self.output_view.set_editable(False)
+
+        # v3.8.7 — dictionary में न मिलने वाले शब्द लाल दिखें
+        buffer = self.output_view.get_buffer()
+        self.unknown_tag = buffer.create_tag("unknown", foreground="#d00000",
+                                             weight=700)
         scroller.add(self.output_view)
         body.pack_start(scroller, True, True, 0)
 
@@ -452,9 +918,15 @@ class Dashboard(Gtk.Window):
         body.pack_start(self.output_counter, False, False, 0)
 
         row = Gtk.Box(spacing=8)
-        row.pack_start(self.button(self.t("copy"), self.on_copy, "blue"), True, True, 0)
-        row.pack_start(self.button(self.t("print"), self.on_print, "purple"), True, True, 0)
-        row.pack_start(self.button(self.t("save"), self.on_save, "primary"), True, True, 0)
+        row.pack_start(
+            self.button(self.t("copy"), self.on_copy, "grad-blue"), True, True, 0
+        )
+        row.pack_start(
+            self.button(self.t("print"), self.on_print, "grad-purple"), True, True, 0
+        )
+        row.pack_start(
+            self.button(self.t("save"), self.on_save, "grad-green"), True, True, 0
+        )
         body.pack_start(row, False, False, 0)
 
         card.pack_start(body, True, True, 0)
@@ -510,6 +982,10 @@ class Dashboard(Gtk.Window):
             manager.connect("destroy", self.on_manager_closed)
             manager.show_all()
 
+            # v3.8.7 — show_all() के बाद स्थिति फिर लगाएँ, वरना
+            # "नया शब्द जोड़ें" मोड में भी खोज box दिख जाता है।
+            manager.panel.update_action_state()
+
             if mode == "search":
                 manager.panel.search_entry.grab_focus()
 
@@ -530,6 +1006,29 @@ class Dashboard(Gtk.Window):
 
     def on_open_manager_search(self, *_args):
         self.open_manager("search")
+
+    def two_line_button(self, top, bottom, callback, css_class):
+        """ऊपर अंग्रेज़ी नाम, नीचे कोष्ठक में हिन्दी — ग्रेडिएंट रंग के साथ।"""
+        button = Gtk.Button()
+        button.get_style_context().add_class(css_class)
+        label = Gtk.Label()
+        label.set_markup(
+            f"<span weight='bold'>{top}</span>\n<span size='small'>{bottom}</span>"
+        )
+        label.set_justify(Gtk.Justification.CENTER)
+        button.add(label)
+        button.connect("clicked", callback)
+        return button
+
+    def bottom_header(self, text):
+        """नीचे के तीन बक्सों के ऊपर गहरी नीली पट्टी।"""
+        bar = Gtk.Box(spacing=6)
+        bar.get_style_context().add_class("bottom-head")
+        label = Gtk.Label()
+        label.set_markup(f"<span weight='bold' color='#ffffff'>{text}</span>")
+        label.set_xalign(0)
+        bar.pack_start(label, True, True, 0)
+        return bar
 
     def _label(self, text):
         label = Gtk.Label(label=text)
@@ -569,13 +1068,11 @@ class Dashboard(Gtk.Window):
     def build_bottom_row(self):
         row = Gtk.Box(spacing=8)
 
+        # ---- त्वरित सुझाव ----
         tips = self.card()
+        tips.pack_start(self.bottom_header(self.t("tips_title")), False, False, 0)
         tips_body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         tips_body.set_border_width(8)
-        tips_head = Gtk.Label()
-        tips_head.set_xalign(0)
-        tips_head.set_markup(f"<b>{self.t('tips_title')}</b>")
-        tips_body.pack_start(tips_head, False, False, 0)
         for tip in (self.t("tip1"), self.t("tip2"), self.t("tip3")):
             line = Gtk.Label(label=f"✔  {tip}")
             line.set_xalign(0)
@@ -584,13 +1081,11 @@ class Dashboard(Gtk.Window):
         tips.pack_start(tips_body, False, False, 0)
         row.pack_start(tips, True, True, 0)
 
+        # ---- अतिरिक्त विकल्प ----
         options = self.card()
+        options.pack_start(self.bottom_header(self.t("options_title")), False, False, 0)
         options_body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         options_body.set_border_width(8)
-        options_head = Gtk.Label()
-        options_head.set_xalign(0)
-        options_head.set_markup(f"<b>{self.t('options_title')}</b>")
-        options_body.pack_start(options_head, False, False, 0)
 
         self.opt_copy = Gtk.CheckButton(label=self.t("opt_copy"))
         self.opt_cap = Gtk.CheckButton(label=self.t("opt_cap"))
@@ -606,13 +1101,11 @@ class Dashboard(Gtk.Window):
         options.pack_start(options_body, False, False, 0)
         row.pack_start(options, True, True, 0)
 
+        # ---- उचित उपयोग ----
         usage = self.card()
+        usage.pack_start(self.bottom_header(self.t("usage_title")), False, False, 0)
         usage_body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
         usage_body.set_border_width(8)
-        usage_head = Gtk.Label()
-        usage_head.set_xalign(0)
-        usage_head.set_markup(f"<b>{self.t('usage_title')}</b>")
-        usage_body.pack_start(usage_head, False, False, 0)
         usage_text = Gtk.Label()
         usage_text.set_xalign(0)
         usage_text.set_line_wrap(True)
@@ -622,7 +1115,7 @@ class Dashboard(Gtk.Window):
         usage.pack_start(usage_body, False, False, 0)
         row.pack_start(usage, True, True, 0)
 
-        row.pack_start(self.button(self.t("exit"), lambda *_: self.destroy(), "exit"), False, False, 0)
+        # v3.8.0 — "बंद करें" बटन हटा दिया (window बटन ✕ से बंद होती है)
         return row
 
     # ---------------- footer ----------------
@@ -636,13 +1129,27 @@ class Dashboard(Gtk.Window):
         self.status_label.set_markup(f"<span>{self.t('ready')}</span>")
         footer.pack_start(self.status_label, True, True, 0)
 
-        court = Gtk.Label(label=COURT_NAME)
+        court = Gtk.Label(label=OFFICE_NAME or self.t("office_default"))
         court.get_style_context().add_class("footer-label")
         footer.pack_start(court, False, False, 0)
 
         self.clock_label = Gtk.Label()
         self.clock_label.get_style_context().add_class("footer-label")
         footer.pack_end(self.clock_label, False, False, 0)
+
+        # v3.8.18 — कोने से window छोटी/बड़ी करने का हैंडल
+        grip = Gtk.EventBox()
+        grip.set_visible_window(False)
+        grip_label = Gtk.Label(label="◢")
+        grip_label.get_style_context().add_class("footer-label")
+        grip.add(grip_label)
+        grip.add_events(Gdk.EventMask.BUTTON_PRESS_MASK)
+        grip.connect("button-press-event", self.on_resize_grip_press)
+        try:
+            grip.set_tooltip_text("खींचकर छोटा/बड़ा करें")
+        except Exception:
+            pass
+        footer.pack_end(grip, False, False, 0)
 
         self.online_label = Gtk.Label()
         self.online_label.get_style_context().add_class("footer-label")
@@ -682,6 +1189,15 @@ class Dashboard(Gtk.Window):
             self.dict_status.set_markup(self.t("chip_ready"))
             self.dict_status.get_style_context().remove_class("chip-warn")
             self.dict_status.get_style_context().add_class("chip-ok")
+
+    def _deferred_startup(self):
+        """window दिखने के बाद भारी काम।"""
+        try:
+            self.reload_dictionary()
+            self.refresh_placeholder()
+        except Exception:
+            pass
+        return False
 
     def reload_dictionary(self):
         e2h_path = os.path.join(DICT_DIR, sdm.E2H_FILENAME)
@@ -728,10 +1244,61 @@ class Dashboard(Gtk.Window):
     def on_input_changed(self, _buffer):
         self.update_input_counter()
 
+        # v3.8.7 — 400ms रुकने पर अपने आप अनुवाद
+        if getattr(self, "_auto_source", None):
+            try:
+                GLib.source_remove(self._auto_source)
+            except Exception:
+                pass
+        self._auto_source = GLib.timeout_add(400, self.auto_translate)
+
+    def auto_translate(self):
+        self._auto_source = None
+        if self.get_input_text().strip():
+            self.on_translate()
+        return False
+
+    def on_input_area_press(self, _widget, event):
+        """सफ़ेद बॉक्स में कहीं भी क्लिक → वहीं cursor, सीधे लिखना शुरू (v3.8.13)।"""
+        self.input_view.grab_focus()
+        buffer = self.input_view.get_buffer()
+
+        try:
+            x, y = self.input_view.window_to_buffer_coords(
+                Gtk.TextWindowType.WIDGET, int(event.x), int(event.y)
+            )
+            location = self.input_view.get_iter_at_location(x, y)
+            if isinstance(location, tuple):
+                found, text_iter = location
+            else:
+                found, text_iter = False, None
+
+            if found and text_iter is not None:
+                buffer.place_cursor(text_iter)
+                return False
+        except Exception:
+            pass
+
+        buffer.place_cursor(buffer.get_end_iter())
+        return False
+
+    def refresh_placeholder(self, *_args):
+        """खोज/खाली होने पर placeholder दिखाएँ, टाइप करते ही छिपा दें।"""
+        if not hasattr(self, "input_placeholder"):
+            return False
+        try:
+            has_text = bool(self.get_input_text().strip())
+            focused = self.input_view.is_focus()
+            self.input_placeholder.set_visible(not has_text and not focused)
+        except Exception:
+            pass
+        return False
+
     def update_input_counter(self):
         buffer = self.input_view.get_buffer()
         length = buffer.get_char_count()
         self.input_counter.set_markup(f"<span size='small'>{length} / {MAX_CHARS}</span>")
+        self.refresh_placeholder()
 
     def update_output_counter(self):
         buffer = self.output_view.get_buffer()
@@ -742,11 +1309,28 @@ class Dashboard(Gtk.Window):
         buffer = self.input_view.get_buffer()
         return buffer.get_text(buffer.get_start_iter(), buffer.get_end_iter(), True)
 
-    def set_output_text(self, text):
-        self.output_view.get_buffer().set_text(text or "")
+    def set_output_text(self, text, unknown_words=None):
+        """आउटपुट लिखें; dictionary में न मिले शब्द लाल रंग में (v3.8.9)।"""
+        buffer = self.output_view.get_buffer()
+        buffer.set_text(text or "")
+
+        if unknown_words:
+            lowered = {word.lower() for word in unknown_words if word}
+            content = buffer.get_text(
+                buffer.get_start_iter(), buffer.get_end_iter(), True
+            )
+
+            for match in re.finditer(r"[^\s]+", content):
+                clean = match.group(0).strip(".,;:!?()[]\"'।").lower()
+                if clean and clean in lowered:
+                    start_iter = buffer.get_iter_at_offset(match.start())
+                    end_iter = buffer.get_iter_at_offset(match.end())
+                    buffer.apply_tag(self.unknown_tag, start_iter, end_iter)
+
         self.update_output_counter()
 
     def on_translate(self, *_args):
+        """अनुवाद background thread में — टाइपिंग नहीं अटकती (v3.8.26)।"""
         text = self.get_input_text().strip()
         if not text:
             self.set_status("पहले कुछ लिखें या Paste करें")
@@ -757,19 +1341,43 @@ class Dashboard(Gtk.Window):
             return
 
         engine = h2e_engine if self.direction == "H2E" else e2h_engine
-        captured = io.StringIO()
 
+        self._translate_token = getattr(self, "_translate_token", 0) + 1
+        token = self._translate_token
+
+        self.set_status("… अनुवाद हो रहा है")
+        threading.Thread(
+            target=self._translate_worker,
+            args=(text, engine, token),
+            daemon=True,
+        ).start()
+
+    def _translate_worker(self, text, engine, token):
+        """थ्रेड में इंजन चलाएँ; परिणाम UI थ्रेड को दें।"""
+        captured = io.StringIO()
         try:
             with contextlib.redirect_stdout(captured):
                 result = engine.translate(text)
+            unknown = list(getattr(engine, "LAST_UNKNOWN_WORDS", []))
+            error = None
         except Exception as exc:  # noqa: BLE001
+            result, unknown, error = None, [], str(exc)
+
+        GLib.idle_add(self._apply_translation, result, unknown, error, token)
+
+    def _apply_translation(self, result, unknown_words, error, token):
+        """UI थ्रेड में परिणाम (पुराने परिणाम छोड़ दें)।"""
+        if token != getattr(self, "_translate_token", 0):
+            return False
+
+        if error:
             self.set_output_text("")
-            self.set_status(f"त्रुटि: {exc}")
-            return
+            self.set_status(f"त्रुटि: {error}")
+            return False
 
         if not result:
             self.set_status("अनुवाद नहीं हो सका")
-            return
+            return False
 
         if self.opt_space.get_active():
             result = " ".join(result.split())
@@ -777,15 +1385,25 @@ class Dashboard(Gtk.Window):
         if self.opt_cap.get_active() and result and result[0].isalpha():
             result = result[0].upper() + result[1:]
 
-        self.set_output_text(result)
+        if os.path.exists(ONLINE_MARKER):
+            unknown_words = []
 
-        if self.opt_copy.get_active():
+        self.set_output_text(result, unknown_words)
+
+        if unknown_words:
+            self.set_status(
+                f"✔ अनुवाद तैयार — {len(unknown_words)} शब्द dictionary में नहीं हैं (लाल): "
+                + ", ".join(unknown_words[:3])
+            )
+        elif self.opt_copy.get_active():
             clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
             clipboard.set_text(result, -1)
             clipboard.store()
             self.set_status("✔ अनुवाद तैयार और clipboard में कॉपी")
         else:
             self.set_status("✔ अनुवाद तैयार")
+
+        return False
 
     def on_copy(self, *_args):
         buffer = self.output_view.get_buffer()
@@ -799,12 +1417,18 @@ class Dashboard(Gtk.Window):
         self.set_status("✔ परिणाम clipboard में कॉपी हो गया")
 
     def on_paste(self, *_args):
+        """पेस्ट से पहले इनपुट और परिणाम अपने आप साफ़ (v3.8.10)।"""
         clipboard = Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
         text = clipboard.wait_for_text() or ""
         if not text.strip():
             self.set_status("clipboard खाली है")
             return
+
+        self.output_view.get_buffer().set_text("")
         self.input_view.get_buffer().set_text(text)
+        self.input_view.get_buffer().place_cursor(
+            self.input_view.get_buffer().get_end_iter()
+        )
         self.set_status("✔ clipboard से आ गया")
 
     def on_clear(self, *_args):
@@ -939,79 +1563,176 @@ class Dashboard(Gtk.Window):
         self.set_output_text(output_text)
         self.refresh_online_state()
 
-    def on_language(self, *_args):
-        dialog = Gtk.Dialog(
-            title="भाषा / Language", transient_for=self, modal=True
-        )
-        dialog.add_button("रद्द करें / Cancel", Gtk.ResponseType.CANCEL)
-        dialog.add_button("लागू करें / Apply", Gtk.ResponseType.OK)
-
-        box = dialog.get_content_area()
-        box.set_border_width(14)
-
-        heading = Gtk.Label()
-        heading.set_xalign(0)
-        heading.set_markup("<b>इंटरफ़ेस की भाषा चुनें / Choose interface language</b>")
-        box.pack_start(heading, False, False, 8)
-
-        rb_hindi = Gtk.RadioButton.new_with_label_from_widget(None, "हिन्दी (Hindi)")
-        rb_english = Gtk.RadioButton.new_with_label_from_widget(
-            rb_hindi, "English (अंग्रेज़ी)"
-        )
-        if self.lang == "en":
-            rb_english.set_active(True)
-        else:
-            rb_hindi.set_active(True)
-
-        box.pack_start(rb_hindi, False, False, 4)
-        box.pack_start(rb_english, False, False, 4)
-
-        note = Gtk.Label()
-        note.set_xalign(0)
-        note.set_line_wrap(True)
-        note.set_markup(
-            "<span size='small'>बदलाव तुरंत लागू हो जाएगा।</span>"
-        )
-        box.pack_start(note, False, False, 8)
-
-        dialog.show_all()
-        response = dialog.run()
-        chosen = "hi" if rb_hindi.get_active() else "en"
-        dialog.destroy()
-
-        if response != Gtk.ResponseType.OK:
+    def on_language_selected(self, widget, code):
+        """चुनते ही भाषा बदल जाए।"""
+        if not widget.get_active() or code == self.lang:
             return
 
-        if chosen != self.lang and save_language(chosen):
-            self.lang = chosen
+        popover = getattr(self, "_settings_popover", None)
+        if popover is not None:
+            popover.popdown()
+
+        if not save_language(code):
+            self.set_status("भाषा सहेजी नहीं जा सकी")
+            return
+
+        self.lang = code
+        GLib.idle_add(self.apply_language_change, code)
+
+    def apply_language_change(self, code):
+        """UI दोबारा बनाएँ — idle में, ताकि popover बंद होने के बाद हो।"""
+        try:
             self.rebuild_ui()
             self.set_status(
-                "✔ भाषा बदल दी गई" if chosen == "hi" else "✔ Language changed"
+                "✔ भाषा हिन्दी में बदल दी गई" if code == "hi"
+                else "✔ Language changed to English"
+            )
+        except Exception as exc:  # noqa: BLE001
+            self.set_status(f"भाषा बदलने में समस्या: {exc}")
+        return False
+
+    def about_text(self):
+        """About में दिखने वाली पूरी जानकारी (भाषा के अनुसार)।"""
+        if self.lang == "hi":
+            return (
+                f"DM Office Translator — संस्करण {APP_VERSION}\n"
+                + f"{OFFICE_NAME or self.t('office_default')}\n\n"
+                "यह उपकरण सरकारी कार्यालयों में हिन्दी ↔ अंग्रेज़ी अनुवाद के लिए बनाया गया है।\n"
+                "dictionary पहले देखी जाती है, बचे शब्दों का लिप्यांतरण होता है, और Online mode\n"
+                "में पूरा अनुवाद Google/MyMemory से आता है।\n\n"
+                "कीबोर्ड शॉर्टकट (किसी भी ऐप में काम करते हैं):\n"
+                "  • Alt + Space — English → Hindi\n"
+                "  • Alt + H — Hindi → English\n"
+                "  • Alt + T — Online mode चालू/बंद\n\n"
+                "क्यों उपयोगी हैं:\n"
+                "  किसी भी ऐप में पाठ चुनें → शॉर्टकट दबाएँ → अनुवाद वापस clipboard में आ जाता है\n"
+                "  → Ctrl+V से वहीं चिपका दें। टाइपिंग रुकनी नहीं पड़ती।\n\n"
+                "शॉर्टकट काम न करें तो: dm-office-tools-shortcuts\n\n"
+                "फ़ाइलें:\n"
+                f"  dictionary : {os.path.join(USER_DATA_DIR, 'dictionary')}\n"
+                f"  backups    : {os.path.join(USER_DATA_DIR, 'backups')}\n\n"
+                f"GitHub     : {GITHUB_URL}\n"
+                f"सुझाव/शिकायत : {GITHUB_ISSUES_URL}"
             )
 
+        return (
+            f"DM Office Translator — version {APP_VERSION}\n"
+            + f"{OFFICE_NAME or self.t('office_default')}\n\n"
+            "This tool is built for Hindi <-> English translation in government offices.\n"
+            "The dictionary is checked first, remaining words are transliterated, and in Online\n"
+            "mode the whole text is translated through Google/MyMemory.\n\n"
+            "Keyboard shortcuts (work in any application):\n"
+            "  • Alt + Space — English → Hindi\n"
+            "  • Alt + H — Hindi → English\n"
+            "  • Alt + T — Online mode on/off\n\n"
+            "Why they help:\n"
+            "  Select text in any app → press the shortcut → the translation returns to the\n"
+            "  clipboard → paste it with Ctrl+V. You never leave what you are typing.\n\n"
+            "If the shortcuts stop working: dm-office-tools-shortcuts\n\n"
+            "Files:\n"
+            f"  dictionary : {os.path.join(USER_DATA_DIR, 'dictionary')}\n"
+            f"  backups    : {os.path.join(USER_DATA_DIR, 'backups')}\n\n"
+            f"GitHub     : {GITHUB_URL}\n"
+            f"Feedback   : {GITHUB_ISSUES_URL}"
+        )
+
+    def show_text_window(self, title, body, url=None, url_label=None):
+        """पढ़ने योग्य लंबा संदेश — scroll के साथ।"""
+        dialog = Gtk.Dialog(title=title, transient_for=self, modal=True)
+        dialog.set_default_size(680, 520)
+        dialog.add_button("बंद करें / Close", Gtk.ResponseType.CLOSE)
+
+        box = dialog.get_content_area()
+        box.set_border_width(12)
+
+        scroller = Gtk.ScrolledWindow()
+        scroller.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        view = Gtk.TextView()
+        view.set_editable(False)
+        view.set_cursor_visible(False)
+        view.set_wrap_mode(Gtk.WrapMode.WORD)
+        view.get_buffer().set_text(body)
+        scroller.add(view)
+        box.pack_start(scroller, True, True, 0)
+
+        if url:
+            open_button = Gtk.Button(label=url_label or url)
+            open_button.get_style_context().add_class("grad-blue")
+            open_button.connect("clicked", lambda *_: self.open_url(url))
+            box.pack_start(open_button, False, False, 6)
+
+        dialog.show_all()
+        dialog.run()
+        dialog.destroy()
+
+    def open_url(self, url):
+        """ब्राउज़र में खोलें।"""
+        try:
+            if Gtk.show_uri_on_window(self, url, Gdk.CURRENT_TIME):
+                return True
+        except Exception:
+            pass
+        try:
+            import webbrowser
+            return webbrowser.open(url)
+        except Exception:
+            self.set_status(f"ब्राउज़र नहीं खुला: {url}")
+            return False
+
     def on_about(self, *_args):
-        self.open_github()
-        self.simple_dialog(
+        """About — पूरी जानकारी एक जगह (शॉर्टकट सहित)।"""
+        self.show_text_window(
             "DM Office Translator",
-            f"संस्करण {APP_VERSION}\n{COURT_NAME}\n\n"
-            "हिन्दी ↔ अंग्रेज़ी अनुवाद, हाइब्रिड डिक्शनरी और शॉर्टकट — एक ही जगह।\n\n"
-            f"GitHub: {GITHUB_URL}",
+            self.about_text(),
+            url=GITHUB_URL,
+            url_label="GitHub पर खोलें / Open GitHub",
         )
 
     def on_help(self, *_args):
-        self.open_github()
+        """Help — फ़ीडबैक के लिए GitHub Issues खोलें।"""
+        self.open_url(GITHUB_ISSUES_URL)
         self.simple_dialog(
             "सहायता / Help",
-            "Alt + Space — English → Hindi\n"
-            "Alt + H — Hindi → English\n"
-            "Alt + T — Online mode चालू/बंद\n\n"
-            "शॉर्टकट clipboard पर काम करते हैं: पाठ कॉपी करें, शॉर्टकट दबाएँ, "
-            "फिर Ctrl+V से चिपकाएँ।\n\n"
-            f"GitHub: {GITHUB_URL}",
+            (
+                "फ़ीडबैक, सुझाव या समस्या के लिए GitHub Issues खोल दिया गया है:\n"
+                f"{GITHUB_ISSUES_URL}\n\n"
+                "वहाँ लिखें कि क्या समस्या आई — हम मिलकर उसका समाधान करेंगे।\n\n"
+                "शॉर्टकट की जानकारी के लिए About (जानकारी) देखें।"
+            ),
         )
 
 
+APP_LOCK_FILE = os.path.join(USER_DATA_DIR, "app.lock")
 ERROR_LOG = os.path.join(USER_DATA_DIR, "last_error.log")
+
+
+def raise_existing_window():
+    """पहले से खुली window सामने लाएँ (wmctrl/xdotool)।"""
+    import subprocess
+
+    for command in (
+        ["wmctrl", "-a", "DM Office Translator"],
+        ["xdotool", "search", "--name", "DM Office Translator", "windowactivate"],
+    ):
+        try:
+            if subprocess.run(command, check=False, timeout=3).returncode == 0:
+                return True
+        except Exception:
+            continue
+    return False
+
+
+def acquire_single_instance():
+    """दूसरी प्रति न खुले — lock फ़ाइल ले लें।"""
+    import fcntl
+
+    try:
+        os.makedirs(USER_DATA_DIR, exist_ok=True)
+        handle = io.open(APP_LOCK_FILE, "w")
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        return handle
+    except Exception:
+        return None
 
 
 def log_and_show_error(exc):
@@ -1049,10 +1770,18 @@ def main():
         print(f"DM Office Translator {APP_VERSION}")
         return
 
+    # v3.8.24 — पहले से खुला है तो नई window न खोलें, वही सामने लाएँ
+    lock_handle = acquire_single_instance()
+    if lock_handle is None:
+        raise_existing_window()
+        print("DM Office Translator पहले से खुला है — वही window सामने लाई गई।")
+        return
+
     try:
         app = Dashboard()
         app.connect("destroy", Gtk.main_quit)
         app.show_all()
+        app.refresh_placeholder()
         app.refresh_online_state()
         Gtk.main()
     except Exception as exc:  # noqa: BLE001 — कारण दिखाना ज़रूरी है

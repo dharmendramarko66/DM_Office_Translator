@@ -35,7 +35,7 @@ except ImportError:  # सीधे चलाने पर
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.6.1"
+    APP_VERSION = "3.8.28"
 
 # ---------------------------------------------------------
 # Paths / configuration
@@ -216,6 +216,27 @@ def _marker_for(index):
     return chr(0xF0000 + (index - (0xF8FF - 0xE000 + 1)))
 
 
+_LOAD_CACHE = {"signature": None, "value": None}
+
+# v3.8.11 — dictionary में न मिले और लिप्यांतरित हुए शब्द यहाँ जमा होते हैं
+# (Dashboard इन्हें output में लाल दिखाता है)।
+LAST_UNKNOWN_WORDS = []
+
+
+def _dictionary_signature(dict_dirs):
+    """फ़ाइलों के mtime/size से हस्ताक्षर।"""
+    parts = []
+    for directory in dict_dirs:
+        for name in (E2H_DICT_FILENAME, "hindi_to_english_dictionary.txt"):
+            path = os.path.join(directory, name)
+            try:
+                stat = os.stat(path)
+                parts.append((path, stat.st_mtime_ns, stat.st_size))
+            except OSError:
+                parts.append((path, None, None))
+    return tuple(parts)
+
+
 def load_dictionary(dict_dirs=None):
     """सभी dictionary फ़ाइलें load करके एक combined compiled regex
     और (marker → hindi) mapping लौटाता है।
@@ -229,6 +250,11 @@ def load_dictionary(dict_dirs=None):
         if os.path.isdir(SYSTEM_DICT_DIR):
             dict_dirs.append(SYSTEM_DICT_DIR)
 
+    # v3.8.2 — बदलाव न हो तो पहले से बना regex ही लौटाएँ।
+    signature = _dictionary_signature(dict_dirs)
+    if _LOAD_CACHE["signature"] == signature and _LOAD_CACHE["value"] is not None:
+        return _LOAD_CACHE["value"]
+
     entries = {}
 
     for dict_dir in dict_dirs:
@@ -241,7 +267,9 @@ def load_dictionary(dict_dirs=None):
             entries.setdefault(key, value)
 
     if not entries:
-        return None, {}, {}
+        _LOAD_CACHE["signature"] = signature
+        _LOAD_CACHE["value"] = (None, {}, {})
+        return _LOAD_CACHE["value"]
 
     # Longest keys पहले — ताकि "rajkumar" पर "raj" match न करे।
     keys = sorted(entries, key=len, reverse=True)
@@ -262,7 +290,9 @@ def load_dictionary(dict_dirs=None):
         key_to_marker[key] = marker
         protected[marker] = entries[key]
 
-    return combined, key_to_marker, protected
+    _LOAD_CACHE["signature"] = signature
+    _LOAD_CACHE["value"] = (combined, key_to_marker, protected)
+    return _LOAD_CACHE["value"]
 
 
 # ---------------------------------------------------------
@@ -670,6 +700,8 @@ def formal_register(text):
 def translate(text):
     """मुख्य अनुवाद pipeline — clipboard I/O से मुक्त, ताकि
     tests इसे बिना clipboard के चला सकें।"""
+    LAST_UNKNOWN_WORDS.clear()
+
     if not text or not text.strip():
         print("Clipboard is empty or contains only whitespace.")
         return None
@@ -806,15 +838,18 @@ def translate(text):
         cache_key = word_part.strip().lower()
 
         if cache_key in transliteration_cache:
-            final_tokens.append(
-                transliteration_cache[cache_key] + punctuation_part
-            )
+            produced = transliteration_cache[cache_key]
+            if re.search(r"[\u0900-\u097F]", produced):
+                LAST_UNKNOWN_WORDS.append(produced.strip())
+            final_tokens.append(produced + punctuation_part)
             continue
 
         # Online miss / offline mode → offline phonetic engine।
         transliteration_cache[cache_key] = e2h_offline_transliterate_word(
             word_part
         )
+        if re.search(r"[\u0900-\u097F]", transliteration_cache[cache_key]):
+            LAST_UNKNOWN_WORDS.append(transliteration_cache[cache_key].strip())
         final_tokens.append(
             transliteration_cache[cache_key] + punctuation_part
         )

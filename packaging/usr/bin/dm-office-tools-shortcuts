@@ -1,0 +1,192 @@
+#!/bin/bash
+# ============================================================
+# DM Office Translator — शॉर्टकट फिर से सेट करें
+#
+#   dm-office-tools-shortcuts          # सेट करें और जाँचें
+#   dm-office-tools-shortcuts status   # सिर्फ़ स्थिति देखें
+#   dm-office-tools-shortcuts test     # टेस्ट — क्लिपबोर्ड से अनुवाद
+#
+# यह script उसी उपयोगकर्ता के रूप में चलाइए जिसे शॉर्टकट चाहिए
+# (root के रूप में नहीं)।
+# ============================================================
+
+set -u
+
+SCHEMA="org.gnome.settings-daemon.plugins.media-keys"
+BASE="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
+
+E2H_COMMAND="/usr/bin/dm-office-tools-e2h"
+H2E_COMMAND="/usr/bin/dm-office-tools-h2e"
+TRANSLIT_COMMAND="/usr/bin/dm-office-tools-translit"
+
+E2H_BINDING="<Alt>space"
+H2E_BINDING="<Alt>h"
+TRANSLIT_BINDING="<Alt>t"
+
+E2H_NAME="DM Office Translator — English to Hindi"
+H2E_NAME="DM Office Translator — Hindi to English"
+TRANSLIT_NAME="DM Office Translator — Online mode (skip dictionary)"
+
+ACTION="${1:-setup}"
+
+current_slots() {
+    gsettings get "$SCHEMA" custom-keybindings 2>/dev/null | sed "s/@as //" | tr -d "[]',"
+}
+
+show_status() {
+    echo "=========================================="
+    echo " DM Office Translator — शॉर्टकट स्थिति"
+    echo "=========================================="
+
+    if ! command -v gsettings >/dev/null 2>&1; then
+        echo "❌ gsettings नहीं मिला — GNOME आवश्यक है।"
+        return 1
+    fi
+
+    local found=0
+    for slot in $(current_slots); do
+        local command binding name
+        command="$(dconf read "${slot}command" 2>/dev/null | tr -d "'")"
+        binding="$(dconf read "${slot}binding" 2>/dev/null | tr -d "'")"
+        name="$(dconf read "${slot}name" 2>/dev/null | tr -d "'")"
+
+        case "$command" in
+            *dm-office-tools-e2h|*dm-office-tools-h2e|*dm-office-tools-translit)
+                found=$((found + 1))
+                echo "  ✔ $binding  →  $(basename "$command")"
+                echo "      नाम: $name"
+                ;;
+        esac
+    done
+
+    if [ "$found" -eq 0 ]; then
+        echo "  ⚠️  कोई भी DM Office Translator शॉर्टकट सेट नहीं है।"
+        echo "      ठीक करने के लिए:  dm-office-tools-shortcuts"
+    fi
+
+    local winmenu
+    winmenu="$(gsettings get org.gnome.desktop.wm.keybindings activate-window-menu 2>/dev/null || true)"
+    echo
+    echo "  Alt+Space (GNOME window menu): ${winmenu:-अज्ञात}"
+
+    return 0
+}
+
+find_free_index() {
+    local used
+    used="$(current_slots | grep -o 'custom[0-9]*' | grep -o '[0-9]*' | sort -n | tail -1)"
+    used="${used:-0}"
+    echo $((used + 1))
+}
+
+set_binding() {
+    local command="$1"
+    local binding="$2"
+    local name="$3"
+
+    # पहले से इस command के लिए slot है?
+    local slot=""
+    for existing in $(current_slots); do
+        local existing_command
+        existing_command="$(dconf read "${existing}command" 2>/dev/null | tr -d "'")"
+        if [ "$existing_command" = "$command" ]; then
+            slot="$existing"
+            break
+        fi
+    done
+
+    if [ -z "$slot" ]; then
+        local index
+        index="$(find_free_index)"
+        slot="${BASE}/custom${index}/"
+
+        local list
+        list="$(current_slots)"
+        if [ -z "$list" ]; then
+            gsettings set "$SCHEMA" custom-keybindings "['$slot']"
+        else
+            gsettings set "$SCHEMA" custom-keybindings "[$(current_slots | sed "s#^#'#; s#$#'#" | paste -sd, | sed "s#,',#'#,g")]"
+        fi
+    fi
+
+    dconf write "${slot}name" "'$name'"
+    dconf write "${slot}command" "'$command'"
+    dconf write "${slot}binding" "'$binding'"
+
+    echo "  ✔ सेट: $binding → $(basename "$command")"
+}
+
+setup_shortcuts() {
+    if ! command -v gsettings >/dev/null 2>&1; then
+        echo "❌ gsettings नहीं मिला — GNOME आवश्यक है।"
+        return 1
+    fi
+
+    echo "=========================================="
+    echo " शॉर्टकट सेट किए जा रहे हैं"
+    echo "=========================================="
+
+    # Alt+Space पहले GNOME के window-menu को दिया होता है — उसे हटाएँ
+    gsettings set org.gnome.desktop.wm.keybindings activate-window-menu "[]" 2>/dev/null || true
+
+    set_binding "$E2H_COMMAND" "$E2H_BINDING" "$E2H_NAME"
+    set_binding "$H2E_COMMAND" "$H2E_BINDING" "$H2E_NAME"
+    set_binding "$TRANSLIT_COMMAND" "$TRANSLIT_BINDING" "$TRANSLIT_NAME"
+
+    echo
+    show_status
+    echo
+    echo "अब Alt+Space / Alt+H आज़माएँ।"
+}
+
+test_translation() {
+    echo "=========================================="
+    echo " परीक्षण — Hindi → English"
+    echo "=========================================="
+
+    local sample="जिला जबलपुर"
+    echo "  क्लिपबोर्ड में डाला जा रहा है: $sample"
+
+    if command -v wl-copy >/dev/null 2>&1; then
+        printf '%s' "$sample" | wl-copy 2>/dev/null || true
+    elif command -v xclip >/dev/null 2>&1; then
+        printf '%s' "$sample" | xclip -selection clipboard 2>/dev/null || true
+    else
+        echo "  ⚠️  wl-copy/xclip नहीं मिला — क्लिपबोर्ड परीक्षण छोड़ा गया।"
+        return 1
+    fi
+
+    echo "  इंजन चलाया जा रहा है…"
+    "$H2E_COMMAND" || echo "  ❌ इंजन विफल रहा"
+
+    echo
+    echo "  क्लिपबोर्ड में अब जो है:"
+    if command -v wl-paste >/dev/null 2>&1; then
+        wl-paste 2>/dev/null | head -3
+    elif command -v xclip >/dev/null 2>&1; then
+        xclip -selection clipboard -o 2>/dev/null | head -3
+    fi
+}
+
+case "$ACTION" in
+    status)
+        show_status
+        ;;
+    setup|"")
+        setup_shortcuts
+        ;;
+    test)
+        test_translation
+        ;;
+    --help|-h)
+        echo "Usage: dm-office-tools-shortcuts [setup|status|test]"
+        echo "  setup  : शॉर्टकट सेट करें (default)"
+        echo "  status : वर्तमान स्थिति देखें"
+        echo "  test   : क्लिपबोर्ड से अनुवाद का परीक्षण"
+        ;;
+    *)
+        echo "⚠️  अज्ञात विकल्प: $ACTION"
+        echo "Usage: dm-office-tools-shortcuts [setup|status|test]"
+        exit 1
+        ;;
+esac

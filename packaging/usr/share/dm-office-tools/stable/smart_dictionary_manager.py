@@ -24,7 +24,7 @@ from datetime import datetime
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.6.1"
+    APP_VERSION = "3.8.28"
 
 E2H_FILENAME = "english_to_hindi_dictionary.txt"
 H2E_FILENAME = "hindi_to_english_dictionary.txt"
@@ -608,9 +608,11 @@ class DictionaryPanel(Gtk.Box):
             entry { border-radius: 10px; padding: 8px; }
             """
         )
+        # v3.8.15 — Dashboard का CSS (APPLICATION = 600) इससे ऊपर रहे, वरना
+        # Manager खोलने पर Dashboard के गोल बटन अपना रंग-रूप खो देते हैं।
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(), provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION - 1,
         )
 
     def make_card(self, title_text=None):
