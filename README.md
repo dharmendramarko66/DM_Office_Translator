@@ -3,22 +3,20 @@
 **Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager**\
 **स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर एवं स्मार्ट डिक्शनरी मैनेजर**
 
-[![Version](https://img.shields.io/badge/version-3.8.32-blue)](#version-history)
+[![Version](https://img.shields.io/badge/version-3.8.33-blue)](#version-history)
 [![Status](https://img.shields.io/badge/status-stable-success)](#)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%2B-orange)](#system-requirements)
 
 > अंग्रेज़ी ↔ हिन्दी डेटा एंट्री के काम को तेज़, आसान और व्यवस्थित बनाने वाला Ubuntu
 > आधारित टूल।
 
-  जानकारी            विवरण
-  ------------------ ---------------------------------------
-  **वर्तमान संस्करण**   3.8.32 Stable
-  **स्थिति**          Stable Release
-  **प्लेटफ़ॉर्म**        Ubuntu Linux 24.04 LTS एवं बाद के संस्करण
-  **डेवलपर**          Dharmendra Marko
-  **आर्किटेक्चर**       amd64 (64-bit)
-
-------------------------------------------------------------------------
+| जानकारी | विवरण |
+|---|---|
+| **वर्तमान संस्करण** | 3.8.33 Stable |
+| **स्थिति** | Stable Release |
+| **प्लेटफ़ॉर्म** | Ubuntu Linux 24.04 LTS एवं बाद के संस्करण |
+| **डेवलपर** | Dharmendra Marko |
+| **आर्किटेक्चर** | amd64 (64-bit) |
 
 ## विषय-सूची
 
@@ -40,8 +38,6 @@
 -   [संस्करण इतिहास](#संस्करण-इतिहास)
 -   [Roadmap](#roadmap)
 -   [डेवलपर एवं Release जानकारी](#डेवलपर-एवं-release-जानकारी)
-
-------------------------------------------------------------------------
 
 ## परिचय
 
@@ -84,18 +80,15 @@
 `Alt + T` से Online mode चालू/बंद किया जा सकता है। इस mode में dictionary को
 छोड़कर Google translation का उपयोग किया जाता है।
 
-------------------------------------------------------------------------
-
 ## त्वरित शुरुआत
 
 इंस्टॉलेशन के बाद सामान्य उपयोग के लिए:
 
-  काम                  शॉर्टकट
-  -------------------- ---------------
-  English से Hindi      `Alt + Space`
-  Hindi से English      `Alt + H`
-  Online mode चालू/बंद   `Alt + T`
-
+| काम | शॉर्टकट |
+|---|---|
+| English से Hindi | `Alt + Space` |
+| Hindi से English | `Alt + H` |
+| Online mode चालू/बंद | `Alt + T` |
 **Dictionary में बदलाव करना हो:** Ubuntu Applications Menu से
 `DM Office Translator` खोलें — उसी में Dictionary Manager है।
 (सिर्फ़ Dictionary Manager अलग window में चाहिए तो `dm-office-tools-dictionary`।)
@@ -103,23 +96,13 @@
 **संवेदनशील दस्तावेज़ों पर काम करना हो:** [Offline-only
 Mode](#privacy-एवं-offline-mode) सक्रिय करें।
 
-------------------------------------------------------------------------
-
 ## कीबोर्ड शॉर्टकट
 
-  -------------------------------------------------------------------------------------
-  शॉर्टकट                  कार्य                    Command
-  ----------------------- ----------------------- -------------------------------------
-  **Alt + Space**         English → Hindi         `/usr/bin/dm-office-tools-e2h`
-                          Translation             
-
-  **Alt + H**             Hindi → English         `/usr/bin/dm-office-tools-h2e`
-                          Translation             
-
-  **Alt + T**             Online mode चालू/बंद      `/usr/bin/dm-office-tools-translit`
-                          (dictionary skip करके    
-                          Google अनुवाद)           
-  -------------------------------------------------------------------------------------
+| शॉर्टकट | कार्य | Command |
+|---|---|---|
+| **Alt + Space** | English → Hindi Translation | `/usr/bin/dm-office-tools-e2h` |
+| **Alt + H** | Hindi → English Translation | `/usr/bin/dm-office-tools-h2e` |
+| **Alt + T** | Online mode चालू/बंद (dictionary skip करके Google अनुवाद) | `/usr/bin/dm-office-tools-translit` |
 
 > शॉर्टकट system-installed translators को
 > `/usr/share/dm-office-tools/stable/` से चलाते हैं।
@@ -137,13 +120,11 @@ dm-office-tools-shortcuts
 dm-office-tools-shortcuts test
 ```
 
-------------------------------------------------------------------------
-
 ## इंस्टॉलेशन
 
 ### तरीका 1: Double-click से (अनुशंसित)
 
-1.  GitHub Releases से `dm-office-tools_3.8.32_amd64.deb` डाउनलोड करें।
+1.  GitHub Releases से `dm-office-tools_3.8.33_amd64.deb` डाउनलोड करें।
 2.  Downloads फ़ोल्डर खोलें।
 3.  `.deb` फ़ाइल पर Double-click करें।
 4.  Ubuntu Software / App Center खुलने पर **Install** पर क्लिक करें।
@@ -158,7 +139,7 @@ dm-office-tools-shortcuts test
 
 ``` bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.8.32_amd64.deb
+sudo apt install ./dm-office-tools_3.8.33_amd64.deb
 ```
 
 ### इंस्टॉलेशन की पुष्टि
@@ -172,7 +153,7 @@ dpkg -s dm-office-tools | grep -E "Package:|Version:|Status:"
 ``` text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.8.32
+Version: 3.8.33
 ```
 
 संस्करण जाँचने के लिए:
@@ -195,18 +176,15 @@ dm-office-tools-h2e --version
 -   `Alt + Space`, `Alt + H` एवं `Alt + T` Keyboard Shortcuts
 -   `dm-office-tools-shortcuts` — शॉर्टकट जाँचने/फिर से सेट करने का कमांड
 
-------------------------------------------------------------------------
-
 ## Smart Dictionary Manager
 
 Smart Dictionary Manager एक GUI आधारित टूल है, जिससे आप अपनी offline
 dictionaries को अपनी आवश्यकता के अनुसार प्रबंधित कर सकते हैं।
 
-  Dictionary   फ़ाइल                                उपयोग
-  ------------ ----------------------------------- ---------------------
-  **E2H**      `english_to_hindi_dictionary.txt`   English → Hindi शब्द
-  **H2E**      `hindi_to_english_dictionary.txt`   Hindi → English शब्द
-
+| Dictionary | फ़ाइल | उपयोग |
+|---|---|---|
+| **E2H** | `english_to_hindi_dictionary.txt` | English → Hindi शब्द |
+| **H2E** | `hindi_to_english_dictionary.txt` | Hindi → English शब्द |
 ### उपलब्ध कार्य
 
 -   **Add:** नए शब्द और उनके अर्थ जोड़ें।
@@ -216,8 +194,6 @@ dictionaries को अपनी आवश्यकता के अनुसा
 -   **Suggestions:** टाइप करते समय सुझाव प्राप्त करें।
 
 **कैसे खोलें:** Ubuntu Applications Menu → `Smart Dictionary Manager`
-
-------------------------------------------------------------------------
 
 ## Dictionary Synchronization
 
@@ -253,8 +229,6 @@ bash sync-dictionaries.sh
 
 प्रक्रिया के दौरान E2H और H2E दोनों dictionaries में नई entries तथा conflicts
 की संख्या दिखाई जाती है।
-
-------------------------------------------------------------------------
 
 ## Privacy एवं Offline Mode
 
@@ -296,8 +270,6 @@ rm ~/.dm_office_tools/offline_mode
 
 Offline-only Mode में केवल local dictionary और built-in phonetic engine
 उपयोग होते हैं। कोई network request नहीं भेजी जाती।
-
-------------------------------------------------------------------------
 
 ## अपग्रेड कैसे करें
 
@@ -375,8 +347,6 @@ sudo apt install ~/Downloads/dm-office-tools_X.Y.Z_amd64.deb
 4.  **समस्या आने पर:** `~/.dm_office_tools/last_error.log` देखें और GitHub
     Issues पर समस्या दर्ज करें।
 
-------------------------------------------------------------------------
-
 ## अनइंस्टॉलेशन
 
 यदि DM Office Translator `.deb` package से install किया गया है, तो
@@ -399,8 +369,6 @@ sudo apt remove dm-office-tools
 
 -   `~/.dm_office_tools/dictionary/` --- User dictionaries
 -   `~/.dm_office_tools/backup/` --- User backups
-
-------------------------------------------------------------------------
 
 ## समस्या-निवारण / Troubleshooting
 
@@ -432,8 +400,6 @@ rm -f ~/.dm_office_tools/google_failure_until
 जानकारी GitHub Issues पर भेजें:
 https://github.com/dharmendramarko66/DM_Office_Translator/issues
 
-------------------------------------------------------------------------
-
 ## टेस्ट चलाना / Running the tests
 
 ``` bash
@@ -443,29 +409,23 @@ python3 -m pytest tests -q
 
 72 tests — अनुवाद, dictionary, phonetic engines, CSS और संस्करण की जाँच।
 
-------------------------------------------------------------------------
-
 ## फ़ीडबैक / Feedback
 
 सुझाव या समस्या GitHub Issues पर लिखें — हम मिलकर समाधान करेंगे:
 https://github.com/dharmendramarko66/DM_Office_Translator/issues
 
-------------------------------------------------------------------------
-
 ## सिस्टम आवश्यकताएँ
 
-  घटक                   आवश्यकता
-  --------------------- ----------------------------------------------------
-  Operating System      Ubuntu 24.04 LTS या बाद का संस्करण
-  Architecture          amd64 (64-bit)
-  Python                Python 3.12 या बाद का संस्करण
-  Python Packages       `python3-requests`, `python3-gi`, `gir1.2-gtk-3.0`
-  Desktop Environment   GNOME
-  Clipboard Utility     `wl-clipboard`
-  Disk Space            20 MB से कम (backup files को छोड़कर)
-  Internet              वैकल्पिक; offline dictionary के लिए आवश्यक नहीं
-
-------------------------------------------------------------------------
+| घटक | आवश्यकता |
+|---|---|
+| Operating System | Ubuntu 24.04 LTS या बाद का संस्करण |
+| Architecture | amd64 (64-bit) |
+| Python | Python 3.12 या बाद का संस्करण |
+| Python Packages | `python3-requests`, `python3-gi`, `gir1.2-gtk-3.0` |
+| Desktop Environment | GNOME |
+| Clipboard Utility | `wl-clipboard` |
+| Disk Space | 20 MB से कम (backup files को छोड़कर) |
+| Internet | वैकल्पिक; offline dictionary के लिए आवश्यक नहीं |
 
 ## प्रोजेक्ट संरचना
 
@@ -526,25 +486,14 @@ DM_Office_Translator/
 
 ### मुख्य Directories
 
-  ----------------------------------------------------------------------------
-  Directory                                उद्देश्य
-  ---------------------------------------- -----------------------------------
-  `stable/`                                E2H, H2E Translator runtime और
-                                           Dictionary Manager
-
-  `dictionary/`                            E2H एवं H2E user dictionary source
-                                           files
-
-  `packaging/`                             Debian package metadata, launchers
-                                           और build scripts
-
-  `packaging/usr/share/dm-office-tools/`   Installed stable runtime और
-                                           dictionaries का package location
-
-  `tests/`                                 Project के automated tests
-
-  `apt-repo/`                              Signed APT repository
-  ----------------------------------------------------------------------------
+| Directory | उद्देश्य |
+|---|---|
+| `stable/` | E2H, H2E Translator runtime और Dictionary Manager |
+| `dictionary/` | E2H एवं H2E user dictionary source files |
+| `packaging/` | Debian package metadata, launchers और build scripts |
+| `packaging/usr/share/dm-office-tools/` | Installed stable runtime और dictionaries का package location |
+| `tests/` | Project के automated tests |
+| `apt-repo/` | Signed APT repository |
 
 ### Runtime Location
 
@@ -554,161 +503,69 @@ Installed translators इस path का उपयोग करते हैं:
 /usr/share/dm-office-tools/stable/
 ```
 
-------------------------------------------------------------------------
-
 ## संस्करण इतिहास
 
-  -----------------------------------------------------------------------
-  Version                 स्थिति                   मुख्य बदलाव
-  ----------------------- ----------------------- -----------------------
-  **3.8.32**              Current Stable          Upgrade guide जोड़ी गई
-                                                  --- apt, `.deb` और ZIP
-                                                  के तरीके
-
-  3.8.30                  Previous                विस्तृत README ढाँचा,
-                                                  Version History,
-                                                  shortcuts और project
-                                                  structure वापस
-
-  3.8.28                  Previous                मुख्य विशेषताएँ जोड़ी गईं
-
-  3.8.27                  Previous                README और CHANGELOG
-                                                  संक्षिप्त किए
-
-  3.8.26                  Previous                तेज़ startup
-
-  3.8.25                  Previous                Dock में दूसरा icon हटाया
-
-  3.8.24                  Previous                Single instance
-
-  3.8.23                  Previous                नाम पहले जैसा किया
-
-  3.8.22                  Previous                तटस्थ कार्यालय नाम
-
-  3.8.21                  Previous                कार्यालय का नाम code से
-                                                  हटाया
-
-  3.8.20                  Previous                About में पूरी जानकारी
-
-  3.8.19                  Previous                Swap केवल ⇄ icon
-
-  3.8.18                  Previous                Swap button बीच में
-
-  3.8.17                  Previous                Ctrl+C चयन के अनुसार
-
-  3.8.16                  Previous                Shortcut repair command
-
-  3.8.15                  Previous                Manager बंद होने पर
-                                                  buttons का अनावश्यक
-                                                  बदलाव रोका
-
-  3.8.14                  Previous                Help / About / Language
-                                                  captions ठीक किए
-
-  3.8.13                  Previous                White box में कहीं भी क्लिक
-
-  3.8.12                  Previous                Input box में कहीं भी क्लिक
-
-  3.8.11                  Previous                दोनों दिशाओं में red words
-
-  3.8.10                  Previous                Red words का रंग ठीक
-                                                  किया
-
-  3.8.9                   Previous                Input और Translation
-                                                  text बड़ा
-
-  3.8.8                   Previous                पूरे software में बड़े अक्षर
-
-  3.8.7                   Previous                Buttons की भाषा एक जैसी
-
-  3.8.6                   Previous                तीनों buttons चित्र के
-                                                  अनुसार
-
-  3.8.5                   Previous                Modern theme
-
-  3.8.4                   Previous                Banner design ठीक किया
-
-  3.8.3                   Previous                Banner design
-
-  3.8.2                   Previous                Dictionary cache से तेज़ी
-
-  3.8.1                   Previous                Logo और font सुधार
-
-  3.8.0                   Previous                Curved tricolour
-
-  3.7.2                   Previous                केवल रंग और logo बदले
-
-  3.7.1                   Previous                v3.7.0 वापस लिया
-
-  3.7.0                   Previous                नया colour scheme
-
-  3.6.2                   Previous                अनुपयोगी files हटाईं
-
-  3.6.1                   Previous                Project cleanup
-
-  3.6.0                   Previous                भाषा button
-
-  3.5.0                   Previous                Buttons अधिक रंगीन और
-                                                  पढ़ने योग्य
-
-  3.4.2                   Previous                Startup bug ठीक
-
-  3.4.1                   Previous                Startup समस्या ठीक
-
-  3.4.0                   Previous                नया Dashboard UI
-
-  3.3.0                   Previous                एक App में Translator,
-                                                  Dictionary और Shortcuts
-
-  3.2.0                   Previous                English output sentence
-                                                  case
-
-  3.1.9                   Previous                तीन translation
-                                                  providers और fallback
-
-  3.1.8                   Previous                Online mode fallback
-                                                  दिखाई देने लगा
-
-  3.1.7                   Previous                Upgrade पर dictionary
-                                                  mirror
-
-  3.1.6                   Previous                Bulk Add summary पूरी
-
-  3.1.5                   Previous                Bulk Add duplicate पर
-                                                  user का निर्णय
-
-  3.1.4                   Previous                Search box ठीक
-
-  3.1.3                   Previous                Search box केवल आवश्यकता
-                                                  पर
-
-  3.1.2                   Previous                Suggestions की
-                                                  filtering ठीक
-
-  3.1.1                   Previous                Typing के दौरान
-                                                  auto-suggestions
-
-  3.1.0                   Previous                Dictionary Manager में
-                                                  बड़ा सुधार
-
-  3.0.8                   Previous                Dictionary values एकरूप
-
-  2.0.12                  Previous                Alt+T Online mode ---
-                                                  dictionary skip
-
-  2.0.11                  Previous                Transliteration mode
-
-  2.0.10                  Previous                Vowel से शुरू होने वाले शब्द
-                                                  ठीक
-
-  2.0.9                   Previous                Alt+Space conflict का
-                                                  समाधान
-
-  2.0.8                   Previous                Software का नाम हर जगह
-                                                  DM Office Translator
-  -----------------------------------------------------------------------
-
-------------------------------------------------------------------------
+| Version | स्थिति | मुख्य बदलाव |
+|---|---|---|
+| **3.8.33** | Current Stable | Upgrade guide जोड़ी गई --- apt, `.deb` और ZIP के तरीके |
+| 3.8.30 | Previous | विस्तृत README ढाँचा, Version History, shortcuts और project structure वापस |
+| 3.8.28 | Previous | मुख्य विशेषताएँ जोड़ी गईं |
+| 3.8.27 | Previous | README और CHANGELOG संक्षिप्त किए |
+| 3.8.26 | Previous | तेज़ startup |
+| 3.8.25 | Previous | Dock में दूसरा icon हटाया |
+| 3.8.24 | Previous | Single instance |
+| 3.8.23 | Previous | नाम पहले जैसा किया |
+| 3.8.22 | Previous | तटस्थ कार्यालय नाम |
+| 3.8.21 | Previous | कार्यालय का नाम code से हटाया |
+| 3.8.20 | Previous | About में पूरी जानकारी |
+| 3.8.19 | Previous | Swap केवल ⇄ icon |
+| 3.8.18 | Previous | Swap button बीच में |
+| 3.8.17 | Previous | Ctrl+C चयन के अनुसार |
+| 3.8.16 | Previous | Shortcut repair command |
+| 3.8.15 | Previous | Manager बंद होने पर buttons का अनावश्यक बदलाव रोका |
+| 3.8.14 | Previous | Help / About / Language captions ठीक किए |
+| 3.8.13 | Previous | White box में कहीं भी क्लिक |
+| 3.8.12 | Previous | Input box में कहीं भी क्लिक |
+| 3.8.11 | Previous | दोनों दिशाओं में red words |
+| 3.8.10 | Previous | Red words का रंग ठीक किया |
+| 3.8.9 | Previous | Input और Translation text बड़ा |
+| 3.8.8 | Previous | पूरे software में बड़े अक्षर |
+| 3.8.7 | Previous | Buttons की भाषा एक जैसी |
+| 3.8.6 | Previous | तीनों buttons चित्र के अनुसार |
+| 3.8.5 | Previous | Modern theme |
+| 3.8.4 | Previous | Banner design ठीक किया |
+| 3.8.3 | Previous | Banner design |
+| 3.8.2 | Previous | Dictionary cache से तेज़ी |
+| 3.8.1 | Previous | Logo और font सुधार |
+| 3.8.0 | Previous | Curved tricolour |
+| 3.7.2 | Previous | केवल रंग और logo बदले |
+| 3.7.1 | Previous | v3.7.0 वापस लिया |
+| 3.7.0 | Previous | नया colour scheme |
+| 3.6.2 | Previous | अनुपयोगी files हटाईं |
+| 3.6.1 | Previous | Project cleanup |
+| 3.6.0 | Previous | भाषा button |
+| 3.5.0 | Previous | Buttons अधिक रंगीन और पढ़ने योग्य |
+| 3.4.2 | Previous | Startup bug ठीक |
+| 3.4.1 | Previous | Startup समस्या ठीक |
+| 3.4.0 | Previous | नया Dashboard UI |
+| 3.3.0 | Previous | एक App में Translator, Dictionary और Shortcuts |
+| 3.2.0 | Previous | English output sentence case |
+| 3.1.9 | Previous | तीन translation providers और fallback |
+| 3.1.8 | Previous | Online mode fallback दिखाई देने लगा |
+| 3.1.7 | Previous | Upgrade पर dictionary mirror |
+| 3.1.6 | Previous | Bulk Add summary पूरी |
+| 3.1.5 | Previous | Bulk Add duplicate पर user का निर्णय |
+| 3.1.4 | Previous | Search box ठीक |
+| 3.1.3 | Previous | Search box केवल आवश्यकता पर |
+| 3.1.2 | Previous | Suggestions की filtering ठीक |
+| 3.1.1 | Previous | Typing के दौरान auto-suggestions |
+| 3.1.0 | Previous | Dictionary Manager में बड़ा सुधार |
+| 3.0.8 | Previous | Dictionary values एकरूप |
+| 2.0.12 | Previous | Alt+T Online mode --- dictionary skip |
+| 2.0.11 | Previous | Transliteration mode |
+| 2.0.10 | Previous | Vowel से शुरू होने वाले शब्द ठीक |
+| 2.0.9 | Previous | Alt+Space conflict का समाधान |
+| 2.0.8 | Previous | Software का नाम हर जगह DM Office Translator |
 
 ## Roadmap
 
@@ -721,28 +578,17 @@ Installed translators इस path का उपयोग करते हैं:
 DM Office Translator, repository की `LICENSE` फ़ाइल में दी गई open license
 terms के अंतर्गत उपलब्ध है।
 
-------------------------------------------------------------------------
-
 ## डेवलपर एवं Release जानकारी
 
-  ------------------------------------------------------------------------
-  विवरण                               जानकारी
-  ----------------------------------- ------------------------------------
-  **Developer**                       Dharmendra Marko
-
-  **Project**                         DM Office Translator
-
-  **Components**                      Smart Office Hybrid Translator
-                                      (SOHT) एवं Smart Dictionary Manager
-
-  **Current Version**                 3.8.32 Stable
-
-  **Package**                         `dm-office-tools_3.8.32_amd64.deb`
-
-  **Architecture**                    amd64
-
-  **Repository**                      `DM_Office_Translator`
-  ------------------------------------------------------------------------
+| विवरण | जानकारी |
+|---|---|
+| **Developer** | Dharmendra Marko |
+| **Project** | DM Office Translator |
+| **Components** | Smart Office Hybrid Translator (SOHT) एवं Smart Dictionary Manager |
+| **Current Version** | 3.8.33 Stable |
+| **Package** | `dm-office-tools_3.8.33_amd64.deb` |
+| **Architecture** | amd64 |
+| **Repository** | `DM_Office_Translator` |
 
 ### अनुरक्षक के लिए: APT Repository में Release प्रकाशित करना
 

@@ -33,7 +33,7 @@ except ImportError:  # सीधे चलाने पर (script के जि
 try:
     from soht_version import APP_VERSION
 except ImportError:  # direct execution from anywhere
-    APP_VERSION = "3.8.32"
+    APP_VERSION = "3.8.33"
 
 # ---------------------------------------------------------
 # Paths / configuration
