@@ -27,7 +27,7 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.8.33"
+    APP_VERSION = "3.8.34"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
@@ -664,13 +664,6 @@ class Dashboard(Gtk.Window):
         box.pack_start(caption, False, False, 0)
         return box
 
-    def circle_button(self, icon, tooltip, callback):
-        button = Gtk.Button(label=icon)
-        button.get_style_context().add_class("circle")
-        button.set_tooltip_text(tooltip)
-        button.connect("clicked", callback)
-        return button
-
     def win_button(self, glyph, callback):
         button = Gtk.Button(label=glyph)
         button.get_style_context().add_class("winbtn")
@@ -1007,19 +1000,6 @@ class Dashboard(Gtk.Window):
     def on_open_manager_search(self, *_args):
         self.open_manager("search")
 
-    def two_line_button(self, top, bottom, callback, css_class):
-        """ऊपर अंग्रेज़ी नाम, नीचे कोष्ठक में हिन्दी — ग्रेडिएंट रंग के साथ।"""
-        button = Gtk.Button()
-        button.get_style_context().add_class(css_class)
-        label = Gtk.Label()
-        label.set_markup(
-            f"<span weight='bold'>{top}</span>\n<span size='small'>{bottom}</span>"
-        )
-        label.set_justify(Gtk.Justification.CENTER)
-        button.add(label)
-        button.connect("clicked", callback)
-        return button
-
     def bottom_header(self, text):
         """नीचे के तीन बक्सों के ऊपर गहरी नीली पट्टी।"""
         bar = Gtk.Box(spacing=6)
@@ -1030,13 +1010,6 @@ class Dashboard(Gtk.Window):
         bar.pack_start(label, True, True, 0)
         return bar
 
-    def _label(self, text):
-        label = Gtk.Label(label=text)
-        label.set_xalign(0)
-        label.set_width_chars(15)
-        return label
-
-    # ---------------- feature strip ----------------
     def build_feature_strip(self):
         strip = Gtk.Box(spacing=8, homogeneous=True)
 
@@ -1525,27 +1498,6 @@ class Dashboard(Gtk.Window):
         dialog.format_secondary_text(body)
         dialog.run()
         dialog.destroy()
-
-    def open_github(self):
-        """GitHub पेज ब्राउज़र में खोलें।"""
-        opened = False
-        try:
-            opened = Gtk.show_uri_on_window(
-                self, GITHUB_URL, Gdk.CURRENT_TIME
-            )
-        except Exception:
-            opened = False
-
-        if not opened:
-            try:
-                import webbrowser
-                opened = webbrowser.open(GITHUB_URL)
-            except Exception:
-                opened = False
-
-        if not opened:
-            self.set_status(f"ब्राउज़र नहीं खुला — यह पता खुद खोलें: {GITHUB_URL}")
-        return opened
 
     def rebuild_ui(self):
         """भाषा बदलने पर पूरी UI दोबारा बनाएँ (लिखा हुआ पाठ सुरक्षित)।"""

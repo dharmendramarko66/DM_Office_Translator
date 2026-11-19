@@ -3,6 +3,14 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.34] — 2026-11-19
+
+### Removed
+- **अनुपयोगी कोड:** `dm_office_app.py` से `circle_button()`, `two_line_button()`, `_label()`,
+  `open_github()`; `hindi_to_english_hybrid.py` से `unresolved_tokens()` (v3.8.11 के बाद अप्रयुक्त)।
+- **package से stale फ़ाइलें:** `soht_app.py` (v3.6.2 में हटाई गई थी) और `stable/README.md`
+  अब `.deb` में नहीं जातीं; `build-deb.sh` सिर्फ़ `*.py`/`*.sh` copy करता है और stale फ़ाइलें हटाता है।
+
 ## [3.8.33] — 2026-11-19
 
 ### Changed

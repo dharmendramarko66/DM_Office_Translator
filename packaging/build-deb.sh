@@ -88,8 +88,21 @@ echo "[1/4] Version .................. OK ($VERSION)"
 echo "[1/4] Syncing stable sources into packaging..."
 
 mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/stable"
+
+# v3.8.34 — package में सिर्फ़ चलाने वाली फ़ाइलें (*.py, *.sh) जाएँ
 find "$PROJECT_DIR/stable" -maxdepth 1 -type f \
+    \( -name "*.py" -o -name "*.sh" \) \
     -exec cp -f {} "$SCRIPT_DIR/usr/share/dm-office-tools/stable/" \;
+
+# v3.8.34 — जो फ़ाइल अब stable/ में नहीं है, वह package से हटा दें
+for existing in "$SCRIPT_DIR/usr/share/dm-office-tools/stable/"*; do
+    [ -e "$existing" ] || continue
+    base="$(basename "$existing")"
+    if [ ! -e "$PROJECT_DIR/stable/$base" ]; then
+        echo "[1/4] Removing stale packaged file: $base"
+        rm -f "$existing"
+    fi
+done
 
 echo "[1/4] Syncing dictionaries into packaging..."
 
