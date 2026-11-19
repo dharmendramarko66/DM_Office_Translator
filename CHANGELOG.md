@@ -3,6 +3,16 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.35] — 2026-11-19
+
+### Fixed
+- **package में अब भी soht_app.py / README.md जा रही थीं:** कारण — वे फ़ाइलें `stable/` में
+  बची हुई थीं, इसलिए पुरानी "stale फ़ाइलें हटाओ" विधि उन्हें रख लेती थी। अब `build-deb.sh`
+  की सूची निश्चित है (9 फ़ाइलें) और packaging की stable directory पहले खाली की जाती है।
+
+### Removed
+- `stable/README.md` (उसकी जानकारी मुख्य README के Project Structure में है)।
+
 ## [3.8.34] — 2026-11-19
 
 ### Removed

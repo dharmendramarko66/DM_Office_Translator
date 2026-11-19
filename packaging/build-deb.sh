@@ -87,20 +87,29 @@ echo "[1/4] Version .................. OK ($VERSION)"
 
 echo "[1/4] Syncing stable sources into packaging..."
 
+# v3.8.35 — package में सिर्फ़ ये 9 फ़ाइलें जाती हैं (सूची निश्चित है)।
+# इससे soht_app.py, README.md जैसी अनुपयोगी फ़ाइलें कभी package में नहीं आएँगी।
+RUNTIME_FILES="
+dm_office_app.py
+english_to_hindi_hybrid.py
+hindi_to_english_hybrid.py
+smart_dictionary_manager.py
+translation_providers.py
+dictionary_mirror.py
+soht_version.py
+run_english_to_hindi.sh
+run_hindi_to_english.sh
+"
+
+rm -rf "$SCRIPT_DIR/usr/share/dm-office-tools/stable"
 mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/stable"
 
-# v3.8.34 — package में सिर्फ़ चलाने वाली फ़ाइलें (*.py, *.sh) जाएँ
-find "$PROJECT_DIR/stable" -maxdepth 1 -type f \
-    \( -name "*.py" -o -name "*.sh" \) \
-    -exec cp -f {} "$SCRIPT_DIR/usr/share/dm-office-tools/stable/" \;
-
-# v3.8.34 — जो फ़ाइल अब stable/ में नहीं है, वह package से हटा दें
-for existing in "$SCRIPT_DIR/usr/share/dm-office-tools/stable/"*; do
-    [ -e "$existing" ] || continue
-    base="$(basename "$existing")"
-    if [ ! -e "$PROJECT_DIR/stable/$base" ]; then
-        echo "[1/4] Removing stale packaged file: $base"
-        rm -f "$existing"
+for file in $RUNTIME_FILES; do
+    if [ -f "$PROJECT_DIR/stable/$file" ]; then
+        cp -f "$PROJECT_DIR/stable/$file" "$SCRIPT_DIR/usr/share/dm-office-tools/stable/$file"
+    else
+        echo "ERROR: missing stable/$file"
+        exit 1
     fi
 done
 
