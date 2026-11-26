@@ -485,30 +485,6 @@ def load_dictionary(dict_dirs=None):
     return _LOAD_CACHE["value"]
 
 
-def unresolved_tokens(text):
-    """dictionary में न मिलने वाले हिन्दी शब्दों की सूची (v3.8.7)।
-
-    Dashboard इन्हें output में लाल दिखाता है, ताकि शब्द तुरंत
-    dictionary में जोड़ा जा सके।
-    """
-    if not text:
-        return []
-
-    combined, _dictionary = load_dictionary()
-    if combined is None:
-        return re.findall(r"[\u0900-\u097F]+", text)
-
-    covered = [match.span() for match in combined.finditer(text)]
-
-    unknown = []
-    for match in re.finditer(r"[\u0900-\u097F]+", text):
-        start, end = match.span()
-        inside = any(s0 <= start and end <= e0 for s0, e0 in covered)
-        if not inside:
-            unknown.append(match.group(0))
-
-    return unknown
-
 
 # ---------------------------------------------------------
 # Main translation flow
