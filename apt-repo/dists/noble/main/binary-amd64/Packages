@@ -1,14 +1,14 @@
 Package: dm-office-tools
-Version: 3.0.8
+Version: 3.8.41
 Architecture: amd64
 Maintainer: Dharmendra Marko
 Depends: python3, python3-gi, python3-requests, wl-clipboard
 Suggests: xclip | xsel
-Filename: apt-repo/pool/main/d/dm-office-tools/dm-office-tools_3.0.8_amd64.deb
-Size: 2139986
-MD5sum: d71befc82ec6fd4e85093d66b9082e79
-SHA1: 27e9c61d4998e661e17b3cce397d770c79117c97
-SHA256: 19c62ad2b12459aadb8ae3b2378136fb568c74ebb3edd3d88e0db396751e392d
+Filename: apt-repo/pool/main/d/dm-office-tools/dm-office-tools_3.8.41_amd64.deb
+Size: 878016
+MD5sum: 4b49440224b0030b0e8f7a9a818714a7
+SHA1: 066a1aa45b9d393962717fe849c5ba55b205186c
+SHA256: 9be9d6ffc4631abd9a894f134a1bc7e063097acb05ae1fcd4a5eb552e9ed5de8
 Section: office
 Priority: optional
 Homepage: https://github.com/dharmendramarko66/DM_Office_Translator
