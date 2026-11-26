@@ -5861,3 +5861,4 @@ Kudwara=कुदवारा
 Richkudi=रिचकुडी
 Lohia=लोहिआ
 Sailwara=सैलवारा
+Timri=टिमरी
