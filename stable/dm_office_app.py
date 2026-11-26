@@ -27,7 +27,7 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.8.38"
+    APP_VERSION = "3.8.39"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
@@ -42,7 +42,7 @@ GITHUB_URL = "https://github.com/dharmendramarko66/DM_Office_Translator"
 GITHUB_ISSUES_URL = GITHUB_URL + "/issues"
 
 # v3.8.36 — बैनर के तीन गोल बटनों के चित्र
-ICON_PIXELS = 22   # v3.8.38 — बटन पर चित्र का आकार (बदलना हो तो यहीं)
+ICON_PIXELS = 32   # v3.8.39 — बटन पर चित्र का आकार (बदलना हो तो यहीं)
 ICON_DIRS = (
     "/usr/share/dm-office-tools/icons",
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "icons"),
@@ -191,10 +191,10 @@ button.icon-plain {
     border: none;
     box-shadow: none;
     padding: 0;
-    min-width: 26px;
-    min-height: 26px;
+    min-width: 36px;
+    min-height: 36px;
 }
-button.icon-plain:hover { background-color: rgba(255, 255, 255, 0.14); border-radius: 13px; }
+button.icon-plain:hover { background-color: rgba(255, 255, 255, 0.14); border-radius: 18px; }
 .vline { background-color: #75a9ed; }
 .swap-icon { color: #12479f; font-size: 26px; font-weight: bold; }
 
