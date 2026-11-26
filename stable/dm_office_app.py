@@ -27,7 +27,7 @@ from gi.repository import Gdk, GdkPixbuf, GLib, Gtk  # noqa: E402
 try:
     from soht_version import APP_VERSION
 except ImportError:
-    APP_VERSION = "3.8.35"
+    APP_VERSION = "3.8.38"
 
 import english_to_hindi_hybrid as e2h_engine
 import hindi_to_english_hybrid as h2e_engine
@@ -40,6 +40,22 @@ ONLINE_MARKER = os.path.join(USER_DATA_DIR, "transliteration_mode")
 ICON_PATH = "/usr/share/dm-office-tools/dm-office-translator.png"
 GITHUB_URL = "https://github.com/dharmendramarko66/DM_Office_Translator"
 GITHUB_ISSUES_URL = GITHUB_URL + "/issues"
+
+# v3.8.36 — बैनर के तीन गोल बटनों के चित्र
+ICON_PIXELS = 22   # v3.8.38 — बटन पर चित्र का आकार (बदलना हो तो यहीं)
+ICON_DIRS = (
+    "/usr/share/dm-office-tools/icons",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "icons"),
+)
+
+
+def icon_path(name):
+    """आइकन की फ़ाइल ढूँढें (package में, वरना प्रोजेक्ट में)।"""
+    for folder in ICON_DIRS:
+        candidate = os.path.join(folder, f"{name}.png")
+        if os.path.exists(candidate):
+            return candidate
+    return None
 LANG_FILE = os.path.join(USER_DATA_DIR, "ui_language")
 
 STRINGS = {
@@ -168,6 +184,17 @@ window {
 .logo-dm { color: #ffd166; font-size: 42px; font-weight: bold; }
 .logo-rest { color: #ffffff; font-size: 42px; font-weight: bold; }
 .glossy-label { color: #ffffff; font-size: 13px; font-weight: bold; }
+
+button.icon-plain {
+    background-image: none;
+    background-color: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    min-width: 26px;
+    min-height: 26px;
+}
+button.icon-plain:hover { background-color: rgba(255, 255, 255, 0.14); border-radius: 13px; }
 .vline { background-color: #75a9ed; }
 .swap-icon { color: #12479f; font-size: 26px; font-weight: bold; }
 
@@ -590,15 +617,15 @@ class Dashboard(Gtk.Window):
         circles.set_halign(Gtk.Align.END)
         circles.pack_start(
             self.glossy_button("?", self.t("btn_help"), self.on_help,
-                               "grad-glossy"), False, False, 0
+                               "grad-glossy", image_name="help"), False, False, 0
         )
         circles.pack_start(
             self.glossy_button("ℹ", self.t("btn_about"), self.on_about,
-                               "grad-glossy-green"), False, False, 0
+                               "grad-glossy-green", image_name="about"), False, False, 0
         )
         circles.pack_start(
             self.glossy_button("Aअ", self.t("btn_language"), self.on_language_popover,
-                               "grad-glossy-purple"), False, False, 0
+                               "grad-glossy-purple", image_name="language"), False, False, 0
         )
         right_col.pack_start(circles, False, False, 0)
 
@@ -648,12 +675,31 @@ class Dashboard(Gtk.Window):
         popover.popup()
 
     # ---------------- banner helpers ----------------
-    def glossy_button(self, glyph, label_text, callback, css_class="grad-glossy"):
-        """गोल चमकदार बटन, नीचे सफ़ेद नाम — जैसे चित्र में।"""
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+    def glossy_button(self, glyph, label_text, callback, css_class="grad-glossy",
+                      image_name=None):
+        """गोल चमकदार बटन, नीचे सफ़ेद नाम; image_name हो तो चित्र लगे।"""
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
 
-        button = Gtk.Button(label=glyph)
-        button.get_style_context().add_class(css_class)
+        picture = icon_path(image_name) if image_name else None
+
+        if picture:
+            button = Gtk.Button()
+            # v3.8.38 — फ़ाइल से बना Gtk.Image अपने-आप नहीं छोटा होता,
+            # इसलिए pixbuf को ही मापकर लोड करते हैं।
+            try:
+                pixbuf = GdkPixbuf.Pixbuf.new_from_file_at_scale(
+                    picture, ICON_PIXELS, ICON_PIXELS, True
+                )
+                image = Gtk.Image.new_from_pixbuf(pixbuf)
+            except Exception:
+                image = Gtk.Image.new_from_file(picture)
+                image.set_pixel_size(ICON_PIXELS)
+            button.add(image)
+            button.get_style_context().add_class("icon-plain")
+        else:
+            button = Gtk.Button(label=glyph)
+            button.get_style_context().add_class(css_class)
+
         button.set_tooltip_text(label_text)
         button.connect("clicked", callback)
 

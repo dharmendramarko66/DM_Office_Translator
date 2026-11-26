@@ -3,7 +3,7 @@
 **Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager**\
 **स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर एवं स्मार्ट डिक्शनरी मैनेजर**
 
-[![Version](https://img.shields.io/badge/version-3.8.35-blue)](#version-history)
+[![Version](https://img.shields.io/badge/version-3.8.38-blue)](#version-history)
 [![Status](https://img.shields.io/badge/status-stable-success)](#)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%2B-orange)](#system-requirements)
 
@@ -12,7 +12,7 @@
 
 | जानकारी | विवरण |
 |---|---|
-| **वर्तमान संस्करण** | 3.8.35 Stable |
+| **वर्तमान संस्करण** | 3.8.38 Stable |
 | **स्थिति** | Stable Release |
 | **प्लेटफ़ॉर्म** | Ubuntu Linux 24.04 LTS एवं बाद के संस्करण |
 | **डेवलपर** | Dharmendra Marko |
@@ -124,7 +124,7 @@ dm-office-tools-shortcuts test
 
 ### तरीका 1: Double-click से (अनुशंसित)
 
-1.  GitHub Releases से `dm-office-tools_3.8.35_amd64.deb` डाउनलोड करें।
+1.  GitHub Releases से `dm-office-tools_3.8.38_amd64.deb` डाउनलोड करें।
 2.  Downloads फ़ोल्डर खोलें।
 3.  `.deb` फ़ाइल पर Double-click करें।
 4.  Ubuntu Software / App Center खुलने पर **Install** पर क्लिक करें।
@@ -139,7 +139,7 @@ dm-office-tools-shortcuts test
 
 ``` bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.8.35_amd64.deb
+sudo apt install ./dm-office-tools_3.8.38_amd64.deb
 ```
 
 ### इंस्टॉलेशन की पुष्टि
@@ -153,7 +153,7 @@ dpkg -s dm-office-tools | grep -E "Package:|Version:|Status:"
 ``` text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.8.35
+Version: 3.8.38
 ```
 
 संस्करण जाँचने के लिए:
@@ -507,7 +507,10 @@ Installed translators इस path का उपयोग करते हैं:
 
 | Version | स्थिति | मुख्य बदलाव |
 |---|---|---|
-| **3.8.35** | Current Stable | package में सिर्फ़ 9 ज़रूरी फ़ाइलें — soht_app.py और README.md अब नहीं जातीं |
+| **3.8.38** | Current Stable | आइकन अब सही माप में छोटा दिखता है (pixbuf scaling) |
+| **3.8.37** | Previous Release | आइकन का आकार 22 px किया |
+| **3.8.36** | Previous Release | बैनर के तीनों बटनों पर रंगीन आइकन |
+| **3.8.35** | Previous Release | package में सिर्फ़ 9 ज़रूरी फ़ाइलें |
 | 3.8.30 | Previous | विस्तृत README ढाँचा, Version History, shortcuts और project structure वापस |
 | 3.8.28 | Previous | मुख्य विशेषताएँ जोड़ी गईं |
 | 3.8.27 | Previous | README और CHANGELOG संक्षिप्त किए |
@@ -585,8 +588,8 @@ terms के अंतर्गत उपलब्ध है।
 | **Developer** | Dharmendra Marko |
 | **Project** | DM Office Translator |
 | **Components** | Smart Office Hybrid Translator (SOHT) एवं Smart Dictionary Manager |
-| **Current Version** | 3.8.35 Stable |
-| **Package** | `dm-office-tools_3.8.35_amd64.deb` |
+| **Current Version** | 3.8.38 Stable |
+| **Package** | `dm-office-tools_3.8.38_amd64.deb` |
 | **Architecture** | amd64 |
 | **Repository** | `DM_Office_Translator` |
 

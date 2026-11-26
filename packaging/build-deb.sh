@@ -113,6 +113,12 @@ for file in $RUNTIME_FILES; do
     fi
 done
 
+# v3.8.36 — बैनर के तीन आइकन package में
+if [ -d "$PROJECT_DIR/icons" ]; then
+    mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/icons"
+    cp -f "$PROJECT_DIR/icons/"*.png "$SCRIPT_DIR/usr/share/dm-office-tools/icons/"
+fi
+
 echo "[1/4] Syncing dictionaries into packaging..."
 
 mkdir -p "$SCRIPT_DIR/usr/share/dm-office-tools/dictionary"
