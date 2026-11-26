@@ -3,6 +3,13 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.41] — 2026-11-26
+
+### Changed
+- **`scripts/apply-update.sh` अब permissions भी सेट करता है:** zip से निकलते समय `+x` बिट हट जाता था;
+  अब apply के बाद 23 फ़ाइलों (launchers, build scripts, maintainer scripts, engines) पर
+  `chmod +x` अपने आप लग जाता है — `git status` में mode change नहीं दिखेगा।
+
 ## [3.8.40] — 2026-11-26
 
 ### Fixed

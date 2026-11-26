@@ -48,8 +48,41 @@ rsync -a \
     --exclude='*.pyc' \
     "$TEMP_DIR/" "$TARGET/"
 
+# v3.8.41 — zip से निकलते समय +x बिट हट जाता है, उसे वापस लगाएँ
+echo "🔧 execute permissions सेट कर रहे हैं..."
+cd "$TARGET"
+
+for file in \
+    sync-dictionaries.sh \
+    scripts/cleanup.sh \
+    scripts/apply-update.sh \
+    packaging/build-deb.sh \
+    packaging/update-apt-repo.sh \
+    packaging/DEBIAN/postinst \
+    packaging/DEBIAN/postrm \
+    packaging/DEBIAN/prerm \
+    packaging/usr/bin/dm-office-tools \
+    packaging/usr/bin/dm-office-tools-e2h \
+    packaging/usr/bin/dm-office-tools-h2e \
+    packaging/usr/bin/dm-office-tools-dictionary \
+    packaging/usr/bin/dm-office-tools-translit \
+    packaging/usr/bin/dm-office-tools-shortcuts \
+    stable/run_english_to_hindi.sh \
+    stable/run_hindi_to_english.sh \
+    stable/hindi_to_english_hybrid.py \
+    stable/smart_dictionary_manager.py \
+    stable/dm_office_app.py \
+    packaging/usr/share/dm-office-tools/stable/run_english_to_hindi.sh \
+    packaging/usr/share/dm-office-tools/stable/run_hindi_to_english.sh \
+    packaging/usr/share/dm-office-tools/stable/hindi_to_english_hybrid.py \
+    packaging/usr/share/dm-office-tools/stable/smart_dictionary_manager.py \
+    packaging/usr/share/dm-office-tools/stable/dm_office_app.py
+do
+    [ -f "$file" ] && chmod +x "$file"
+done
+
 echo
-echo "✅ फ़ाइलें अपडेट हो गईं।"
+echo "✅ फ़ाइलें अपडेट हो गईं और permissions भी सेट हो गईं।"
 echo
 echo "अब ये चलाएँ:"
 echo "  cd $TARGET"

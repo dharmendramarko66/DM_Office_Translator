@@ -3,7 +3,7 @@
 **Smart Office Hybrid Translator (SOHT) & Smart Dictionary Manager**\
 **स्मार्ट ऑफिस हाइब्रिड ट्रांसलेटर एवं स्मार्ट डिक्शनरी मैनेजर**
 
-[![Version](https://img.shields.io/badge/version-3.8.40-blue)](#version-history)
+[![Version](https://img.shields.io/badge/version-3.8.41-blue)](#version-history)
 [![Status](https://img.shields.io/badge/status-stable-success)](#)
 [![Platform](https://img.shields.io/badge/platform-Ubuntu%2024.04%2B-orange)](#system-requirements)
 
@@ -12,7 +12,7 @@
 
 | जानकारी | विवरण |
 |---|---|
-| **वर्तमान संस्करण** | 3.8.40 Stable |
+| **वर्तमान संस्करण** | 3.8.41 Stable |
 | **स्थिति** | Stable Release |
 | **प्लेटफ़ॉर्म** | Ubuntu Linux 24.04 LTS एवं बाद के संस्करण |
 | **डेवलपर** | Dharmendra Marko |
@@ -124,7 +124,7 @@ dm-office-tools-shortcuts test
 
 ### तरीका 1: Double-click से (अनुशंसित)
 
-1.  GitHub Releases से `dm-office-tools_3.8.40_amd64.deb` डाउनलोड करें।
+1.  GitHub Releases से `dm-office-tools_3.8.41_amd64.deb` डाउनलोड करें।
 2.  Downloads फ़ोल्डर खोलें।
 3.  `.deb` फ़ाइल पर Double-click करें।
 4.  Ubuntu Software / App Center खुलने पर **Install** पर क्लिक करें।
@@ -139,7 +139,7 @@ dm-office-tools-shortcuts test
 
 ``` bash
 cd ~/Downloads
-sudo apt install ./dm-office-tools_3.8.40_amd64.deb
+sudo apt install ./dm-office-tools_3.8.41_amd64.deb
 ```
 
 ### इंस्टॉलेशन की पुष्टि
@@ -153,7 +153,7 @@ dpkg -s dm-office-tools | grep -E "Package:|Version:|Status:"
 ``` text
 Package: dm-office-tools
 Status: install ok installed
-Version: 3.8.40
+Version: 3.8.41
 ```
 
 संस्करण जाँचने के लिए:
@@ -515,7 +515,8 @@ Installed translators इस path का उपयोग करते हैं:
 
 | Version | स्थिति | मुख्य बदलाव |
 |---|---|---|
-| **3.8.40** | Current Stable | sync-dictionaries.sh की समस्या का हल — नया `scripts/apply-update.sh` dictionary को सुरक्षित रखता है |
+| **3.8.41** | Current Stable | `apply-update.sh` अब execute permissions भी सेट करता है |
+| **3.8.40** | Previous Release | सुरक्षित apply — dictionary सुरक्षित |
 | **3.8.39** | Previous Release | आइकन 32 px |
 | **3.8.38** | Previous Release | आइकन सही माप में छोटा दिखने लगा |
 | **3.8.37** | Previous Release | आइकन का आकार 22 px किया |
@@ -598,8 +599,8 @@ terms के अंतर्गत उपलब्ध है।
 | **Developer** | Dharmendra Marko |
 | **Project** | DM Office Translator |
 | **Components** | Smart Office Hybrid Translator (SOHT) एवं Smart Dictionary Manager |
-| **Current Version** | 3.8.40 Stable |
-| **Package** | `dm-office-tools_3.8.40_amd64.deb` |
+| **Current Version** | 3.8.41 Stable |
+| **Package** | `dm-office-tools_3.8.41_amd64.deb` |
 | **Architecture** | amd64 |
 | **Repository** | `DM_Office_Translator` |
 
