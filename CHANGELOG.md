@@ -3,6 +3,18 @@
 सभी उल्लेखनीय बदलाव इस फ़ाइल में दर्ज होते हैं।
 All notable changes are documented in this file.
 
+## [3.8.40] — 2026-11-26
+
+### Fixed
+- **sync-dictionaries.sh हर बार वही शब्द "new" क्यों दिखाता था:** कारण zip नहीं था — version zip
+  में बनी `dictionary/` फ़ाइलें पुरानी थीं और `rsync -a` उन्हें आपकी synced dictionary पर लिख देता था।
+  इसलिए अगली बार फिर वही 91 + 489 प्रविष्टियाँ नई लगती थीं।
+
+### Added
+- **`scripts/apply-update.sh`:** zip को सुरक्षित लगाता है — `dictionary/`, `.git/` और
+  `apt-repo/pool/` को कभी नहीं छूता।
+- repository की dictionary फ़ाइलें आपकी नवीनतम synced प्रति के अनुसार अद्यतन (E2H 5863, H2E 5595 पंक्तियाँ)।
+
 ## [3.8.39] — 2026-11-26
 
 ### Changed
